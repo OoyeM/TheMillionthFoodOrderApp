@@ -2,5 +2,5 @@ namespace TheMillionthFoodOrderApp.Domain.Common;
 
 public interface IDomainEvent
 {
-    DateTime OccurredOn { get; }
+    DateTimeOffset OccurredOnUtc { get; }
 }
