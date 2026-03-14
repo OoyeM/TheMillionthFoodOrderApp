@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheMillionthFoodOrderApp.Application\TheMillionthFoodOrderApp.Application.csproj" />
+    <ProjectReference Include="..\TheMillionthFoodOrderApp.Infrastructure\TheMillionthFoodOrderApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\TheMillionthFoodOrderApp.ServiceDefaults\TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" Version="8.0.1" />
+    <PackageReference Include="FastEndpoints.Swagger" Version="8.0.1" />
+    <PackageReference Include="MassTransit" Version="9.0.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
