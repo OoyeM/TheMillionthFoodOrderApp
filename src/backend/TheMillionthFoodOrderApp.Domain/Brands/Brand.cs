@@ -54,6 +54,7 @@ public sealed class Brand : AggregateRoot<Guid>
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
         UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new BrandCreatedEvent(Id, Name, Slug));
     }
 
     /// <summary>
