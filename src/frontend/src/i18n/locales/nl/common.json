@@ -1,0 +1,14 @@
+{
+  "welcome": "Welkom",
+  "loading": "Laden…",
+  "error": "Er is iets misgegaan",
+  "storefront": {
+    "description": "Bekijk ons menu en plaats uw bestelling."
+  },
+  "pos": {
+    "description": "Kassasysteem voor in de winkel."
+  },
+  "admin": {
+    "description": "Beheer merken, winkels, producten en bestellingen."
+  }
+}

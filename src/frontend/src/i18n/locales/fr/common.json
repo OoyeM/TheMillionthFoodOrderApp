@@ -1,0 +1,14 @@
+{
+  "welcome": "Bienvenue",
+  "loading": "Chargement…",
+  "error": "Une erreur s'est produite",
+  "storefront": {
+    "description": "Consultez notre menu et passez votre commande."
+  },
+  "pos": {
+    "description": "Système de caisse en magasin."
+  },
+  "admin": {
+    "description": "Gérez les marques, boutiques, produits et commandes."
+  }
+}

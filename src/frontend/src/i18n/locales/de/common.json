@@ -1,0 +1,14 @@
+{
+  "welcome": "Willkommen",
+  "loading": "Wird geladen…",
+  "error": "Ein Fehler ist aufgetreten",
+  "storefront": {
+    "description": "Sehen Sie unsere Speisekarte und geben Sie Ihre Bestellung auf."
+  },
+  "pos": {
+    "description": "Kassensystem für den Laden."
+  },
+  "admin": {
+    "description": "Verwalten Sie Marken, Geschäfte, Produkte und Bestellungen."
+  }
+}

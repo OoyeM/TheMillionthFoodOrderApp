@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="TheMillionthFoodOrderApp.Api/TheMillionthFoodOrderApp.Api.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.AppHost/TheMillionthFoodOrderApp.AppHost.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Application/TheMillionthFoodOrderApp.Application.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Bff/TheMillionthFoodOrderApp.Bff.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Domain/TheMillionthFoodOrderApp.Domain.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Infrastructure/TheMillionthFoodOrderApp.Infrastructure.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.ServiceDefaults/TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
+</Solution>
