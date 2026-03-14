@@ -18,14 +18,18 @@ export interface Money {
 }
 
 /**
- * Stub for Brand entity — expand as API types are generated.
+ * Brand entity as returned by the platform API.
  */
 export interface Brand {
   id: string;
   slug: string;
-  name: LocalizedString;
-  /** Primary brand color used for theming */
-  primaryColor?: string;
+  name: string;
+  contactEmail: string;
+  contactPhone: string | null;
+  isActive: boolean;
+  databaseName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -33,7 +37,6 @@ export interface Brand {
  */
 export interface Shop {
   id: string;
-  brandId: string;
   name: LocalizedString;
   /** Shop-level address */
   address?: string;

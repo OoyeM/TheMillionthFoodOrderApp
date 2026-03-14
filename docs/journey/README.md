@@ -11,3 +11,4 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 003 | 2026-03-14 | [GitHub Issues: User Stories](./003-github-issues-user-stories.md) |
 | 004 | 2026-03-14 | [Backend scaffold: .NET + Aspire + Clean Architecture](./004-backend-scaffold.md) |
 | 005 | 2026-03-14 | [Frontend scaffold: React + multi-app routing](./005-frontend-scaffold.md) |
+| 006 | 2026-03-14 | [US-FP-001: Brand management (full stack)](./006-brand-management.md) |

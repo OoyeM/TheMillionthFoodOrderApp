@@ -15,12 +15,14 @@ TheMillionthFoodOrderApp — a multi-tenant restaurant CMS and ordering platform
 ## Quick Start
 
 ```bash
-# Backend (requires .NET 9+ SDK)
+# Backend (requires .NET 10+ SDK) — API runs on http://localhost:5102
 cd src/backend && dotnet run --project TheMillionthFoodOrderApp.AppHost
 
-# Frontend (requires Node 20+, pnpm)
+# Frontend (requires Node 20+, pnpm) — dev server on http://localhost:5173
 cd src/frontend && pnpm install && pnpm dev
 ```
+
+Frontend Vite dev server proxies `/api/*` to `http://localhost:5102` (the API). Start both for full-stack development.
 
 ## Domain Concepts
 

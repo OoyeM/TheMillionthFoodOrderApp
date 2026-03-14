@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '@components/AppShell';
 import { AppVariantLayout } from '@components/AppVariantLayout';
 import { SuspenseWrapper } from '@components/SuspenseWrapper';
+import { adminRoutes } from '@features/admin/routes';
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded feature pages — split into separate chunks by Vite/Rollup
@@ -14,10 +15,6 @@ const LazyStorefrontHome = lazy(() =>
 
 const LazyPosDashboard = lazy(() =>
   import('@features/pos/pages/Dashboard').then((m) => ({ default: m.PosDashboard })),
-);
-
-const LazyAdminDashboard = lazy(() =>
-  import('@features/admin/pages/Dashboard').then((m) => ({ default: m.AdminDashboard })),
 );
 
 export const router = createBrowserRouter([
@@ -65,16 +62,7 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         element: <AppVariantLayout variant="admin" />,
-        children: [
-          {
-            index: true,
-            element: (
-              <SuspenseWrapper>
-                <LazyAdminDashboard />
-              </SuspenseWrapper>
-            ),
-          },
-        ],
+        children: adminRoutes,
       },
     ],
   },

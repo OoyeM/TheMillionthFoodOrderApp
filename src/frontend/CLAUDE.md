@@ -11,7 +11,10 @@
 - Three apps from one codebase: customer storefront, in-store POS (touch-friendly), CMS admin panel
 - App variant detected from hostname (`pos.`, `admin.`, or default storefront)
 - URL structure: `/{brand}/{lang}/...` — brand and language resolved by AppShell
+- Admin panel: `/{brand}/{lang}/admin/brands` for brand management
 - Feature-based folder structure: `src/features/{storefront,pos,admin}/`
+- API client modules in `src/api/` — axios with Vite proxy to backend (`/api/*` → `http://localhost:5102`)
+- TanStack Query hooks per feature in `src/features/*/hooks/`
 - Strict TypeScript — no `any`
 - i18n from day one: NL, FR, DE (react-i18next)
 

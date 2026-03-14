@@ -1,6 +1,9 @@
-using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TheMillionthFoodOrderApp.Domain.Brands;
+using TheMillionthFoodOrderApp.Infrastructure.Brands;
+using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
 namespace TheMillionthFoodOrderApp.Infrastructure;
 
@@ -10,13 +13,11 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddMassTransit(x =>
-        {
-            x.UsingInMemory((context, cfg) =>
-            {
-                cfg.ConfigureEndpoints(context);
-            });
-        });
+        // Platform DB — in-memory for local development; replace with SQL Server for production
+        services.AddDbContext<PlatformDbContext>(options =>
+            options.UseInMemoryDatabase("PlatformDb"));
+
+        services.AddScoped<IBrandRepository, BrandRepository>();
 
         return services;
     }
