@@ -6,6 +6,7 @@
 - FastEndpoints (not controllers) with FluentValidation
 - EF Core, database-per-brand (multi-tenant isolation)
 - Swagger/OpenAPI via FastEndpoints
+- MassTransit for async messaging (in-memory locally, RabbitMQ/Azure Service Bus in prod)
 
 ## Architecture
 
