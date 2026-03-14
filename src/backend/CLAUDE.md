@@ -15,6 +15,24 @@
 - DDD: aggregates, entities, value objects, domain events
 - One endpoint per class — no controllers, no MediatR
 
+## Solution Structure
+
+```
+TheMillionthFoodOrderApp.AppHost/        — .NET Aspire orchestrator (run this)
+TheMillionthFoodOrderApp.Api/            — FastEndpoints API host
+TheMillionthFoodOrderApp.Bff/            — Backend-for-frontend (auth/session)
+TheMillionthFoodOrderApp.Application/    — Use cases, DI registration
+TheMillionthFoodOrderApp.Domain/         — DDD base classes (Entity, AggregateRoot, ValueObject)
+TheMillionthFoodOrderApp.Infrastructure/ — EF Core, external services
+TheMillionthFoodOrderApp.ServiceDefaults/ — Aspire shared config (telemetry, health)
+```
+
+## Commands
+
+- `dotnet run --project TheMillionthFoodOrderApp.AppHost` — start everything via Aspire
+- `dotnet build TheMillionthFoodOrderApp.slnx` — build all projects
+- `dotnet test` — run tests (xUnit)
+
 ## Domain Constraints
 
 - Belgian VAT: 6% takeaway, 21% eat-in

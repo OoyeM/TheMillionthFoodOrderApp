@@ -9,9 +9,19 @@
 ## Architecture
 
 - Three apps from one codebase: customer storefront, in-store POS (touch-friendly), CMS admin panel
-- Feature-based folder structure
+- App variant detected from hostname (`pos.`, `admin.`, or default storefront)
+- URL structure: `/{brand}/{lang}/...` — brand and language resolved by AppShell
+- Feature-based folder structure: `src/features/{storefront,pos,admin}/`
 - Strict TypeScript — no `any`
-- i18n from day one: NL, FR, DE
+- i18n from day one: NL, FR, DE (react-i18next)
+
+## Commands
+
+- `pnpm dev` — start dev server
+- `pnpm build` — type-check + production build
+- `pnpm test` — run Vitest unit tests
+- `pnpm test:e2e` — run Playwright E2E tests
+- `pnpm lint` / `pnpm format` — ESLint + Prettier
 
 ## Key Constraints
 

@@ -6,11 +6,21 @@ TheMillionthFoodOrderApp — a multi-tenant restaurant CMS and ordering platform
 
 ## Monorepo Layout
 
-- `src/backend/` — .NET API + BFF (see its CLAUDE.md)
-- `src/frontend/` — React PWA: storefront, in-store POS, CMS admin (see its CLAUDE.md)
-- `infra/` — deployment and infrastructure
+- `src/backend/` — .NET API + BFF, Aspire orchestrator (see its CLAUDE.md)
+- `src/frontend/` — React PWA: storefront, POS, admin — one codebase, three apps (see its CLAUDE.md)
+- `infra/` — deployment and infrastructure (not yet scaffolded)
 - `docs/` — PRD, user stories, dev journal
 - `.claude/docs/` — detailed patterns and conventions
+
+## Quick Start
+
+```bash
+# Backend (requires .NET 9+ SDK)
+cd src/backend && dotnet run --project TheMillionthFoodOrderApp.AppHost
+
+# Frontend (requires Node 20+, pnpm)
+cd src/frontend && pnpm install && pnpm dev
+```
 
 ## Domain Concepts
 
