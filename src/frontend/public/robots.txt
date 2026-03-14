@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# POS and admin interfaces should not be indexed
+Disallow: /*/pos/
+Disallow: /*/admin/
