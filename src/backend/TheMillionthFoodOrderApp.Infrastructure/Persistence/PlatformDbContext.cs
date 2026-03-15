@@ -4,8 +4,6 @@ using TheMillionthFoodOrderApp.Domain.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Conventions;
-using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
-
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
 /// <summary>
@@ -14,18 +12,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence;
 /// All tables live in the "platform" schema to make the intent explicit.
 /// </summary>
 public sealed class PlatformDbContext(
-    DbContextOptions<PlatformDbContext> options,
-    AuditSaveChangesInterceptor auditInterceptor) : DbContext(options)
+    DbContextOptions<PlatformDbContext> options) : DbContext(options)
 {
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<PlatformUser> PlatformUsers => Set<PlatformUser>();
     public DbSet<BrandUserRole> BrandUserRoles => Set<BrandUserRole>();
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.AddInterceptors(auditInterceptor);
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

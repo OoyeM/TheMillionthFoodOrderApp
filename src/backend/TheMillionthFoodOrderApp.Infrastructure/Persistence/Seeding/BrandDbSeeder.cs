@@ -6,16 +6,16 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 /// Seeds a brand-specific database with development data.
 /// Currently a stub — populate as brand entities (shops, products, menus) are introduced.
 /// </summary>
-#pragma warning disable CS9113 // dbContext will be used when brand entities are added
+#pragma warning disable CS9113 // factory will be used when brand entities are added
 public sealed class BrandDbSeeder(
-    BrandDbContext dbContext,
+    BrandDbContextFactory dbContextFactory,
     ILogger<BrandDbSeeder> logger)
 #pragma warning restore CS9113
 {
     public Task SeedAsync(CancellationToken cancellationToken = default)
     {
         // Suppress unused variable until brand entities are added
-        _ = dbContext;
+        _ = dbContextFactory;
 
         // TODO: seed shops, categories, products, etc. once those entities exist
         logger.LogDebug("BrandDbSeeder: no seed data defined yet.");

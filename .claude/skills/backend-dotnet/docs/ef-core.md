@@ -22,4 +22,5 @@ Data access layer. Azure SQL with database-per-brand for multi-tenant isolation.
 ## Gotchas
 
 - Always use `DateTimeOffset` instead of `DateTime` for all temporal columns
-<!-- Add gotchas discovered during development -->
+- **PlatformDbContext is pooled** (via Aspire's `AddSqlServerDbContext`) — never add interceptors or modify options in `OnConfiguring`. Use the `configureDbContextOptions` callback in `Program.cs` instead.
+- **BrandDbContext is not in DI** — it's multi-tenant. Always resolve via `BrandDbContextFactory`, never inject `BrandDbContext` directly into constructors.

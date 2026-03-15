@@ -36,11 +36,21 @@ TheMillionthFoodOrderApp.ServiceDefaults/ — Aspire shared config (telemetry, h
 - Database: SQL Server container via Aspire, platform DB auto-migrated on startup, "Frietjes?" brand seeded in dev
 - Auth: mock auth enabled by default in dev (`Authentication:UseMockAuth=true`). Personas: `platform-admin`, `brand-admin@frietjes`, `counter-staff@frietjes`, `customer`
 
+## Aspire Integration (important — affects DI patterns)
+
+This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension methods replace standard `AddDbContext`/`AddSqlServer` calls and bring **different defaults** than vanilla EF Core registration:
+
+- **`builder.AddSqlServerDbContext<T>()`** registers the DbContext with **pooling enabled** by default.
+- **Never use `OnConfiguring`** in pooled DbContexts — options are shared across pooled instances. Interceptors, query tracking, etc. must be configured via the `configureDbContextOptions` callback at registration time in `Program.cs`.
+- **Connection strings are injected by Aspire** via the resource name (e.g., `"platform"`). Don't hardcode or read them from `appsettings.json`.
+- **Service discovery** uses Aspire naming (e.g., `https+http://api` in YARP config). Don't use `localhost` URLs between services.
+- **Health checks, retries, and telemetry** are wired automatically by Aspire — don't add them manually.
+
 ## Database Architecture
 
-- **PlatformDbContext** — shared platform DB: brands, users (PlatformUser), roles (BrandUserRole), platform config
-- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`
-- **BrandDbContextFactory** — resolves correct connection string based on brand slug (same SQL Server instance, different `Database=brand_{slug}`)
+- **PlatformDbContext** — shared platform DB: brands, users (PlatformUser), roles (BrandUserRole), platform config. Registered via `AddSqlServerDbContext` (pooled).
+- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`. **Not registered in DI** — resolved on-demand via `BrandDbContextFactory`.
+- **BrandDbContextFactory** — resolves correct connection string based on brand slug (same SQL Server instance, different `Database=brand_{slug}`).
 
 ## BFF Endpoints
 

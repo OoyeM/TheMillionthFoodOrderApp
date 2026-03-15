@@ -35,7 +35,11 @@ if (builder.Environment.IsDevelopment())
 
 // Platform SQL Server database — connection string injected by Aspire via the name "platform".
 // The Aspire integration sets up health checks, retries, and telemetry automatically.
-builder.AddSqlServerDbContext<PlatformDbContext>("platform");
+builder.AddSqlServerDbContext<PlatformDbContext>("platform",
+    configureDbContextOptions: options =>
+    {
+        options.AddInterceptors(new TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors.AuditSaveChangesInterceptor());
+    });
 
 builder.Services.AddApplication();
 builder.Host.UseWolverine();
