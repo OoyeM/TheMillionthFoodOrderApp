@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TheMillionthFoodOrderApp.Application.Multitenancy;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeds a brand-specific database with development data.
-/// Called once per brand database after migrations are applied.
+/// Must be called with a brand context already set (i.e. after
+/// <see cref="IBrandContextAccessor.BrandSlug"/> is populated).
 /// </summary>
 public sealed class BrandDbSeeder(
     BrandDbContextFactory dbContextFactory,
@@ -14,18 +17,44 @@ public sealed class BrandDbSeeder(
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        await SeedFrietjesShopsAsync(cancellationToken);
+        await using var context = dbContextFactory.CreateDbContext();
+
+        await SeedBrandSettingsAsync(context, cancellationToken);
+        await SeedShopsAsync(context, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task SeedFrietjesShopsAsync(CancellationToken cancellationToken)
+    private async Task SeedBrandSettingsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
     {
-        await using var dbContext = dbContextFactory.CreateDbContext();
+        var exists = await context.BrandSettings.AnyAsync(cancellationToken);
 
+        if (exists)
+        {
+            logger.LogDebug("Seed: BrandSettings already exists — skipping.");
+            return;
+        }
+
+        var settings = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings.CreateDefault();
+        await context.BrandSettings.AddAsync(settings, cancellationToken);
+
+        logger.LogInformation(
+            "Seed: Created default BrandSettings (language: {Language}, timezone: {Timezone}, currency: {Currency}).",
+            settings.DefaultLanguage,
+            settings.Timezone,
+            settings.Currency);
+    }
+
+    private async Task SeedShopsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
         var seedSlugs = new[] { "bruxelles-centre", "antwerpen-centraal", "gent-korenmarkt" };
 
         foreach (var slug in seedSlugs)
         {
-            var exists = await dbContext.Shops.AnyAsync(s => s.Slug == slug, cancellationToken);
+            var exists = await context.Shops.AnyAsync(s => s.Slug == slug, cancellationToken);
             if (exists)
             {
                 logger.LogDebug("Seed: Shop '{Slug}' already exists — skipping.", slug);
@@ -58,10 +87,8 @@ public sealed class BrandDbSeeder(
                 _ => throw new InvalidOperationException($"Unknown seed slug: {slug}")
             };
 
-            await dbContext.Shops.AddAsync(shop, cancellationToken);
+            await context.Shops.AddAsync(shop, cancellationToken);
             logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
         }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -13,4 +13,6 @@ public interface IShopRepository
     /// Returns the mutated shop, or null if not found.
     /// </summary>
     Task<Shop?> UpdateAsync(Guid id, Action<Shop> mutate, CancellationToken cancellationToken = default);
+
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

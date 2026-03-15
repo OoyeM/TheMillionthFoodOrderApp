@@ -16,6 +16,7 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
         var shop = Shop.Create(request.Name, request.Slug, address, request.ContactEmail, request.ContactPhone);
 
         await shopRepository.AddAsync(shop, cancellationToken);
+        await shopRepository.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(shop);
     }

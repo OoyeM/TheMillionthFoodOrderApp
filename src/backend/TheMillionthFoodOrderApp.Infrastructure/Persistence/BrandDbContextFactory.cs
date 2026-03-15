@@ -16,10 +16,12 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence;
 /// </summary>
 public sealed class BrandDbContextFactory(
     IBrandContextAccessor brandContextAccessor,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    AuditSaveChangesInterceptor auditInterceptor)
 {
     /// <summary>
     /// Creates a brand-scoped <see cref="BrandDbContext"/> for the current request's brand.
+    /// The <see cref="AuditSaveChangesInterceptor"/> is added so audit fields are auto-populated.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown when no brand slug is set in the current context or the platform connection
@@ -41,7 +43,7 @@ public sealed class BrandDbContextFactory(
 
         var options = new DbContextOptionsBuilder<BrandDbContext>()
             .UseSqlServer(brandConnectionString)
-            .AddInterceptors(new AuditSaveChangesInterceptor())
+            .AddInterceptors(auditInterceptor)
             .Options;
 
         return new BrandDbContext(options);
