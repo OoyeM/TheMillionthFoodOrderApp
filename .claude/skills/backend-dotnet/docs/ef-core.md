@@ -53,6 +53,24 @@ public interface IThingRepository
 public sealed class ThingRepository(BrandDbContext dbContext) : IThingRepository { ... }
 ```
 
+### Brand-Scoped Repository (UpdateAsync delegate pattern)
+
+For brand-scoped entities that need atomic load-mutate-save (e.g. when the scoped `BrandDbContext` lifecycle needs careful handling), use the `UpdateAsync` delegate pattern:
+
+```csharp
+public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
+{
+    public async Task<Shop?> UpdateAsync(Guid id, Action<Shop> mutate, CancellationToken ct = default)
+    {
+        var shop = await dbContext.Shops.FindAsync([id], ct);
+        if (shop is null) return null;
+        mutate(shop);
+        await dbContext.SaveChangesAsync(ct);
+        return shop;
+    }
+}
+```
+
 ### DateTimeOffset Convention
 The `DateTimeOffsetConvention` in both DbContexts ensures all `DateTimeOffset` properties map to `datetimeoffset(7)` in SQL Server. No manual column type annotations needed.
 

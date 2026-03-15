@@ -33,11 +33,28 @@ export interface Brand {
 }
 
 /**
- * Stub for Shop entity — expand as API types are generated.
+ * Physical address of a shop (Belgian market, structured per EU postal standards).
+ */
+export interface ShopAddress {
+  street: string;
+  number: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+/**
+ * Shop entity as returned by the brand-scoped API.
+ * Shops belong to a single brand and are stored in the brand's isolated database.
  */
 export interface Shop {
   id: string;
-  name: LocalizedString;
-  /** Shop-level address */
-  address?: string;
+  name: string;
+  slug: string;
+  address: ShopAddress;
+  contactEmail: string;
+  contactPhone: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

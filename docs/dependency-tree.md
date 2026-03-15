@@ -24,13 +24,14 @@ These are prerequisites for everything else. Must be done in order.
 | 🚧 | **US-FP-001** | Create and manage brands | 069 |
 | 🚧 | **US-FP-070** | Database-per-brand provisioning | 001 |
 | ✅ | **US-FP-004** | Data isolation between brands | 001, 070 |
-| ⬜ | **US-FP-002** | Create and manage shops | 001 |
+| ✅ | **US-FP-002** | Create and manage shops | 001 |
 
 **Notes:**
 - 069: FastEndpoints + Swagger + BFF + YARP proxy all configured and working
 - 001: Brand entity, 7 endpoints, frontend UI exist; needs integration polish
 - 070: BrandDatabaseProvisioner coded; missing verification/error recovery
 - 004: BrandSettings entity in BrandDbContext, middleware validates slugs (404/403), BrandScopedPreProcessor, integration tests with Testcontainers prove cross-brand isolation
+- 002: Shop CRUD + activate/deactivate, full-stack implementation with brand-scoped database
 - 061: PlatformUser entity with role methods; no management endpoints or UI
 
 ---
