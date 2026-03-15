@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var sql = builder.AddSqlServer("sql")
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithDataVolume("sql-data")
     .AddDatabase("platform");
 
 var api = builder.AddProject<Projects.TheMillionthFoodOrderApp_Api>("api")

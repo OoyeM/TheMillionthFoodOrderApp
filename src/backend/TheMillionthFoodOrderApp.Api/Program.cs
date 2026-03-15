@@ -19,19 +19,24 @@ builder.Services.AddInfrastructure();
 
 // ---------------------------------------------------------------------------
 // Authentication
-// In Development the API trusts requests forwarded by the BFF. Authentication
-// is skipped (all endpoints currently use AllowAnonymous). In production,
-// JWT bearer validation against Entra External ID will be wired here.
+// Dev: no-op pass-through so endpoints work without Azure subscription.
+// Prod: JWT bearer validation against Entra External ID (TODO: wire when ready).
+// The middleware (UseAuthentication/UseAuthorization) is always in the pipeline
+// so adding a real scheme later doesn't require pipeline changes.
 // ---------------------------------------------------------------------------
 if (builder.Environment.IsDevelopment())
 {
-    // Register a no-op authentication so the auth middleware is present but
-    // never rejects requests. This keeps the pipeline consistent across envs.
     builder.Services.AddAuthentication("DevPassThrough")
         .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
                    DevPassThroughHandler>("DevPassThrough", _ => { });
-    builder.Services.AddAuthorization();
 }
+else
+{
+    // TODO: register JWT bearer scheme for Entra External ID
+    builder.Services.AddAuthentication();
+}
+
+builder.Services.AddAuthorization();
 
 // Platform SQL Server database — connection string injected by Aspire via the name "platform".
 // The Aspire integration sets up health checks, retries, and telemetry automatically.
@@ -70,11 +75,8 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 app.MapDefaultEndpoints();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseAuthentication();
-    app.UseAuthorization();
-}
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Extract brand slug from route/header early in the pipeline
 app.UseMiddleware<BrandContextMiddleware>();

@@ -38,6 +38,13 @@ Updated docs to capture the Aspire-specific patterns learned from the fixes abov
 - **`.claude/skills/backend-dotnet/docs/aspire.md`** — major expansion: AppHost APIs (resource registration, parameters, secrets, external resources), Service Defaults internals, Aspire component packages (`AddSqlServerDbContext` full signature, `EnrichSqlServerDbContext`), connection string management, service discovery with `https+http://` scheme, YARP integration, testing with `DistributedApplicationTestingBuilder`, deployment (azd + Aspire 9.2+ publishers), and comprehensive gotchas
 - **`.claude/skills/backend-dotnet/docs/ef-core.md`** — added pooling and BrandDbContext gotchas
 
+### 5. PR Review Fixes
+
+Code review of PR #76 surfaced two issues, both now resolved:
+
+- **Auth middleware dev-only** — `UseAuthentication()`/`UseAuthorization()` were wrapped in `if (IsDevelopment())`, meaning production would skip auth entirely. Fix: auth scheme registration stays conditional (dev pass-through vs. future JWT bearer), but middleware and `AddAuthorization()` are now unconditional.
+- **AppHost missing data persistence** — SQL Server container lacked `WithLifetime(ContainerLifetime.Persistent)` and `WithDataVolume("sql-data")`, causing data loss on every AppHost restart. Fix: added both to the `AddSqlServer` call.
+
 ## Key Takeaway
 
 Aspire's `AddSqlServerDbContext` enables DbContext pooling — interceptors and other option modifications must be done at registration time, not in `OnConfiguring`. This is a common pitfall when migrating from non-pooled to pooled DbContext registration.
@@ -47,8 +54,9 @@ Aspire's `AddSqlServerDbContext` enables DbContext pooling — interceptors and 
 ### Code fixes
 - `Infrastructure/Persistence/Seeding/BrandDbSeeder.cs` — constructor: `BrandDbContext` → `BrandDbContextFactory`
 - `Infrastructure/Persistence/PlatformDbContext.cs` — removed `OnConfiguring` and `AuditSaveChangesInterceptor` ctor param
-- `Api/Program.cs` — added interceptor via `configureDbContextOptions` callback
+- `Api/Program.cs` — added interceptor via `configureDbContextOptions` callback; auth middleware now unconditional
 - `Api/TheMillionthFoodOrderApp.Api.csproj` — added `Microsoft.EntityFrameworkCore.Design` package
+- `AppHost/Program.cs` — added `WithLifetime(Persistent)` + `WithDataVolume("sql-data")`
 - `Infrastructure/Persistence/Migrations/Platform/` — new: `InitialPlatform` migration + snapshot
 
 ### Documentation
