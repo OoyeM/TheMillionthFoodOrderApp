@@ -23,14 +23,14 @@ These are prerequisites for everything else. Must be done in order.
 | 🚧 | **US-FP-061** | Platform admin accounts | — |
 | 🚧 | **US-FP-001** | Create and manage brands | 069 |
 | 🚧 | **US-FP-070** | Database-per-brand provisioning | 001 |
-| 🚧 | **US-FP-004** | Data isolation between brands | 001, 070 |
+| ✅ | **US-FP-004** | Data isolation between brands | 001, 070 |
 | ⬜ | **US-FP-002** | Create and manage shops | 001 |
 
 **Notes:**
 - 069: FastEndpoints + Swagger + BFF + YARP proxy all configured and working
 - 001: Brand entity, 7 endpoints, frontend UI exist; needs integration polish
 - 070: BrandDatabaseProvisioner coded; missing verification/error recovery
-- 004: PlatformDbContext + BrandDbContext + middleware exist; no brand-scoped entities yet
+- 004: BrandSettings entity in BrandDbContext, middleware validates slugs (404/403), BrandScopedPreProcessor, integration tests with Testcontainers prove cross-brand isolation
 - 061: PlatformUser entity with role methods; no management endpoints or UI
 
 ---
@@ -204,7 +204,7 @@ Once ordering works, these streams are **all independent**.
 ## Visual Summary
 
 ```
-L0: [069✅] → [061🚧] → [001🚧] → [070🚧] → [004🚧] → [002]
+L0: [069✅] → [061🚧] → [001🚧] → [070🚧] → [004✅] → [002]
 
 L1: [A: Products]   [B: Auth/Staff]   [C: Shop Config]   [D: Branding]     ← 4 parallel
          │                │                  │
