@@ -9,7 +9,7 @@ TheMillionthFoodOrderApp — a multi-tenant restaurant CMS and ordering platform
 - `src/backend/` — .NET API + BFF, Aspire orchestrator (see its CLAUDE.md)
 - `src/frontend/` — React PWA: storefront, POS, admin — one codebase, three apps (see its CLAUDE.md)
 - `infra/` — deployment and infrastructure (not yet scaffolded)
-- `docs/` — PRD, user stories, dev journal
+- `docs/` — PRD, user stories, dev journal, [dependency tree](docs/dependency-tree.md)
 - `.claude/docs/` — detailed patterns and conventions
 
 ## Quick Start

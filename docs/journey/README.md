@@ -12,3 +12,6 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 004 | 2026-03-14 | [Backend scaffold: .NET + Aspire + Clean Architecture](./004-backend-scaffold.md) |
 | 005 | 2026-03-14 | [Frontend scaffold: React + multi-app routing](./005-frontend-scaffold.md) |
 | 006 | 2026-03-14 | [US-FP-001: Brand management (full stack)](./006-brand-management.md) |
+| 007 | 2026-03-15 | [Infrastructure & auth wiring](./007-infrastructure-auth-wiring.md) |
+| 008 | 2026-03-15 | [Startup & DI fixes](./008-startup-fixes.md) |
+| 009 | 2026-03-15 | [Dependency tree & parallel development plan](./009-dependency-tree.md) |
