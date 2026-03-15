@@ -17,7 +17,39 @@ Data access layer. Azure SQL with database-per-brand for multi-tenant isolation.
 - Brand DB deletion = full data isolation for GDPR compliance
 
 ## Patterns
-<!-- Add patterns as they emerge during development -->
+
+### Brand-Scoped Repository (per-method unit-of-work)
+
+Brand entities (e.g., Shop) live in `BrandDbContext`, which is **not** DI-registered. Repositories inject `BrandDbContextFactory` and create a context per method call:
+
+```csharp
+public sealed class ShopRepository(BrandDbContextFactory dbContextFactory) : IShopRepository
+{
+    public async Task<Shop?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        await using var db = dbContextFactory.CreateDbContext();
+        return await db.Shops.FindAsync([id], ct);
+    }
+
+    // Mutations: load-mutate-save in a single context to keep change tracking intact
+    public async Task<Shop?> UpdateAsync(Guid id, Action<Shop> mutate, CancellationToken ct = default)
+    {
+        await using var db = dbContextFactory.CreateDbContext();
+        var shop = await db.Shops.FindAsync([id], ct);
+        if (shop is null) return null;
+        mutate(shop);
+        await db.SaveChangesAsync(ct);
+        return shop;
+    }
+}
+```
+
+Key rules:
+- Each public method owns its full unit-of-work (`await using` context)
+- `AddAsync` saves immediately — no separate `SaveChangesAsync` call needed
+- `UpdateAsync` takes an `Action<T>` delegate to mutate the tracked entity within one context
+- Do **not** expose `SaveChangesAsync` on brand-scoped repositories (it would be a no-op trap)
+- `AuditSaveChangesInterceptor` is wired in `BrandDbContextFactory.CreateDbContext()` for safety
 
 ## Gotchas
 

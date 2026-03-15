@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
+using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -40,6 +41,7 @@ public sealed class BrandDbContextFactory(
 
         var options = new DbContextOptionsBuilder<BrandDbContext>()
             .UseSqlServer(brandConnectionString)
+            .AddInterceptors(new AuditSaveChangesInterceptor())
             .Options;
 
         return new BrandDbContext(options);

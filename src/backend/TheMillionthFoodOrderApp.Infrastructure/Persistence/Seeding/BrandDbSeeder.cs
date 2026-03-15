@@ -1,24 +1,67 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeds a brand-specific database with development data.
-/// Currently a stub — populate as brand entities (shops, products, menus) are introduced.
+/// Called once per brand database after migrations are applied.
 /// </summary>
-#pragma warning disable CS9113 // factory will be used when brand entities are added
 public sealed class BrandDbSeeder(
     BrandDbContextFactory dbContextFactory,
     ILogger<BrandDbSeeder> logger)
-#pragma warning restore CS9113
 {
-    public Task SeedAsync(CancellationToken cancellationToken = default)
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        // Suppress unused variable until brand entities are added
-        _ = dbContextFactory;
+        await SeedFrietjesShopsAsync(cancellationToken);
+    }
 
-        // TODO: seed shops, categories, products, etc. once those entities exist
-        logger.LogDebug("BrandDbSeeder: no seed data defined yet.");
-        return Task.CompletedTask;
+    private async Task SeedFrietjesShopsAsync(CancellationToken cancellationToken)
+    {
+        await using var dbContext = dbContextFactory.CreateDbContext();
+
+        var seedSlugs = new[] { "bruxelles-centre", "antwerpen-centraal", "gent-korenmarkt" };
+
+        foreach (var slug in seedSlugs)
+        {
+            var exists = await dbContext.Shops.AnyAsync(s => s.Slug == slug, cancellationToken);
+            if (exists)
+            {
+                logger.LogDebug("Seed: Shop '{Slug}' already exists — skipping.", slug);
+                continue;
+            }
+
+            var shop = slug switch
+            {
+                "bruxelles-centre" => Shop.Create(
+                    name: "Bruxelles Centre",
+                    slug: "bruxelles-centre",
+                    address: new Address("Rue du Marché aux Herbes", "83", "Bruxelles", "1000"),
+                    contactEmail: "bruxelles@frietjes.be",
+                    contactPhone: "+32 2 000 00 01"),
+
+                "antwerpen-centraal" => Shop.Create(
+                    name: "Antwerpen Centraal",
+                    slug: "antwerpen-centraal",
+                    address: new Address("Koningin Astridplein", "27", "Antwerpen", "2018"),
+                    contactEmail: "antwerpen@frietjes.be",
+                    contactPhone: "+32 3 000 00 02"),
+
+                "gent-korenmarkt" => Shop.Create(
+                    name: "Gent Korenmarkt",
+                    slug: "gent-korenmarkt",
+                    address: new Address("Korenmarkt", "1", "Gent", "9000"),
+                    contactEmail: "gent@frietjes.be",
+                    contactPhone: "+32 9 000 00 03"),
+
+                _ => throw new InvalidOperationException($"Unknown seed slug: {slug}")
+            };
+
+            await dbContext.Shops.AddAsync(shop, cancellationToken);
+            logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
