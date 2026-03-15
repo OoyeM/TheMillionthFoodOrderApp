@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import { ErrorBoundary } from '@components/ErrorBoundary';
+import { AuthProviderSwitch } from '@/auth/AuthProviderSwitch';
 import { router } from './router';
 
 // Only bundle devtools in development builds
@@ -26,8 +27,10 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        {ReactQueryDevtools !== null && <ReactQueryDevtools initialIsOpen={false} />}
+        <AuthProviderSwitch>
+          <RouterProvider router={router} />
+          {ReactQueryDevtools !== null && <ReactQueryDevtools initialIsOpen={false} />}
+        </AuthProviderSwitch>
       </QueryClientProvider>
     </ErrorBoundary>
   );

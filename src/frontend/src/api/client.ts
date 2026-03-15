@@ -41,3 +41,20 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response interceptor: translate HTTP auth errors into window events.
+// Components and providers listen for these to update auth state without
+// having to inspect every API response individually.
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) {
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
+      } else if (error.response?.status === 403) {
+        window.dispatchEvent(new CustomEvent('auth:access-denied'));
+      }
+    }
+    return Promise.reject(error);
+  },
+);

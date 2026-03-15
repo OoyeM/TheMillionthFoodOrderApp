@@ -4,6 +4,29 @@ namespace TheMillionthFoodOrderApp.Application.Brands;
 
 public sealed class BrandService(IBrandRepository brandRepository) : IBrandService
 {
+    public async Task<BrandResponse?> GetBrandBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default)
+    {
+        var brand = await brandRepository.GetBySlugAsync(slug, cancellationToken);
+        return brand is null ? null : MapToResponse(brand);
+    }
+
+    public async Task<BrandResponse> ConfigureStaffAuthAsync(
+        string slug,
+        StaffAuthMethod method,
+        CancellationToken cancellationToken = default)
+    {
+        var brand = await brandRepository.GetBySlugAsync(slug, cancellationToken);
+        if (brand is null)
+            throw new KeyNotFoundException($"Brand with slug '{slug}' was not found.");
+
+        brand.ConfigureStaffAuth(method);
+        await brandRepository.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(brand);
+    }
+
     public async Task<BrandResponse> CreateBrandAsync(
         CreateBrandRequest request,
         CancellationToken cancellationToken = default)
@@ -81,6 +104,7 @@ public sealed class BrandService(IBrandRepository brandRepository) : IBrandServi
             brand.ContactPhone,
             brand.IsActive,
             brand.DatabaseName,
+            brand.StaffAuthMethod,
             brand.CreatedAt,
             brand.UpdatedAt);
 }

@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '@components/AppShell';
 import { AppVariantLayout } from '@components/AppVariantLayout';
 import { SuspenseWrapper } from '@components/SuspenseWrapper';
+import { RequireAuth } from '@/auth/RequireAuth';
 import { adminRoutes } from '@features/admin/routes';
 
 // ---------------------------------------------------------------------------
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
     path: '/:brandSlug/:lang',
     element: <AppShell />,
     children: [
-      // ── Storefront ──────────────────────────────────────────────────────
+      // ── Storefront (public — no auth required) ───────────────────────────
       {
         element: <AppVariantLayout variant="storefront" />,
         children: [
@@ -46,7 +47,11 @@ export const router = createBrowserRouter([
       // ── POS ─────────────────────────────────────────────────────────────
       {
         path: 'pos',
-        element: <AppVariantLayout variant="pos" />,
+        element: (
+          <RequireAuth roles={['counter-staff', 'floor-staff', 'kitchen-staff', 'shop-manager']}>
+            <AppVariantLayout variant="pos" />
+          </RequireAuth>
+        ),
         children: [
           {
             index: true,
@@ -61,7 +66,11 @@ export const router = createBrowserRouter([
       // ── Admin ────────────────────────────────────────────────────────────
       {
         path: 'admin',
-        element: <AppVariantLayout variant="admin" />,
+        element: (
+          <RequireAuth roles={['brand-admin', 'platform-admin']}>
+            <AppVariantLayout variant="admin" />
+          </RequireAuth>
+        ),
         children: adminRoutes,
       },
     ],
