@@ -15,14 +15,23 @@ TheMillionthFoodOrderApp — a multi-tenant restaurant CMS and ordering platform
 ## Quick Start
 
 ```bash
-# Backend (requires .NET 10+ SDK) — API runs on http://localhost:5102
+# Backend (requires .NET 10+ SDK + Docker Desktop for SQL Server container)
 cd src/backend && dotnet run --project TheMillionthFoodOrderApp.AppHost
 
 # Frontend (requires Node 20+, pnpm) — dev server on http://localhost:5173
 cd src/frontend && pnpm install && pnpm dev
 ```
 
-Frontend Vite dev server proxies `/api/*` to `http://localhost:5102` (the API). Start both for full-stack development.
+Backend starts API (http://localhost:5102), BFF (http://localhost:5261), and SQL Server via Aspire. Frontend proxies `/api/*` and `/bff/*` to the BFF. Start both for full-stack development.
+
+Mock auth is enabled by default in dev — no Azure subscription needed. Visit `/bff/login?mock=brand-admin@frietjes` to sign in with a test persona.
+
+## Key Architecture Decisions
+
+- **Database:** Azure SQL with database-per-brand isolation — one SQL Server instance, platform DB for shared data, brand DBs created dynamically at runtime
+- **Identity:** Azure Entra External ID (ex Azure AD B2C) — local username/password accounts + Microsoft/Google SSO, multi-tenant CIAM. Mock auth for local dev.
+- **Auth pattern:** BFF handles all auth (OIDC, cookies, sessions) — frontend never touches tokens. YARP proxies API calls with bearer tokens.
+- **Architecture:** DDD with Clean Architecture, bounded contexts per domain area
 
 ## Domain Concepts
 

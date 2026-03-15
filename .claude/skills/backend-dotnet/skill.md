@@ -22,6 +22,10 @@ Reference for the .NET backend stack. Each component has its own doc — read on
 | MassTransit | Async messaging, domain events, sagas | [masstransit.md](docs/masstransit.md) |
 | xUnit | Testing — unit and integration | Use `/dotnet-unit-testing` skill |
 
+## Code Conventions
+
+- **Always use `DateTimeOffset`** — never `DateTime`. DateTime lacks timezone awareness and causes subtle bugs. Use DateTimeOffset for all entity properties, DTOs, API contracts, and EF Core mappings.
+
 ## When to Read Which Doc
 
 - **Adding a new endpoint?** → fast-endpoints.md + fluent-validation.md + swagger.md

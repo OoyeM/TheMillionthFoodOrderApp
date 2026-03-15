@@ -4,5 +4,5 @@ namespace TheMillionthFoodOrderApp.Domain.Brands;
 
 public sealed record BrandDeactivatedEvent(Guid BrandId, string Slug) : IDomainEvent
 {
-    public DateTimeOffset OccurredOnUtc { get; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset OccurredOn { get; } = DateTimeOffset.UtcNow;
 }

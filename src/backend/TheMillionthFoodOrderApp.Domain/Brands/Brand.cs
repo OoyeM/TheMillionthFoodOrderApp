@@ -2,7 +2,7 @@ using TheMillionthFoodOrderApp.Domain.Common;
 
 namespace TheMillionthFoodOrderApp.Domain.Brands;
 
-public sealed class Brand : AggregateRoot<Guid>
+public sealed class Brand : AggregateRoot<Guid>, IAuditable
 {
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
@@ -16,8 +16,14 @@ public sealed class Brand : AggregateRoot<Guid>
     /// </summary>
     public string DatabaseName { get; private set; } = string.Empty;
 
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    /// <summary>
+    /// The authentication method allowed for staff members on this brand's management portal.
+    /// Defaults to <see cref="StaffAuthMethod.EmailPassword"/>.
+    /// </summary>
+    public StaffAuthMethod StaffAuthMethod { get; private set; } = StaffAuthMethod.EmailPassword;
+
+    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
 
     // Required by EF Core
     private Brand() { }
@@ -28,7 +34,7 @@ public sealed class Brand : AggregateRoot<Guid>
     /// </summary>
     public static Brand Create(string name, string slug, string contactEmail, string? contactPhone)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var brand = new Brand
         {
             Id = Guid.NewGuid(),
@@ -53,7 +59,7 @@ public sealed class Brand : AggregateRoot<Guid>
         Name = name;
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
@@ -66,7 +72,7 @@ public sealed class Brand : AggregateRoot<Guid>
             return;
 
         IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new BrandDeactivatedEvent(Id, Slug));
     }
 
@@ -77,6 +83,16 @@ public sealed class Brand : AggregateRoot<Guid>
             return;
 
         IsActive = true;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Configures the staff authentication method for this brand's management portal.
+    /// Changes take effect on the next Entra app registration configuration sync.
+    /// </summary>
+    public void ConfigureStaffAuth(StaffAuthMethod method)
+    {
+        StaffAuthMethod = method;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

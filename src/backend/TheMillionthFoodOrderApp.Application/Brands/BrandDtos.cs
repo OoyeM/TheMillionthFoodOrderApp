@@ -1,3 +1,5 @@
+using TheMillionthFoodOrderApp.Domain.Brands;
+
 namespace TheMillionthFoodOrderApp.Application.Brands;
 
 public sealed record CreateBrandRequest(
@@ -19,5 +21,6 @@ public sealed record BrandResponse(
     string? ContactPhone,
     bool IsActive,
     string DatabaseName,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    StaffAuthMethod StaffAuthMethod,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

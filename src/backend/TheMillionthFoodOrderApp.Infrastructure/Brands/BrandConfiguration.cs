@@ -38,6 +38,9 @@ public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
         builder.Property(b => b.IsActive)
             .IsRequired();
 
+        builder.Property(b => b.StaffAuthMethod)
+            .IsRequired();
+
         builder.Property(b => b.CreatedAt)
             .IsRequired();
 
