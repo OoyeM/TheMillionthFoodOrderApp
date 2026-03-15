@@ -5,6 +5,7 @@ using TheMillionthFoodOrderApp.Api.Auth;
 using TheMillionthFoodOrderApp.Api.Middleware;
 using TheMillionthFoodOrderApp.Application;
 using TheMillionthFoodOrderApp.Infrastructure;
+using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 using TheMillionthFoodOrderApp.ServiceDefaults;
@@ -70,6 +71,15 @@ await using (var scope = app.Services.CreateAsyncScope())
     {
         var platformSeeder = scope.ServiceProvider.GetRequiredService<PlatformDbSeeder>();
         await platformSeeder.SeedAsync();
+
+        // Seed the Frietjes? brand database.
+        // We manually set the brand slug on the scoped accessor so BrandDbContextFactory
+        // can derive the correct connection string for the brand DB.
+        var brandContextAccessor = scope.ServiceProvider.GetRequiredService<BrandContextAccessor>();
+        brandContextAccessor.BrandSlug = "frietjes";
+
+        var brandSeeder = scope.ServiceProvider.GetRequiredService<BrandDbSeeder>();
+        await brandSeeder.SeedAsync();
     }
 }
 
@@ -78,10 +88,13 @@ app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Extract brand slug from route/header early in the pipeline
+// Extract and validate brand slug from route/header early in the pipeline
 app.UseMiddleware<BrandContextMiddleware>();
 
 app.UseFastEndpoints();
 app.UseSwaggerGen();
 
 app.Run();
+
+// Make Program accessible to WebApplicationFactory in integration tests
+public partial class Program { }

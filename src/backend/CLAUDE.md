@@ -49,8 +49,10 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 ## Database Architecture
 
 - **PlatformDbContext** — shared platform DB: brands, users (PlatformUser), roles (BrandUserRole), platform config. Registered via `AddSqlServerDbContext` (pooled).
-- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`. **Not registered in DI** — resolved on-demand via `BrandDbContextFactory`.
+- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`. Registered as **scoped** in DI via `BrandDbContextFactory` — inject directly into brand-scoped repositories. Throws `InvalidOperationException` if no brand slug is set (guards against accidental use in platform-only endpoints).
 - **BrandDbContextFactory** — resolves correct connection string based on brand slug (same SQL Server instance, different `Database=brand_{slug}`).
+- **BrandContextMiddleware** — validates brand slug from route/header against platform DB (cached 30s), returns 404/403 for invalid/inactive brands.
+- **BrandScopedPreProcessor** — FastEndpoints pre-processor; add to all brand-scoped endpoints to guard against missing brand context.
 
 ## BFF Endpoints
 
@@ -79,6 +81,10 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 
 ## Testing
 
-- xUnit, integration tests hit a real database (not mocks)
+- xUnit + FluentAssertions, integration tests hit a real database (not mocks)
+- **Testcontainers.MsSql** for integration tests — spins up SQL Server in Docker automatically
+- `IntegrationTestWebAppFactory` replaces Aspire's pooled PlatformDbContext with a standard registration pointing at the test container
+- `IntegrationTestBase` provisions multiple brand databases (alpha, beta, gamma) on the same container to verify cross-brand isolation
+- Use `IClassFixture<IntegrationTestBase>` to share the container across tests in a class
 
-For detailed patterns, see `.claude/docs/`.
+For detailed patterns, see `.claude/skills/backend-dotnet/docs/`.

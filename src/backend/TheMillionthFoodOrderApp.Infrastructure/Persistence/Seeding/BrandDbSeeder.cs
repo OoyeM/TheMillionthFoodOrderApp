@@ -1,24 +1,46 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TheMillionthFoodOrderApp.Application.Multitenancy;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeds a brand-specific database with development data.
-/// Currently a stub — populate as brand entities (shops, products, menus) are introduced.
+/// Must be called with a brand context already set (i.e. after
+/// <see cref="IBrandContextAccessor.BrandSlug"/> is populated).
 /// </summary>
-#pragma warning disable CS9113 // factory will be used when brand entities are added
 public sealed class BrandDbSeeder(
     BrandDbContextFactory dbContextFactory,
     ILogger<BrandDbSeeder> logger)
-#pragma warning restore CS9113
 {
-    public Task SeedAsync(CancellationToken cancellationToken = default)
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        // Suppress unused variable until brand entities are added
-        _ = dbContextFactory;
+        await using var context = dbContextFactory.CreateDbContext();
 
-        // TODO: seed shops, categories, products, etc. once those entities exist
-        logger.LogDebug("BrandDbSeeder: no seed data defined yet.");
-        return Task.CompletedTask;
+        await SeedBrandSettingsAsync(context, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedBrandSettingsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await context.BrandSettings.AnyAsync(cancellationToken);
+
+        if (exists)
+        {
+            logger.LogDebug("Seed: BrandSettings already exists — skipping.");
+            return;
+        }
+
+        var settings = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings.CreateDefault();
+        await context.BrandSettings.AddAsync(settings, cancellationToken);
+
+        logger.LogInformation(
+            "Seed: Created default BrandSettings (language: {Language}, timezone: {Timezone}, currency: {Currency}).",
+            settings.DefaultLanguage,
+            settings.Timezone,
+            settings.Currency);
     }
 }
