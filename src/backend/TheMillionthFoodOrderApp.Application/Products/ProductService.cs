@@ -72,6 +72,7 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.Id,
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
+            product.MenuCategoryId,
             product.Translations
                 .Select(t => new TranslationResponse(t.LanguageCode, t.Name, t.Description))
                 .ToList().AsReadOnly(),
@@ -84,5 +85,6 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
+            product.MenuCategoryId,
             product.CreatedAt);
 }

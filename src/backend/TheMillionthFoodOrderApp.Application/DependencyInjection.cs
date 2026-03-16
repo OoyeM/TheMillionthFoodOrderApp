@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TheMillionthFoodOrderApp.Application.BrandSettings;
 using TheMillionthFoodOrderApp.Application.Brands;
 using TheMillionthFoodOrderApp.Application.Identity;
+using TheMillionthFoodOrderApp.Application.MenuCategories;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IShopService, ShopService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IBrandSettingsService, BrandSettingsService>();
+        services.AddScoped<IMenuCategoryService, MenuCategoryService>();
 
         return services;
     }

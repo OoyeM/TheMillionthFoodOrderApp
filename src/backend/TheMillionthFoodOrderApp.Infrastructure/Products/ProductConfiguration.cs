@@ -37,6 +37,16 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.UpdatedAt)
             .IsRequired();
 
+        builder.Property(p => p.MenuCategoryId);
+
+        // Optional FK to MenuCategories — null means uncategorised.
+        // SetNull on delete so products survive category removal.
+        builder.HasOne<Domain.MenuCategories.MenuCategory>()
+            .WithMany()
+            .HasForeignKey(p => p.MenuCategoryId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(p => p.Translations)
             .WithOne()
             .HasForeignKey(t => t.ProductId)
