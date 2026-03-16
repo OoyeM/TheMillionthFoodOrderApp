@@ -6,11 +6,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Identity;
 
 public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatformUserRepository
 {
-    public async Task<PlatformUser?> GetByEntraObjectIdAsync(
-        string entraObjectId,
+    public async Task<PlatformUser?> GetByExternalIdentityIdAsync(
+        string externalIdentityId,
         CancellationToken cancellationToken = default)
         => await dbContext.PlatformUsers
-            .FirstOrDefaultAsync(u => u.EntraObjectId == entraObjectId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.ExternalIdentityId == externalIdentityId, cancellationToken);
 
     public async Task<PlatformUser?> GetByIdAsync(
         Guid id,

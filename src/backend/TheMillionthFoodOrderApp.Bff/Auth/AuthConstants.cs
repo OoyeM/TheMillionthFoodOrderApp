@@ -17,6 +17,9 @@ public static class AuthConstants
 
         /// <summary>Dev-only mock authentication scheme (never active in production).</summary>
         public const string Mock = "BffMock";
+
+        /// <summary>OpenID Connect scheme for Keycloak (or any OIDC provider).</summary>
+        public const string Oidc = "BffOidc";
     }
 
     // -------------------------------------------------------------------------

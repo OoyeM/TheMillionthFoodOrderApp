@@ -5,22 +5,22 @@ namespace TheMillionthFoodOrderApp.Application.Identity;
 public sealed class IdentityService(IPlatformUserRepository userRepository) : IIdentityService
 {
     public async Task<PlatformUser> ProvisionUserAsync(
-        string entraObjectId,
+        string externalIdentityId,
         string email,
         string displayName,
         CancellationToken cancellationToken = default)
     {
-        var existing = await userRepository.GetByEntraObjectIdAsync(entraObjectId, cancellationToken);
+        var existing = await userRepository.GetByExternalIdentityIdAsync(externalIdentityId, cancellationToken);
 
         if (existing is not null)
         {
-            // Synchronise mutable claims that may have changed in Entra
+            // Synchronise mutable claims that may have changed in the identity provider
             existing.UpdateProfile(email, displayName);
             await userRepository.SaveChangesAsync(cancellationToken);
             return existing;
         }
 
-        var user = PlatformUser.Create(entraObjectId, email, displayName);
+        var user = PlatformUser.Create(externalIdentityId, email, displayName);
         await userRepository.AddAsync(user, cancellationToken);
         await userRepository.SaveChangesAsync(cancellationToken);
 
@@ -113,7 +113,7 @@ public sealed class IdentityService(IPlatformUserRepository userRepository) : II
     private static UserWithRolesDto MapToDto(PlatformUser user, IReadOnlyList<BrandUserRole> roles) =>
         new(
             user.Id,
-            user.EntraObjectId,
+            user.ExternalIdentityId,
             user.Email,
             user.DisplayName,
             user.IsPlatformAdmin,

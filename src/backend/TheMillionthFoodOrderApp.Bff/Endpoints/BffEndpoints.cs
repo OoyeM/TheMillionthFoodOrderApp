@@ -28,7 +28,7 @@ public static class BffEndpoints
     /// In dev/mock mode: resolves the persona from <c>?mock=</c>, signs the user in via
     /// the cookie scheme, then redirects to <c>?returnUrl=</c>.
     ///
-    /// In production this endpoint will trigger an OIDC challenge (not yet implemented).
+    /// When mock auth is disabled, triggers an OIDC challenge against the configured identity provider.
     /// </summary>
     private static async Task<IResult> HandleLogin(
         HttpContext context,
@@ -61,10 +61,10 @@ public static class BffEndpoints
             return Results.Redirect(redirect);
         }
 
-        // Production: OIDC challenge (placeholder — real Entra wiring is a future phase)
+        // OIDC challenge via Keycloak (or any configured OIDC provider)
         return Results.Challenge(
             new AuthenticationProperties { RedirectUri = ResolveReturnUrl(returnUrl) },
-            [AuthConstants.Schemes.Cookie]);
+            [AuthConstants.Schemes.Oidc]);
     }
 
     // -------------------------------------------------------------------------
@@ -73,11 +73,23 @@ public static class BffEndpoints
 
     /// <summary>
     /// Signs the user out of the cookie session and returns 200.
-    /// In production this will also trigger a federated sign-out with Entra.
+    /// When mock auth is disabled, also triggers a federated sign-out with the OIDC provider.
     /// </summary>
-    private static async Task<IResult> HandleLogout(HttpContext context)
+    private static async Task<IResult> HandleLogout(
+        HttpContext context,
+        IHostEnvironment env,
+        IConfiguration config)
     {
         await context.SignOutAsync(AuthConstants.Schemes.Cookie);
+
+        var useMock = env.IsDevelopment() &&
+                      config.GetValue<bool>("Authentication:UseMockAuth");
+
+        if (!useMock)
+        {
+            await context.SignOutAsync(AuthConstants.Schemes.Oidc);
+        }
+
         return Results.Ok(new { message = "Signed out" });
     }
 

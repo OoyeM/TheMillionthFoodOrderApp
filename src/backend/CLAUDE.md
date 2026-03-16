@@ -29,13 +29,14 @@ TheMillionthFoodOrderApp.ServiceDefaults/ — Aspire shared config (telemetry, h
 
 ## Local Development
 
-- **Requires Docker Desktop** — Aspire runs SQL Server in a container with a persistent volume
+- **Requires Docker Desktop** — Aspire runs SQL Server and Keycloak in containers with persistent volumes
 - **SQL Server password** is set via `sql-password` Aspire parameter (prompted on first run). Required because `WithDataVolume` persists the password in the volume — random passwords desync on restart.
+- **Keycloak** runs as Aspire container with realm auto-imported from `AppHost/keycloak/themillionfoodorderapp-realm.json`. Admin UI available at Aspire-assigned port. Persistent volume preserves data across restarts.
 - API runs on `http://localhost:5102` — Swagger UI is the default launch page
 - BFF runs on `http://localhost:5261` — auth endpoints + YARP proxy to API
 - Frontend proxies `/api/*` and `/bff/*` to the BFF (not directly to API)
 - Database: SQL Server container via Aspire, platform DB auto-migrated on startup. In dev, `BrandDatabaseProvisioner` is called explicitly at startup to create + migrate the brand DB before seeding (Wolverine isn't running yet at that point).
-- Auth: mock auth enabled by default in dev (`Authentication:UseMockAuth=true`). Personas: `platform-admin`, `brand-admin@frietjes`, `counter-staff@frietjes`, `customer`
+- Auth: mock auth enabled by default in dev (`Authentication:UseMockAuth=true`). Set to `false` to use Keycloak OIDC. Personas: `platform-admin`, `brand-admin@frietjes`, `counter-staff@frietjes`, `customer`. Test user passwords: `P@ssw0rd!`
 
 ## Aspire Integration (important — affects DI patterns)
 
@@ -57,11 +58,11 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 
 ## BFF Endpoints
 
-- `GET /bff/login?mock=<persona>` — mock sign-in (dev), OIDC challenge (prod)
-- `POST /bff/logout` — sign out
+- `GET /bff/login?mock=<persona>` — mock sign-in (dev) or OIDC challenge via Keycloak
+- `POST /bff/logout` — sign out (cookie + federated OIDC logout when not using mock)
 - `GET /bff/user` — current user info (always 200, returns `{ isAuthenticated: false }` if anonymous)
 - `POST /bff/session/keepalive` — slide session expiration
-- `/api/*` — YARP reverse proxy to API with bearer token injection
+- `/api/*` — YARP reverse proxy to API with bearer token forwarding (access token from OIDC stored via `SaveTokens=true`)
 
 ## Commands
 

@@ -22,14 +22,14 @@ cd src/backend && dotnet run --project TheMillionthFoodOrderApp.AppHost
 cd src/frontend && pnpm install && pnpm dev
 ```
 
-Backend starts API (http://localhost:5102), BFF (http://localhost:5261), and SQL Server via Aspire. Frontend proxies `/api/*` and `/bff/*` to the BFF. Start both for full-stack development.
+Backend starts API (http://localhost:5102), BFF (http://localhost:5261), SQL Server, and Keycloak via Aspire. Frontend proxies `/api/*` and `/bff/*` to the BFF. Start both for full-stack development.
 
-Mock auth is enabled by default in dev — no Azure subscription needed. Visit `/bff/login?mock=brand-admin@frietjes` to sign in with a test persona.
+Mock auth is enabled by default in dev — no external services needed. Visit `/bff/login?mock=brand-admin@frietjes` to sign in with a test persona. Set `Authentication:UseMockAuth=false` to use Keycloak.
 
 ## Key Architecture Decisions
 
 - **Database:** Azure SQL with database-per-brand isolation — one SQL Server instance, platform DB for shared data, brand DBs created dynamically at runtime
-- **Identity:** Azure Entra External ID (ex Azure AD B2C) — local username/password accounts + Microsoft/Google SSO, multi-tenant CIAM. Mock auth for local dev.
+- **Identity:** Keycloak (self-hosted, Docker) — standard OIDC, runs as Aspire container. Mock auth for local dev. Migrating to Azure Entra External ID or any OIDC provider is a config-only change.
 - **Auth pattern:** BFF handles all auth (OIDC, cookies, sessions) — frontend never touches tokens. YARP proxies API calls with bearer tokens.
 - **Architecture:** DDD with Clean Architecture, bounded contexts per domain area
 

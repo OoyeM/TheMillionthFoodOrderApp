@@ -5,8 +5,8 @@ namespace TheMillionthFoodOrderApp.Domain.Identity;
 /// </summary>
 public interface IPlatformUserRepository
 {
-    /// <summary>Looks up a user by their Entra External ID object ID (the 'sub' / 'oid' claim).</summary>
-    Task<PlatformUser?> GetByEntraObjectIdAsync(string entraObjectId, CancellationToken cancellationToken = default);
+    /// <summary>Looks up a user by their external identity provider subject ID (the 'sub' claim).</summary>
+    Task<PlatformUser?> GetByExternalIdentityIdAsync(string externalIdentityId, CancellationToken cancellationToken = default);
 
     /// <summary>Looks up a user by their internal platform ID.</summary>
     Task<PlatformUser?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

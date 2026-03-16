@@ -12,12 +12,12 @@ public sealed class PlatformUserConfiguration : IEntityTypeConfiguration<Platfor
 
         builder.HasKey(u => u.Id);
 
-        builder.Property(u => u.EntraObjectId)
+        builder.Property(u => u.ExternalIdentityId)
             .IsRequired()
-            .HasMaxLength(36); // Azure object IDs are GUIDs (36 chars with hyphens)
+            .HasMaxLength(128); // OIDC subject IDs (UUIDs for Keycloak, various formats for other providers)
 
-        // EntraObjectId must be globally unique — the primary lookup key post-authentication
-        builder.HasIndex(u => u.EntraObjectId)
+        // ExternalIdentityId must be globally unique — the primary lookup key post-authentication
+        builder.HasIndex(u => u.ExternalIdentityId)
             .IsUnique();
 
         builder.Property(u => u.Email)
