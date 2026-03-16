@@ -49,7 +49,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ⬜ | **US-FP-007** | Create and manage combo products | 005 |
 | ⬜ | **US-FP-008** | Manage allergen and dietary information | 005 |
 | ✅ | **US-FP-014** | Define menu categories | 005 |
-| ⬜ | **US-FP-015** | Order products within categories | 014 |
+| ✅ | **US-FP-015** | Order products within categories | 014 |
 
 ### Stream B: Auth & Staff
 
