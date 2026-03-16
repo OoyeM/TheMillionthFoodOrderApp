@@ -18,6 +18,12 @@ export interface Money {
 }
 
 /**
+ * Authentication methods available for staff on a brand's management portal.
+ * Values match the backend StaffAuthMethod enum.
+ */
+export type StaffAuthMethod = 'EmailPassword' | 'GoogleSso' | 'MicrosoftSso';
+
+/**
  * Brand entity as returned by the platform API.
  */
 export interface Brand {
@@ -28,6 +34,7 @@ export interface Brand {
   contactPhone: string | null;
   isActive: boolean;
   databaseName: string;
+  staffAuthMethod: StaffAuthMethod;
   createdAt: string;
   updatedAt: string;
 }

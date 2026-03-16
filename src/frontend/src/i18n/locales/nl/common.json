@@ -22,6 +22,21 @@
       "imageUrl": "Afbeelding URL",
       "noProducts": "Nog geen producten. Maak het eerste product aan."
     },
+    "staffAuth": {
+      "title": "Personeelsauthenticatie",
+      "description": "Kies de authenticatiemethode voor alle medewerkers van dit merk.",
+      "methods": {
+        "EmailPassword": "E-mail en wachtwoord",
+        "GoogleSso": "Google SSO",
+        "MicrosoftSso": "Microsoft SSO"
+      },
+      "confirmTitle": "Authenticatiemethode wijzigen",
+      "changeWarning": "Het wijzigen van de authenticatiemethode is van toepassing op alle medewerkers van dit merk. Wilt u doorgaan?",
+      "confirm": "Wijzigen",
+      "cancel": "Annuleren",
+      "saving": "Opslaan…",
+      "error": "Authenticatiemethode kon niet worden gewijzigd. Probeer opnieuw."
+    },
     "menuCategories": {
       "productsSection": {
         "title": "Producten in deze categorie",

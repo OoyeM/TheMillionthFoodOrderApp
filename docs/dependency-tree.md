@@ -55,13 +55,13 @@ Once brands + shops exist, these streams are **independent of each other**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| 🚧 | **US-FP-003** | Assign brand-level staff auth method | 001 |
+| ✅ | **US-FP-003** | Assign brand-level staff auth method | 001 |
 | 🚧 | **US-FP-037** | Customer registration and login | 001 |
 | 🚧 | **US-FP-032** | Manage staff accounts | 001, 003 |
 | ⬜ | **US-FP-039** | Staff login with configured auth method | 003, 032 |
 
 **Notes:**
-- 003: StaffAuthMethod enum + config method exist; no UI/enforcement
+- 003: Full-stack complete — domain, endpoint, frontend config UI with confirmation dialog and i18n
 - 037: Mock auth complete; real Entra External ID / SSO is TODO
 - 032: BrandUserRole entity + StaffRole enum exist; no endpoints or UI
 

@@ -22,6 +22,21 @@
       "imageUrl": "URL de l'image",
       "noProducts": "Aucun produit. Créez le premier."
     },
+    "staffAuth": {
+      "title": "Authentification du personnel",
+      "description": "Choisissez la méthode d'authentification pour tout le personnel de cette marque.",
+      "methods": {
+        "EmailPassword": "E-mail et mot de passe",
+        "GoogleSso": "Google SSO",
+        "MicrosoftSso": "Microsoft SSO"
+      },
+      "confirmTitle": "Modifier la méthode d'authentification",
+      "changeWarning": "La modification de la méthode d'authentification s'appliquera à tout le personnel de cette marque. Voulez-vous continuer ?",
+      "confirm": "Modifier",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "error": "Impossible de modifier la méthode d'authentification. Veuillez réessayer."
+    },
     "menuCategories": {
       "productsSection": {
         "title": "Produits dans cette catégorie",
