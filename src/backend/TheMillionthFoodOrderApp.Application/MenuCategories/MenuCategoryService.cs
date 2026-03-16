@@ -1,3 +1,4 @@
+using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.Products;
 
@@ -93,13 +94,74 @@ public sealed class MenuCategoryService(
         if (category is null)
             throw new KeyNotFoundException($"Menu category with id '{request.CategoryId}' was not found.");
 
+        // Place new product at the end of the category.
+        // Note: not atomic — concurrent assigns can produce duplicate sort positions (acceptable for MVP, last-write-wins).
+        var maxSortOrder = await productRepository.GetMaxSortOrderInCategoryAsync(request.CategoryId, cancellationToken);
+
         var product = await productRepository.UpdateAsync(
             request.ProductId,
-            p => p.AssignCategory(request.CategoryId),
+            p => p.AssignCategory(request.CategoryId, maxSortOrder + 1),
             cancellationToken);
 
         if (product is null)
             throw new KeyNotFoundException($"Product with id '{request.ProductId}' was not found.");
+    }
+
+    public async Task<IReadOnlyList<ProductListItemResponse>> GetCategoryProductsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken = default)
+    {
+        // Verify category exists before fetching its products
+        var category = await menuCategoryRepository.GetByIdAsync(categoryId, cancellationToken);
+        if (category is null)
+            throw new KeyNotFoundException($"Menu category with id '{categoryId}' was not found.");
+
+        var products = await productRepository.GetByCategoryAsync(categoryId, cancellationToken);
+        return products.Select(MapProductToListItem).ToList().AsReadOnly();
+    }
+
+    public async Task ReorderProductsInCategoryAsync(
+        Guid categoryId,
+        ReorderProductsInCategoryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        // Verify category exists
+        var category = await menuCategoryRepository.GetByIdAsync(categoryId, cancellationToken);
+        if (category is null)
+            throw new KeyNotFoundException($"Menu category with id '{categoryId}' was not found.");
+
+        // Load the products by the provided IDs
+        var products = await productRepository.GetByIdsAsync(request.ProductIds, cancellationToken);
+
+        // Validate all submitted IDs were found in the database
+        var notFound = request.ProductIds
+            .Except(products.Select(p => p.Id))
+            .ToList();
+
+        if (notFound.Count > 0)
+            throw new KeyNotFoundException(
+                $"The following product IDs were not found: {string.Join(", ", notFound)}");
+
+        // Validate all provided product IDs belong to this category
+        var wrongCategory = products
+            .Where(p => p.MenuCategoryId != categoryId)
+            .Select(p => p.Id)
+            .ToList();
+
+        if (wrongCategory.Count > 0)
+            throw new InvalidOperationException(
+                $"The following products do not belong to category '{categoryId}': {string.Join(", ", wrongCategory)}");
+
+        // Index the loaded products by ID for ordered assignment
+        var productMap = products.ToDictionary(p => p.Id);
+
+        for (var i = 0; i < request.ProductIds.Count; i++)
+        {
+            if (productMap.TryGetValue(request.ProductIds[i], out var product))
+                product.ReorderInCategory(i);
+        }
+
+        await productRepository.SaveChangesAsync(cancellationToken);
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -123,4 +185,14 @@ public sealed class MenuCategoryService(
             category.SortOrder,
             productCount,
             category.CreatedAt);
+
+    private static ProductListItemResponse MapProductToListItem(Product product) =>
+        new(
+            product.Id,
+            product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
+            new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
+            product.ImageUrl,
+            product.MenuCategoryId,
+            product.SortOrderInCategory,
+            product.CreatedAt);
 }

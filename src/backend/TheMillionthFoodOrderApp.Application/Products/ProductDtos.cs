@@ -19,6 +19,7 @@ public sealed record ProductResponse(
     MoneyResponse BasePrice,
     string? ImageUrl,
     Guid? MenuCategoryId,
+    int SortOrderInCategory,
     IReadOnlyList<TranslationResponse> Translations,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -29,4 +30,5 @@ public sealed record ProductListItemResponse(
     MoneyResponse BasePrice,
     string? ImageUrl,
     Guid? MenuCategoryId,
+    int SortOrderInCategory,
     DateTimeOffset CreatedAt);

@@ -38,7 +38,7 @@ Mock auth is enabled by default in dev — no external services needed. Visit `/
 - **Platform > Brand > Shop** hierarchy with database-per-brand isolation
 - Brands define product catalog, pricing, theming; shops inherit and can customize (with approval)
 - Products: simple, with modifiers, or combos — all support 14 EU allergens and dietary tags
-- Menu categories: brand-scoped, multilingual, ordered — products assigned to at most one category
+- Menu categories: brand-scoped, multilingual, ordered — products assigned to at most one category with configurable display order within each category
 - Orders: online + in-store channels, configurable lifecycle per shop
 - Belgian market: VAT (6% takeaway / 21% eat-in), languages (NL, FR, DE)
 

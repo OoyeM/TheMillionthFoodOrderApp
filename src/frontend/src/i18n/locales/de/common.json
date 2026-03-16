@@ -21,6 +21,23 @@
       "basePrice": "Grundpreis",
       "imageUrl": "Bild-URL",
       "noProducts": "Noch keine Produkte. Erstellen Sie das erste."
+    },
+    "menuCategories": {
+      "productsSection": {
+        "title": "Produkte in dieser Kategorie",
+        "loading": "Produkte werden geladen…",
+        "loadError": "Produkte konnten nicht geladen werden.",
+        "empty": "Keine Produkte in dieser Kategorie.",
+        "position": "#",
+        "productName": "Name",
+        "basePrice": "Grundpreis",
+        "order": "Reihenfolge",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "saveOrder": "Reihenfolge speichern",
+        "savingOrder": "Wird gespeichert…",
+        "saveOrderError": "Reihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
+      }
     }
   }
 }

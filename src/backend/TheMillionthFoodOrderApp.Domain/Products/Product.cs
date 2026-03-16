@@ -14,6 +14,12 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     /// </summary>
     public Guid? MenuCategoryId { get; private set; }
 
+    /// <summary>
+    /// Display position of this product within its category. 0-based, ascending.
+    /// Defaults to 0 for uncategorised products; assigned sequentially when added to a category.
+    /// </summary>
+    public int SortOrderInCategory { get; private set; }
+
     public bool IsDeleted { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
 
@@ -46,6 +52,7 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
             BasePrice = basePrice,
             ImageUrl = imageUrl,
             IsDeleted = false,
+            SortOrderInCategory = 0,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -86,20 +93,32 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     }
 
     /// <summary>
-    /// Assigns this product to the specified menu category.
+    /// Assigns this product to the specified menu category at the given sort position.
     /// </summary>
-    public void AssignCategory(Guid menuCategoryId)
+    public void AssignCategory(Guid menuCategoryId, int sortOrder)
     {
         MenuCategoryId = menuCategoryId;
+        SortOrderInCategory = sortOrder;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
     /// Removes this product from its current menu category (makes it uncategorised).
+    /// Resets <see cref="SortOrderInCategory"/> to 0.
     /// </summary>
     public void RemoveCategory()
     {
         MenuCategoryId = null;
+        SortOrderInCategory = 0;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates this product's display position within its current category.
+    /// </summary>
+    public void ReorderInCategory(int sortOrder)
+    {
+        SortOrderInCategory = sortOrder;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

@@ -14,6 +14,8 @@ public sealed record ReorderMenuCategoryRequest(int SortOrder);
 
 public sealed record AssignProductCategoryRequest(Guid ProductId, Guid CategoryId);
 
+public sealed record ReorderProductsInCategoryRequest(IReadOnlyList<Guid> ProductIds);
+
 public sealed record MenuCategoryTranslationRequest(string LanguageCode, string Name, string? Description);
 
 public sealed record MenuCategoryTranslationResponse(string LanguageCode, string Name, string? Description);

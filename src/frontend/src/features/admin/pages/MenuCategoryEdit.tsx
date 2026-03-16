@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   useMenuCategory,
   useUpdateMenuCategory,
   useDeleteMenuCategory,
+  useCategoryProducts,
+  useReorderCategoryProducts,
 } from '../hooks/useMenuCategories';
-import type { SupportedLocale } from '../../../types/common';
+import type { ProductListItem, SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -40,6 +43,7 @@ interface FormErrors {
 
 export function MenuCategoryEdit() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { brandSlug, lang, categoryId } = useParams<{
     brandSlug: string;
     lang: string;
@@ -58,12 +62,33 @@ export function MenuCategoryEdit() {
   const updateCategory = useUpdateMenuCategory(resolvedBrandSlug, resolvedCategoryId);
   const deleteCategory = useDeleteMenuCategory(resolvedBrandSlug);
 
+  const {
+    data: categoryProducts,
+    isLoading: isLoadingProducts,
+    isError: isErrorProducts,
+  } = useCategoryProducts(resolvedBrandSlug, resolvedCategoryId);
+  const reorderProducts = useReorderCategoryProducts(resolvedBrandSlug, resolvedCategoryId);
+
   const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
   const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
   const [sortOrder, setSortOrder] = useState('0');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [formInitialized, setFormInitialized] = useState(false);
+
+  // Local ordered list of products — populated from server data, then mutated by move up/down
+  const [orderedProducts, setOrderedProducts] = useState<ProductListItem[]>([]);
+  const [productOrderDirty, setProductOrderDirty] = useState(false);
+
+  // Sync orderedProducts when server data arrives (and when not dirty)
+  useEffect(() => {
+    if (categoryProducts !== undefined && !productOrderDirty) {
+      const sorted = [...categoryProducts].sort(
+        (a, b) => a.sortOrderInCategory - b.sortOrderInCategory,
+      );
+      setOrderedProducts(sorted);
+    }
+  }, [categoryProducts, productOrderDirty]);
 
   // Populate form when category data arrives
   useEffect(() => {
@@ -87,6 +112,32 @@ export function MenuCategoryEdit() {
       ...prev,
       [locale]: { name: value },
     }));
+  }
+
+  function moveProduct(index: number, direction: 'up' | 'down') {
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= orderedProducts.length) return;
+    const next = [...orderedProducts];
+    // Bounds are validated above; non-null assertions are safe here.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const a = next[index]!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const b = next[swapIndex]!;
+    next[index] = b;
+    next[swapIndex] = a;
+    setOrderedProducts(next);
+    setProductOrderDirty(true);
+  }
+
+  function handleSaveOrder() {
+    reorderProducts.mutate(
+      orderedProducts.map((p) => p.id),
+      {
+        onSuccess: () => {
+          setProductOrderDirty(false);
+        },
+      },
+    );
   }
 
   function validate(): FormErrors {
@@ -192,7 +243,7 @@ export function MenuCategoryEdit() {
   // ---------------------------------------------------------------------------
 
   return (
-    <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
+    <main style={{ padding: '1.5rem', maxWidth: '48rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         Edit Menu Category
       </h1>
@@ -351,6 +402,143 @@ export function MenuCategoryEdit() {
           </button>
         </div>
       </form>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Products in this Category                                          */}
+      {/* ----------------------------------------------------------------- */}
+      <section style={{ marginTop: '2.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}
+        >
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
+            {t('admin.menuCategories.productsSection.title')}
+          </h2>
+          {productOrderDirty && (
+            <button
+              type="button"
+              onClick={handleSaveOrder}
+              disabled={reorderProducts.isPending}
+              style={{
+                padding: '0.375rem 1rem',
+                background: '#111827',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: reorderProducts.isPending ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                opacity: reorderProducts.isPending ? 0.6 : 1,
+              }}
+            >
+              {reorderProducts.isPending
+                ? t('admin.menuCategories.productsSection.savingOrder')
+                : t('admin.menuCategories.productsSection.saveOrder')}
+            </button>
+          )}
+        </div>
+
+        {reorderProducts.isError && (
+          <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+            {reorderProducts.error instanceof Error
+              ? reorderProducts.error.message
+              : t('admin.menuCategories.productsSection.saveOrderError')}
+          </p>
+        )}
+
+        {isLoadingProducts && (
+          <p style={{ color: '#6b7280' }}>
+            {t('admin.menuCategories.productsSection.loading')}
+          </p>
+        )}
+
+        {isErrorProducts && (
+          <p style={{ color: '#dc2626' }}>
+            {t('admin.menuCategories.productsSection.loadError')}
+          </p>
+        )}
+
+        {!isLoadingProducts && !isErrorProducts && orderedProducts.length === 0 && (
+          <p style={{ color: '#6b7280' }}>
+            {t('admin.menuCategories.productsSection.empty')}
+          </p>
+        )}
+
+        {!isLoadingProducts && !isErrorProducts && orderedProducts.length > 0 && (
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '0.9rem',
+            }}
+          >
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
+                <th style={{ padding: '0.5rem 0.75rem', fontWeight: 600, width: '3rem' }}>
+                  {t('admin.menuCategories.productsSection.position')}
+                </th>
+                <th style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>
+                  {t('admin.menuCategories.productsSection.productName')}
+                </th>
+                <th style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>
+                  {t('admin.menuCategories.productsSection.basePrice')}
+                </th>
+                <th style={{ padding: '0.5rem 0.75rem', fontWeight: 600, width: '6rem' }}>
+                  {t('admin.menuCategories.productsSection.order')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderedProducts.map((product, index) => (
+                <tr
+                  key={product.id}
+                  style={{ borderBottom: '1px solid #e5e7eb' }}
+                >
+                  <td
+                    style={{
+                      padding: '0.75rem',
+                      color: '#6b7280',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {index + 1}
+                  </td>
+                  <td style={{ padding: '0.75rem' }}>{product.name}</td>
+                  <td style={{ padding: '0.75rem', fontFamily: 'monospace' }}>
+                    {'\u20AC'} {product.basePrice.amount.toFixed(2)}
+                  </td>
+                  <td style={{ padding: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => moveProduct(index, 'up')}
+                        disabled={index === 0}
+                        aria-label={t('admin.menuCategories.productsSection.moveUp')}
+                        style={moveButtonStyle(index === 0)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveProduct(index, 'down')}
+                        disabled={index === orderedProducts.length - 1}
+                        aria-label={t('admin.menuCategories.productsSection.moveDown')}
+                        style={moveButtonStyle(index === orderedProducts.length - 1)}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </main>
   );
 }
@@ -383,6 +571,19 @@ function inputStyle(hasError: boolean): React.CSSProperties {
     borderRadius: '0.375rem',
     fontSize: '1rem',
     boxSizing: 'border-box',
+  };
+}
+
+function moveButtonStyle(disabled: boolean): React.CSSProperties {
+  return {
+    padding: '0.25rem 0.5rem',
+    fontSize: '0.875rem',
+    background: '#fff',
+    border: '1px solid #d1d5db',
+    borderRadius: '0.25rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.3 : 1,
+    lineHeight: 1,
   };
 }
 
