@@ -38,7 +38,7 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
         var now = DateTimeOffset.UtcNow;
         var shop = new Shop
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             Name = name,
             Slug = slug,
             Address = address,

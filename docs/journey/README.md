@@ -15,3 +15,6 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 007 | 2026-03-15 | [Infrastructure & auth wiring](./007-infrastructure-auth-wiring.md) |
 | 008 | 2026-03-15 | [Startup & DI fixes](./008-startup-fixes.md) |
 | 009 | 2026-03-15 | [Dependency tree & parallel development plan](./009-dependency-tree.md) |
+| 010 | 2026-03-15 | [US-FP-004: Data isolation between brands](./010-data-isolation.md) |
+| 010 | 2026-03-15 | [US-FP-002: Shop management (full stack)](./010-shop-management.md) |
+| 011 | 2026-03-15 | [Startup seeding fix & UUIDv7 migration](./011-startup-seeding-and-guidv7.md) |

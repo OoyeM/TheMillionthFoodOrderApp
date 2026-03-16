@@ -37,7 +37,7 @@ public sealed class Brand : AggregateRoot<Guid>, IAuditable
         var now = DateTimeOffset.UtcNow;
         var brand = new Brand
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             Name = name,
             Slug = slug,
             ContactEmail = contactEmail,

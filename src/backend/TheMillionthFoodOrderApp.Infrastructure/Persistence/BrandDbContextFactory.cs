@@ -27,12 +27,24 @@ public sealed class BrandDbContextFactory(
     /// Thrown when no brand slug is set in the current context or the platform connection
     /// string is not configured.
     /// </exception>
+    /// <summary>
+    /// Creates a brand-scoped <see cref="BrandDbContext"/> for the current request's brand.
+    /// When no brand slug is set (e.g. during startup when FastEndpoints builds the route map),
+    /// returns a placeholder context that will throw on actual database access.
+    /// </summary>
     public BrandDbContext CreateDbContext()
     {
-        var slug = brandContextAccessor.BrandSlug
-            ?? throw new InvalidOperationException(
-                "No brand context is active for this request. " +
-                "Ensure the BrandContextMiddleware is registered and the request includes a brand identifier.");
+        var slug = brandContextAccessor.BrandSlug;
+
+        if (slug is null)
+        {
+            // Startup resolution — FastEndpoints instantiates endpoints to discover routes.
+            // Return a context that satisfies DI but will fail loudly if actually queried.
+            var placeholder = new DbContextOptionsBuilder<BrandDbContext>()
+                .UseSqlServer("Server=placeholder;Database=placeholder")
+                .Options;
+            return new BrandDbContext(placeholder);
+        }
 
         var platformConnectionString = configuration.GetConnectionString("platform")
             ?? throw new InvalidOperationException(

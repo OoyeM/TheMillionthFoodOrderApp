@@ -1,0 +1,125 @@
+{
+  "realm": "themillionfoodorderapp",
+  "enabled": true,
+  "_comment_ssl": "DEV ONLY — production realms MUST use 'external' or 'all'",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 86400,
+  "roles": {
+    "realm": [
+      {
+        "name": "PlatformAdmin",
+        "description": "Full platform access across all brands",
+        "composite": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "bff-client",
+      "name": "TheMillionthFoodOrderApp BFF",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "_comment_secret": "DEV ONLY — rotate before any non-local deployment",
+      "secret": "dev-secret-do-not-use-in-production",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5261/signin-oidc"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5261/signout-callback-oidc"
+      },
+      "webOrigins": [
+        "http://localhost:5261",
+        "http://localhost:5173"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "_comment_fullScope": "Production: set to false and assign explicit client scopes",
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "username": "platform-admin",
+      "email": "platform-admin@mock.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Platform",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "P@ssw0rd!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "PlatformAdmin"
+      ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "username": "brand-admin-frietjes",
+      "email": "brand-admin@frietjes.mock.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Brand Admin",
+      "lastName": "(Frietjes)",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "P@ssw0rd!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": []
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "username": "counter-staff-frietjes",
+      "email": "counter-staff@frietjes.mock.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Counter Staff",
+      "lastName": "(Frietjes)",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "P@ssw0rd!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": []
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "username": "customer",
+      "email": "customer@mock.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Customer",
+      "lastName": "",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "P@ssw0rd!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": []
+    }
+  ]
+}

@@ -3,15 +3,15 @@ using TheMillionthFoodOrderApp.Domain.Common;
 namespace TheMillionthFoodOrderApp.Domain.Identity;
 
 /// <summary>
-/// Aggregate root representing a user provisioned from Azure Entra External ID.
-/// Each user is uniquely identified by their Entra object ID (the 'sub' claim).
+/// Aggregate root representing a user provisioned from an external identity provider.
+/// Each user is uniquely identified by their external identity ID (the 'sub' claim).
 /// Platform-level role assignments are stored directly on this entity;
 /// brand/shop-scoped assignments live in <see cref="BrandUserRole"/>.
 /// </summary>
 public sealed class PlatformUser : AggregateRoot<Guid>, IAuditable
 {
-    /// <summary>The Azure Entra External ID object ID (the 'sub' / 'oid' claim). Unique across the platform.</summary>
-    public string EntraObjectId { get; private set; } = string.Empty;
+    /// <summary>External identity provider subject ID (the 'sub' claim). Unique across the platform.</summary>
+    public string ExternalIdentityId { get; private set; } = string.Empty;
 
     public string Email { get; private set; } = string.Empty;
 
@@ -28,10 +28,10 @@ public sealed class PlatformUser : AggregateRoot<Guid>, IAuditable
 
     /// <summary>
     /// Factory method — the only way to create a valid PlatformUser.
-    /// Called during first-time provisioning after successful Entra authentication.
+    /// Called during first-time provisioning after successful authentication.
     /// </summary>
     public static PlatformUser Create(
-        string entraObjectId,
+        string externalIdentityId,
         string email,
         string displayName,
         bool isPlatformAdmin = false)
@@ -40,8 +40,8 @@ public sealed class PlatformUser : AggregateRoot<Guid>, IAuditable
 
         return new PlatformUser
         {
-            Id = Guid.NewGuid(),
-            EntraObjectId = entraObjectId,
+            Id = Guid.CreateVersion7(),
+            ExternalIdentityId = externalIdentityId,
             Email = email,
             DisplayName = displayName,
             IsPlatformAdmin = isPlatformAdmin,
@@ -50,7 +50,7 @@ public sealed class PlatformUser : AggregateRoot<Guid>, IAuditable
         };
     }
 
-    /// <summary>Synchronises mutable profile data from the Entra token claims.</summary>
+    /// <summary>Synchronises mutable profile data from identity provider token claims.</summary>
     public void UpdateProfile(string email, string displayName)
     {
         Email = email;

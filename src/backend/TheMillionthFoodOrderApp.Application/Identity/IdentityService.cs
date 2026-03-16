@@ -5,24 +5,30 @@ namespace TheMillionthFoodOrderApp.Application.Identity;
 public sealed class IdentityService(IPlatformUserRepository userRepository) : IIdentityService
 {
     public async Task<PlatformUser> ProvisionUserAsync(
-        string entraObjectId,
+        string externalIdentityId,
         string email,
         string displayName,
         CancellationToken cancellationToken = default)
     {
-        var existing = await userRepository.GetByEntraObjectIdAsync(entraObjectId, cancellationToken);
+        var existing = await userRepository.GetByExternalIdentityIdAsync(externalIdentityId, cancellationToken);
 
         if (existing is not null)
         {
-            // Synchronise mutable claims that may have changed in Entra
+            // Synchronise mutable claims that may have changed in the identity provider
             existing.UpdateProfile(email, displayName);
             await userRepository.SaveChangesAsync(cancellationToken);
             return existing;
         }
 
-        var user = PlatformUser.Create(entraObjectId, email, displayName);
-        await userRepository.AddAsync(user, cancellationToken);
-        await userRepository.SaveChangesAsync(cancellationToken);
+        var newUser = PlatformUser.Create(externalIdentityId, email, displayName);
+        var (user, wasCreated) = await userRepository.AddOrGetExistingAsync(newUser, cancellationToken);
+
+        if (!wasCreated)
+        {
+            // Concurrent insert won — still synchronise the profile
+            user.UpdateProfile(email, displayName);
+            await userRepository.SaveChangesAsync(cancellationToken);
+        }
 
         return user;
     }
@@ -35,9 +41,19 @@ public sealed class IdentityService(IPlatformUserRepository userRepository) : II
         if (user is null)
             return null;
 
-        var roles = await userRepository.GetRolesForUserAsync(platformUserId, cancellationToken);
+        var rolesWithSlugs = await userRepository.GetRolesWithBrandSlugsAsync(platformUserId, cancellationToken);
+        var roleDtos = rolesWithSlugs
+            .Select(r => new RoleAssignmentDto(r.Role.BrandId, r.BrandSlug, r.Role.ShopId, r.Role.Role))
+            .ToList();
 
-        return MapToDto(user, roles);
+        return new UserWithRolesDto(
+            user.Id,
+            user.ExternalIdentityId,
+            user.Email,
+            user.DisplayName,
+            user.IsPlatformAdmin,
+            user.CreatedAt,
+            roleDtos);
     }
 
     public async Task AssignRoleAsync(
@@ -93,10 +109,21 @@ public sealed class IdentityService(IPlatformUserRepository userRepository) : II
     {
         var usersWithRoles = await userRepository.GetUsersByBrandAsync(brandId, cancellationToken);
 
-        return usersWithRoles
-            .Select(entry => MapToDto(entry.User, entry.Roles))
-            .ToList()
-            .AsReadOnly();
+        var result = new List<UserWithRolesDto>();
+        foreach (var (user, roles) in usersWithRoles)
+        {
+            // For brand staff listing, we already know the brand — fetch slugs for full DTO
+            var rolesWithSlugs = await userRepository.GetRolesWithBrandSlugsAsync(user.Id, cancellationToken);
+            var roleDtos = rolesWithSlugs
+                .Select(r => new RoleAssignmentDto(r.Role.BrandId, r.BrandSlug, r.Role.ShopId, r.Role.Role))
+                .ToList();
+
+            result.Add(new UserWithRolesDto(
+                user.Id, user.ExternalIdentityId, user.Email, user.DisplayName,
+                user.IsPlatformAdmin, user.CreatedAt, roleDtos));
+        }
+
+        return result.AsReadOnly();
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -109,14 +136,4 @@ public sealed class IdentityService(IPlatformUserRepository userRepository) : II
 
         return user;
     }
-
-    private static UserWithRolesDto MapToDto(PlatformUser user, IReadOnlyList<BrandUserRole> roles) =>
-        new(
-            user.Id,
-            user.EntraObjectId,
-            user.Email,
-            user.DisplayName,
-            user.IsPlatformAdmin,
-            user.CreatedAt,
-            roles);
 }

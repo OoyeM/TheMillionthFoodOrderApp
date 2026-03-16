@@ -12,7 +12,7 @@ public interface IIdentityService
     /// If the user already exists, their email and display name are synchronised from the latest token.
     /// </summary>
     Task<PlatformUser> ProvisionUserAsync(
-        string entraObjectId,
+        string externalIdentityId,
         string email,
         string displayName,
         CancellationToken cancellationToken = default);
@@ -60,9 +60,18 @@ public interface IIdentityService
 /// </summary>
 public sealed record UserWithRolesDto(
     Guid Id,
-    string EntraObjectId,
+    string ExternalIdentityId,
     string Email,
     string DisplayName,
     bool IsPlatformAdmin,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<BrandUserRole> Roles);
+    IReadOnlyList<RoleAssignmentDto> Roles);
+
+/// <summary>
+/// Role assignment with the brand slug resolved (for claims enrichment).
+/// </summary>
+public sealed record RoleAssignmentDto(
+    Guid BrandId,
+    string BrandSlug,
+    Guid? ShopId,
+    StaffRole Role);

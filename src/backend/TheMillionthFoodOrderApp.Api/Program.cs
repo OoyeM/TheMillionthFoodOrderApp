@@ -20,12 +20,14 @@ builder.Services.AddInfrastructure();
 
 // ---------------------------------------------------------------------------
 // Authentication
-// Dev: no-op pass-through so endpoints work without Azure subscription.
-// Prod: JWT bearer validation against Entra External ID (TODO: wire when ready).
-// The middleware (UseAuthentication/UseAuthorization) is always in the pipeline
-// so adding a real scheme later doesn't require pipeline changes.
+// Dev: no-op pass-through so endpoints work without identity provider.
+// Prod: JWT bearer validation against Keycloak-issued tokens.
+// Toggle: set Authentication:UseDevPassThrough=false to use real JWT validation.
 // ---------------------------------------------------------------------------
-if (builder.Environment.IsDevelopment())
+var useDevPassThrough = builder.Environment.IsDevelopment() &&
+    builder.Configuration.GetValue<bool>("Authentication:UseDevPassThrough", true);
+
+if (useDevPassThrough)
 {
     builder.Services.AddAuthentication("DevPassThrough")
         .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
@@ -33,8 +35,16 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    // TODO: register JWT bearer scheme for Entra External ID
-    builder.Services.AddAuthentication();
+    builder.Services.AddAuthentication("Bearer")
+        .AddJwtBearer("Bearer", options =>
+        {
+            options.Authority = builder.Configuration["Authentication:Keycloak:Authority"];
+            options.Audience = builder.Configuration["Authentication:Keycloak:Audience"];
+            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+
+            options.MapInboundClaims = false;
+            options.TokenValidationParameters.NameClaimType = "preferred_username";
+        });
 }
 
 builder.Services.AddAuthorization();
@@ -71,6 +81,16 @@ await using (var scope = app.Services.CreateAsyncScope())
     {
         var platformSeeder = scope.ServiceProvider.GetRequiredService<PlatformDbSeeder>();
         await platformSeeder.SeedAsync();
+
+        // Provision the brand database before seeding — in production this happens
+        // asynchronously via Wolverine when BrandCreatedEvent is raised, but during
+        // startup seeding Wolverine hasn't started processing messages yet.
+        var brandProvisioner = new BrandDatabaseProvisioner(
+            scope.ServiceProvider.GetRequiredService<IConfiguration>(),
+            scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<BrandDatabaseProvisioner>());
+        await brandProvisioner.HandleAsync(
+            new TheMillionthFoodOrderApp.Domain.Brands.BrandCreatedEvent(Guid.Empty, "Frietjes?", "frietjes"),
+            CancellationToken.None);
 
         // Seed the Frietjes? brand database.
         // We manually set the brand slug on the scoped accessor so BrandDbContextFactory

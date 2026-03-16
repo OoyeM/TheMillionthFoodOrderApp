@@ -5,8 +5,8 @@ namespace TheMillionthFoodOrderApp.Domain.Identity;
 /// </summary>
 public interface IPlatformUserRepository
 {
-    /// <summary>Looks up a user by their Entra External ID object ID (the 'sub' / 'oid' claim).</summary>
-    Task<PlatformUser?> GetByEntraObjectIdAsync(string entraObjectId, CancellationToken cancellationToken = default);
+    /// <summary>Looks up a user by their external identity provider subject ID (the 'sub' claim).</summary>
+    Task<PlatformUser?> GetByExternalIdentityIdAsync(string externalIdentityId, CancellationToken cancellationToken = default);
 
     /// <summary>Looks up a user by their internal platform ID.</summary>
     Task<PlatformUser?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -14,8 +14,17 @@ public interface IPlatformUserRepository
     /// <summary>Persists a newly created user.</summary>
     Task AddAsync(PlatformUser user, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Attempts to add a new user. If a unique constraint violation occurs (concurrent insert),
+    /// returns the existing row instead.
+    /// </summary>
+    Task<(PlatformUser User, bool WasCreated)> AddOrGetExistingAsync(PlatformUser user, CancellationToken cancellationToken = default);
+
     /// <summary>Returns all <see cref="BrandUserRole"/> records for the given user.</summary>
     Task<IReadOnlyList<BrandUserRole>> GetRolesForUserAsync(Guid platformUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns role assignments for a user together with brand slugs (joined from Brands).</summary>
+    Task<IReadOnlyList<(BrandUserRole Role, string BrandSlug)>> GetRolesWithBrandSlugsAsync(Guid platformUserId, CancellationToken cancellationToken = default);
 
     /// <summary>Returns all users (with roles) who hold at least one role within the given brand.</summary>
     Task<IReadOnlyList<(PlatformUser User, IReadOnlyList<BrandUserRole> Roles)>> GetUsersByBrandAsync(Guid brandId, CancellationToken cancellationToken = default);

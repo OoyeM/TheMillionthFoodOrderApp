@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using TheMillionthFoodOrderApp.Application;
 using TheMillionthFoodOrderApp.Bff.Auth;
 using TheMillionthFoodOrderApp.Bff.Endpoints;
+using TheMillionthFoodOrderApp.Infrastructure;
+using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
 using TheMillionthFoodOrderApp.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +51,56 @@ if (useMockAuth)
 {
     authBuilder.AddScheme<AuthenticationSchemeOptions, MockAuthHandler>(
         AuthConstants.Schemes.Mock, _ => { });
+}
+else
+{
+    // Real OIDC via Keycloak (or any OIDC provider)
+    authBuilder.AddOpenIdConnect(AuthConstants.Schemes.Oidc, options =>
+    {
+        options.Authority = builder.Configuration["Authentication:Keycloak:Authority"];
+        options.ClientId = builder.Configuration["Authentication:Keycloak:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Keycloak:ClientSecret"];
+        options.ResponseType = "code";
+        // PKCE is enabled even though this is a confidential client (with client_secret).
+        // Defense-in-depth per OAuth 2.1: PKCE recommended for ALL clients.
+        options.UsePkce = true;
+        options.SaveTokens = true;
+        options.GetClaimsFromUserInfoEndpoint = true;
+        options.SignInScheme = AuthConstants.Schemes.Cookie;
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters.NameClaimType = "preferred_username";
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.RequireHttpsMetadata = false;
+        }
+
+        options.Events = new OpenIdConnectEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var enrichmentService = context.HttpContext.RequestServices
+                    .GetRequiredService<ClaimsEnrichmentService>();
+                await enrichmentService.EnrichClaimsAsync(context);
+            }
+        };
+    });
+
+    // Claims enrichment requires Application + Infrastructure layers
+    builder.Services.AddScoped<ClaimsEnrichmentService>();
+    builder.Services.AddInfrastructure();
+    builder.Services.AddApplication();
+    builder.AddSqlServerDbContext<PlatformDbContext>("platform",
+        configureDbContextOptions: options =>
+        {
+            options.AddInterceptors(new AuditSaveChangesInterceptor());
+        });
 }
 
 // ---------------------------------------------------------------------------
@@ -107,11 +162,18 @@ app.MapBffEndpoints();
 // Forward /api/** to the upstream API via YARP
 app.MapReverseProxy(proxyPipeline =>
 {
-    // Forward X-Brand-Slug header from the incoming request
+    // Forward X-Brand-Slug header and access token
     proxyPipeline.Use(async (context, next) =>
     {
         if (context.Request.Headers.TryGetValue("X-Brand-Slug", out var brandSlug))
             context.Request.Headers["X-Brand-Slug"] = brandSlug;
+
+        // Forward access token as Bearer header (stored by SaveTokens=true)
+        var accessToken = await context.GetTokenAsync("access_token");
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            context.Request.Headers.Authorization = $"Bearer {accessToken}";
+        }
 
         await next();
     });
