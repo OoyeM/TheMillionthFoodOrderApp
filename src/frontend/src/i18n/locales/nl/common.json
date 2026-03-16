@@ -9,6 +9,18 @@
     "description": "Kassasysteem voor in de winkel."
   },
   "admin": {
-    "description": "Beheer merken, winkels, producten en bestellingen."
+    "description": "Beheer merken, winkels, producten en bestellingen.",
+    "products": {
+      "title": "Producten",
+      "create": "Product aanmaken",
+      "edit": "Product bewerken",
+      "delete": "Verwijderen",
+      "confirmDelete": "\"{{name}}\" verwijderen? Dit product wordt verborgen voor klanten.",
+      "name": "Naam",
+      "description": "Beschrijving",
+      "basePrice": "Basisprijs",
+      "imageUrl": "Afbeelding URL",
+      "noProducts": "Nog geen producten. Maak het eerste product aan."
+    }
   }
 }

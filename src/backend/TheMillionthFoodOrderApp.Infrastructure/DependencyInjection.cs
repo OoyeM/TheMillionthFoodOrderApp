@@ -4,6 +4,7 @@ using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Domain.Brands;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.Identity;
+using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
@@ -12,6 +13,7 @@ using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
+using TheMillionthFoodOrderApp.Infrastructure.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Shops;
 
 namespace TheMillionthFoodOrderApp.Infrastructure;
@@ -48,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IPlatformUserRepository, PlatformUserRepository>();
         services.AddScoped<IShopRepository, ShopRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IBrandSettingsRepository, BrandSettingsRepository>();
 
         // Seeders (scoped — they depend on scoped DbContext)

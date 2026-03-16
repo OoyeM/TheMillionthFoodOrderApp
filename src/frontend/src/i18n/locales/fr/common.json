@@ -9,6 +9,18 @@
     "description": "Système de caisse en magasin."
   },
   "admin": {
-    "description": "Gérez les marques, boutiques, produits et commandes."
+    "description": "Gérez les marques, boutiques, produits et commandes.",
+    "products": {
+      "title": "Produits",
+      "create": "Créer un produit",
+      "edit": "Modifier le produit",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer \"{{name}}\" ? Ce produit sera masqué pour les clients.",
+      "name": "Nom",
+      "description": "Description",
+      "basePrice": "Prix de base",
+      "imageUrl": "URL de l'image",
+      "noProducts": "Aucun produit. Créez le premier."
+    }
   }
 }
