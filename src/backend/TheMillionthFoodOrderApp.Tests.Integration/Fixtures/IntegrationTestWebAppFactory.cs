@@ -34,11 +34,31 @@ public sealed class IntegrationTestWebAppFactory(string platformConnectionString
 
         builder.ConfigureServices(services =>
         {
-            // Remove the Aspire-registered PlatformDbContext (pooled, with Aspire health checks)
-            // and replace with a standard EF Core registration pointing at the test container.
+            // Remove ALL Aspire-registered PlatformDbContext infrastructure.
+            // Aspire's AddSqlServerDbContext registers a pooled context with multiple
+            // service descriptors (DbContextOptions, pooled factory, the context itself).
+            // We must remove every descriptor whose service or implementation type
+            // references PlatformDbContext, then re-register as a standard DbContext.
             services.RemoveAll<DbContextOptions<PlatformDbContext>>();
             services.RemoveAll<PlatformDbContext>();
 
+            // Remove pooled context registrations that Aspire adds internally.
+            // These are generic types (IDbContextPool<T>, IDbContextFactory<T>) that
+            // we can't reference directly since IDbContextPool is internal to EF Core.
+            for (var i = services.Count - 1; i >= 0; i--)
+            {
+                var descriptor = services[i];
+                var serviceType = descriptor.ServiceType;
+
+                if (serviceType.IsGenericType &&
+                    serviceType.GenericTypeArguments.Length == 1 &&
+                    serviceType.GenericTypeArguments[0] == typeof(PlatformDbContext))
+                {
+                    services.RemoveAt(i);
+                }
+            }
+
+            // Re-register as a standard (non-pooled) DbContext pointing at the test container.
             services.AddDbContext<PlatformDbContext>((sp, options) =>
             {
                 options.UseSqlServer(platformConnectionString);

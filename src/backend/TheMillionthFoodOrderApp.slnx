@@ -7,4 +7,5 @@
   <Project Path="TheMillionthFoodOrderApp.Infrastructure/TheMillionthFoodOrderApp.Infrastructure.csproj" />
   <Project Path="TheMillionthFoodOrderApp.ServiceDefaults/TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
   <Project Path="TheMillionthFoodOrderApp.Tests.Integration/TheMillionthFoodOrderApp.Tests.Integration.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Tests.Unit/TheMillionthFoodOrderApp.Tests.Unit.csproj" />
 </Solution>

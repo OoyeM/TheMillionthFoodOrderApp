@@ -90,7 +90,7 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 
 ## Testing
 
-- xUnit + FluentAssertions, integration tests hit a real database (not mocks)
+- xUnit + Shouldly (assertions), integration tests hit a real database (not mocks)
 - **Testcontainers.MsSql** for integration tests — spins up SQL Server in Docker automatically
 - `IntegrationTestWebAppFactory` replaces Aspire's pooled PlatformDbContext with a standard registration pointing at the test container
 - `IntegrationTestBase` provisions multiple brand databases (alpha, beta, gamma) on the same container to verify cross-brand isolation
