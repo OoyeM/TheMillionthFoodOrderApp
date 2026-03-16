@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Brand } from '../types/common';
+import type { Brand, StaffAuthMethod } from '../types/common';
 
 export interface CreateBrandRequest {
   name: string;
@@ -36,4 +36,15 @@ export const brandsApi = {
 
   activate: (id: string): Promise<void> =>
     apiClient.post<void>(`/brands/${id}/activate`).then(() => undefined),
+
+  configureStaffAuth: (slug: string, method: StaffAuthMethod): Promise<Brand> => {
+    const methodMap: Record<StaffAuthMethod, number> = {
+      EmailPassword: 0,
+      GoogleSso: 1,
+      MicrosoftSso: 2,
+    };
+    return apiClient
+      .put<Brand>(`/brands/${slug}/staff-auth`, { method: methodMap[method] })
+      .then((r) => r.data);
+  },
 };

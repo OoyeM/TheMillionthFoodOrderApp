@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useBrand, useUpdateBrand } from '../hooks/useBrands';
+import { useTranslation } from 'react-i18next';
+import { useBrand, useUpdateBrand, useConfigureStaffAuth } from '../hooks/useBrands';
+import type { StaffAuthMethod } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Validation helpers
@@ -28,14 +30,17 @@ export function BrandEdit() {
   // brandId is guaranteed by the route definition; guard for type safety
   const resolvedBrandId = brandId ?? '';
 
+  const { t } = useTranslation();
   const { data: brand, isLoading, isError, error } = useBrand(resolvedBrandId);
   const updateBrand = useUpdateBrand(resolvedBrandId);
+  const configureStaffAuth = useConfigureStaffAuth(resolvedBrandId, brand?.slug ?? '');
 
   const [name, setName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [formInitialized, setFormInitialized] = useState(false);
+  const [pendingAuthMethod, setPendingAuthMethod] = useState<StaffAuthMethod | null>(null);
 
   // Populate form when brand data arrives
   useEffect(() => {
@@ -89,6 +94,35 @@ export function BrandEdit() {
   function handleCancel() {
     navigate(`/${brandSlug}/${lang}/admin/brands`);
   }
+
+  function handleAuthMethodChange(method: StaffAuthMethod) {
+    if (brand && method !== brand.staffAuthMethod) {
+      configureStaffAuth.reset();
+      setPendingAuthMethod(method);
+    }
+  }
+
+  function confirmAuthMethodChange() {
+    if (pendingAuthMethod) {
+      configureStaffAuth.mutate(pendingAuthMethod, {
+        onSuccess: () => setPendingAuthMethod(null),
+      });
+    }
+  }
+
+  const cancelAuthMethodChange = useCallback(() => {
+    setPendingAuthMethod(null);
+  }, []);
+
+  // Close confirmation dialog on Escape key
+  useEffect(() => {
+    if (pendingAuthMethod === null) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') cancelAuthMethodChange();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [pendingAuthMethod, cancelAuthMethodChange]);
 
   // ---------------------------------------------------------------------------
   // Loading / error states
@@ -219,6 +253,112 @@ export function BrandEdit() {
             style={inputStyle(false)}
           />
         </div>
+
+        {/* Staff Authentication Method */}
+        <fieldset style={{ border: '1px solid #e5e7eb', borderRadius: '0.375rem', padding: '1rem', marginBottom: '1rem' }}>
+          <legend style={{ fontWeight: 600, fontSize: '0.875rem', padding: '0 0.25rem' }}>
+            {t('admin.staffAuth.title')}
+          </legend>
+          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+            {t('admin.staffAuth.description')}
+          </p>
+          {(['EmailPassword', 'GoogleSso', 'MicrosoftSso'] as const).map((method) => (
+            <label
+              key={method}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.375rem 0',
+                cursor: configureStaffAuth.isPending ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <input
+                type="radio"
+                name="staffAuthMethod"
+                value={method}
+                checked={brand.staffAuthMethod === method}
+                onChange={() => handleAuthMethodChange(method)}
+                disabled={configureStaffAuth.isPending}
+              />
+              <span style={{ fontSize: '0.875rem' }}>
+                {t(`admin.staffAuth.methods.${method}`)}
+              </span>
+            </label>
+          ))}
+          {configureStaffAuth.isError && (
+            <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+              {configureStaffAuth.error instanceof Error
+                ? configureStaffAuth.error.message
+                : t('admin.staffAuth.error')}
+            </p>
+          )}
+        </fieldset>
+
+        {/* Confirmation dialog for auth method change */}
+        {pendingAuthMethod !== null && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="staff-auth-dialog-title"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+            }}
+          >
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '0.5rem',
+                padding: '1.5rem',
+                maxWidth: '28rem',
+                width: '100%',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <h3 id="staff-auth-dialog-title" style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                {t('admin.staffAuth.confirmTitle')}
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '1.25rem' }}>
+                {t('admin.staffAuth.changeWarning')}
+              </p>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={cancelAuthMethodChange}
+                  style={secondaryButtonStyle}
+                  disabled={configureStaffAuth.isPending}
+                >
+                  {t('admin.staffAuth.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmAuthMethodChange}
+                  disabled={configureStaffAuth.isPending}
+                  style={{
+                    padding: '0.5rem 1.25rem',
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: configureStaffAuth.isPending ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    opacity: configureStaffAuth.isPending ? 0.6 : 1,
+                  }}
+                >
+                  {configureStaffAuth.isPending
+                    ? t('admin.staffAuth.saving')
+                    : t('admin.staffAuth.confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Metadata */}
         <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>

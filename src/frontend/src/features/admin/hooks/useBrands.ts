@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { brandsApi } from '@api/brands';
 import type { CreateBrandRequest, UpdateBrandRequest } from '@api/brands';
+import type { StaffAuthMethod } from '../../../types/common';
 
 /** Centralized query key factory — keeps cache invalidation consistent. */
 export const brandKeys = {
@@ -77,6 +78,19 @@ export function useActivateBrand(id: string) {
 
   return useMutation({
     mutationFn: () => brandsApi.activate(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: brandKeys.all });
+      void queryClient.invalidateQueries({ queryKey: brandKeys.detail(id) });
+    },
+  });
+}
+
+/** Configure staff authentication method. Invalidates list and detail on success. */
+export function useConfigureStaffAuth(id: string, slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (method: StaffAuthMethod) => brandsApi.configureStaffAuth(slug, method),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: brandKeys.all });
       void queryClient.invalidateQueries({ queryKey: brandKeys.detail(id) });
