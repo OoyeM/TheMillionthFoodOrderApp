@@ -29,11 +29,12 @@ TheMillionthFoodOrderApp.ServiceDefaults/ — Aspire shared config (telemetry, h
 
 ## Local Development
 
-- **Requires Docker Desktop** — Aspire runs SQL Server in a container
+- **Requires Docker Desktop** — Aspire runs SQL Server in a container with a persistent volume
+- **SQL Server password** is set via `sql-password` Aspire parameter (prompted on first run). Required because `WithDataVolume` persists the password in the volume — random passwords desync on restart.
 - API runs on `http://localhost:5102` — Swagger UI is the default launch page
 - BFF runs on `http://localhost:5261` — auth endpoints + YARP proxy to API
 - Frontend proxies `/api/*` and `/bff/*` to the BFF (not directly to API)
-- Database: SQL Server container via Aspire, platform DB auto-migrated on startup, "Frietjes?" brand seeded in dev
+- Database: SQL Server container via Aspire, platform DB auto-migrated on startup. In dev, `BrandDatabaseProvisioner` is called explicitly at startup to create + migrate the brand DB before seeding (Wolverine isn't running yet at that point).
 - Auth: mock auth enabled by default in dev (`Authentication:UseMockAuth=true`). Personas: `platform-admin`, `brand-admin@frietjes`, `counter-staff@frietjes`, `customer`
 
 ## Aspire Integration (important — affects DI patterns)
@@ -49,8 +50,8 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 ## Database Architecture
 
 - **PlatformDbContext** — shared platform DB: brands, users (PlatformUser), roles (BrandUserRole), platform config. Registered via `AddSqlServerDbContext` (pooled).
-- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`. Registered as **scoped** in DI via `BrandDbContextFactory` — inject directly into brand-scoped repositories. Throws `InvalidOperationException` if no brand slug is set (guards against accidental use in platform-only endpoints).
-- **BrandDbContextFactory** — resolves correct connection string based on brand slug (same SQL Server instance, different `Database=brand_{slug}`).
+- **BrandDbContext** — one DB per brand, created dynamically at runtime by `BrandDatabaseProvisioner`. Registered as **scoped** in DI via `BrandDbContextFactory` — inject directly into brand-scoped repositories.
+- **BrandDbContextFactory** — resolves correct connection string based on brand slug (same SQL Server instance, different `Database=brand_{slug}`). Returns a placeholder context when no brand slug is set (happens at startup when FastEndpoints builds the route map).
 - **BrandContextMiddleware** — validates brand slug from route/header against platform DB (cached 30s), returns 404/403 for invalid/inactive brands.
 - **BrandScopedPreProcessor** — FastEndpoints pre-processor; add to all brand-scoped endpoints to guard against missing brand context.
 
@@ -78,6 +79,7 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 ## Code Conventions
 
 - **Always use `DateTimeOffset`** — never `DateTime`. DateTimeOffset is timezone-aware and avoids subtle bugs with UTC conversions and comparisons.
+- **Always use `Guid.CreateVersion7()`** — never `Guid.NewGuid()`. UUIDv7 embeds a timestamp, producing time-ordered IDs that are better for database index performance and natural sort order.
 
 ## Testing
 

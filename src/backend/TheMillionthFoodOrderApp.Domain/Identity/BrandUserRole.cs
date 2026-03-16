@@ -42,7 +42,7 @@ public sealed class BrandUserRole : Entity<Guid>
 
         return new BrandUserRole
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             PlatformUserId = platformUserId,
             BrandId = brandId,
             ShopId = shopId,

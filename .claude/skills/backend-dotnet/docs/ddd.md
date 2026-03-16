@@ -23,6 +23,7 @@ Rich domain modeling for the restaurant ordering platform. Business logic lives 
 - Reference other aggregates by ID, never by direct object reference
 - Keep aggregates small — prefer more smaller aggregates over fewer large ones
 - Aggregate roots are the only entry point — external code never reaches into child entities
+- **Always use `Guid.CreateVersion7()`** for entity IDs — never `Guid.NewGuid()`. UUIDv7 embeds a timestamp, producing time-ordered IDs that improve clustered index performance and provide natural chronological ordering
 
 ## Entities vs Value Objects
 

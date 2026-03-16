@@ -36,6 +36,8 @@ public static class DependencyInjection
 
         // BrandDbContext registered as scoped via factory so it is available for injection
         // throughout the request lifetime (after BrandContextMiddleware has set the slug).
+        // Returns null-object context when no brand slug is set — this happens at startup
+        // when FastEndpoints instantiates endpoints to build the route map.
         services.AddScoped<Persistence.BrandDbContext>(sp =>
         {
             var factory = sp.GetRequiredService<BrandDbContextFactory>();

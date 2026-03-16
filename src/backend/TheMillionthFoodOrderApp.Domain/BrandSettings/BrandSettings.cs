@@ -45,7 +45,7 @@ public sealed class BrandSettings : AggregateRoot<Guid>, IAuditable
         var now = DateTimeOffset.UtcNow;
         return new BrandSettings
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             DefaultLanguage = "nl-BE",
             Timezone = "Europe/Brussels",
             Currency = "EUR",
@@ -62,7 +62,7 @@ public sealed class BrandSettings : AggregateRoot<Guid>, IAuditable
         var now = DateTimeOffset.UtcNow;
         return new BrandSettings
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             DefaultLanguage = defaultLanguage,
             Timezone = timezone,
             Currency = currency,

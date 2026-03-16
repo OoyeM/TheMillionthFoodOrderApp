@@ -40,7 +40,7 @@ public sealed class PlatformUser : AggregateRoot<Guid>, IAuditable
 
         return new PlatformUser
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             EntraObjectId = entraObjectId,
             Email = email,
             DisplayName = displayName,

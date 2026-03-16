@@ -72,6 +72,16 @@ await using (var scope = app.Services.CreateAsyncScope())
         var platformSeeder = scope.ServiceProvider.GetRequiredService<PlatformDbSeeder>();
         await platformSeeder.SeedAsync();
 
+        // Provision the brand database before seeding — in production this happens
+        // asynchronously via Wolverine when BrandCreatedEvent is raised, but during
+        // startup seeding Wolverine hasn't started processing messages yet.
+        var brandProvisioner = new BrandDatabaseProvisioner(
+            scope.ServiceProvider.GetRequiredService<IConfiguration>(),
+            scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<BrandDatabaseProvisioner>());
+        await brandProvisioner.HandleAsync(
+            new TheMillionthFoodOrderApp.Domain.Brands.BrandCreatedEvent(Guid.Empty, "Frietjes?", "frietjes"),
+            CancellationToken.None);
+
         // Seed the Frietjes? brand database.
         // We manually set the brand slug on the scoped accessor so BrandDbContextFactory
         // can derive the correct connection string for the brand DB.
