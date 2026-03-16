@@ -15,6 +15,8 @@ public sealed class ClaimsEnrichmentService(
 {
     public async Task EnrichClaimsAsync(TokenValidatedContext context)
     {
+        var cancellationToken = context.HttpContext.RequestAborted;
+
         var sub = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier)
                   ?? context.Principal?.FindFirstValue("sub");
 
@@ -32,27 +34,41 @@ public sealed class ClaimsEnrichmentService(
                    ?? principal.FindFirstValue(ClaimTypes.Name)
                    ?? "";
 
-        var user = await identityService.ProvisionUserAsync(sub, email, name);
-        var userWithRoles = await identityService.GetUserWithRolesAsync(user.Id);
+        var user = await identityService.ProvisionUserAsync(sub, email, name, cancellationToken);
+        var userWithRoles = await identityService.GetUserWithRolesAsync(user.Id, cancellationToken);
 
         if (userWithRoles is null)
         {
-            logger.LogWarning("User {Sub} provisioned but GetUserWithRolesAsync returned null", sub);
+            logger.LogError(
+                "User {Sub} provisioned (Id={UserId}) but GetUserWithRolesAsync returned null — denying login",
+                sub, user.Id);
+            context.Fail("Claims enrichment failed: user not found after provisioning.");
             return;
         }
 
         var identity = principal.Identity as ClaimsIdentity;
         if (identity is null) return;
 
+        // Platform admin role
         if (userWithRoles.IsPlatformAdmin)
         {
             identity.AddClaim(new Claim(ClaimTypes.Role, AuthConstants.Roles.PlatformAdmin));
             identity.AddClaim(new Claim(AuthConstants.Claims.PlatformRole, AuthConstants.Roles.PlatformAdmin));
         }
 
+        // Brand-scoped roles with slugs (matching mock auth claim format)
+        var brandSlugs = userWithRoles.Roles.Select(r => r.BrandSlug).Distinct();
+        foreach (var slug in brandSlugs)
+        {
+            identity.AddClaim(new Claim(AuthConstants.Claims.BrandSlug, slug));
+        }
+
         foreach (var role in userWithRoles.Roles)
         {
             identity.AddClaim(new Claim(ClaimTypes.Role, role.Role.ToString()));
+            identity.AddClaim(new Claim(
+                AuthConstants.Claims.BrandRoles,
+                $"{role.BrandSlug}:{role.Role}"));
         }
 
         logger.LogInformation(

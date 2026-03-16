@@ -61,6 +61,8 @@ else
         options.ClientId = builder.Configuration["Authentication:Keycloak:ClientId"];
         options.ClientSecret = builder.Configuration["Authentication:Keycloak:ClientSecret"];
         options.ResponseType = "code";
+        // PKCE is enabled even though this is a confidential client (with client_secret).
+        // Defense-in-depth per OAuth 2.1: PKCE recommended for ALL clients.
         options.UsePkce = true;
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;

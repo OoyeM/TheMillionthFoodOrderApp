@@ -1,8 +1,9 @@
 {
   "realm": "themillionfoodorderapp",
   "enabled": true,
+  "_comment_ssl": "DEV ONLY — production realms MUST use 'external' or 'all'",
   "sslRequired": "none",
-  "registrationAllowed": true,
+  "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "accessTokenLifespan": 300,
@@ -24,16 +25,16 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
+      "_comment_secret": "DEV ONLY — rotate before any non-local deployment",
       "secret": "dev-secret-do-not-use-in-production",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:5261/signin-oidc",
-        "http://localhost:5261/*"
+        "http://localhost:5261/signin-oidc"
       ],
       "attributes": {
-        "post.logout.redirect.uris": "http://localhost:5261/signout-callback-oidc##http://localhost:5261/*"
+        "post.logout.redirect.uris": "http://localhost:5261/signout-callback-oidc"
       },
       "webOrigins": [
         "http://localhost:5261",
@@ -45,6 +46,7 @@
         "email",
         "roles"
       ],
+      "_comment_fullScope": "Production: set to false and assign explicit client scopes",
       "fullScopeAllowed": true
     }
   ],

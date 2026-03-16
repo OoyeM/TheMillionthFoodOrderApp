@@ -37,6 +37,8 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Platfor
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // WARNING: Narrows nvarchar(128) to nvarchar(36). If any values exceed 36 chars,
+            // this will fail with truncation error. Use a new forward migration instead.
             migrationBuilder.AlterColumn<string>(
                 name: "ExternalIdentityId",
                 schema: "platform",

@@ -16,11 +16,12 @@ var api = builder.AddProject<Projects.TheMillionthFoodOrderApp_Api>("api")
     .WaitFor(sql)
     .WithReference(keycloak);
 
+// Mock auth is controlled via Bff/appsettings.Development.json (UseMockAuth).
+// Set to false there to use Keycloak OIDC instead.
 builder.AddProject<Projects.TheMillionthFoodOrderApp_Bff>("bff")
     .WithReference(api)
     .WaitFor(api)
     .WithReference(keycloak)
-    .WaitFor(keycloak)
-    .WithEnvironment("Authentication__UseMockAuth", "true");
+    .WaitFor(keycloak);
 
 builder.Build().Run();

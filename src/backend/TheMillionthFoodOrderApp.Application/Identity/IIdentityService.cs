@@ -65,4 +65,13 @@ public sealed record UserWithRolesDto(
     string DisplayName,
     bool IsPlatformAdmin,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<BrandUserRole> Roles);
+    IReadOnlyList<RoleAssignmentDto> Roles);
+
+/// <summary>
+/// Role assignment with the brand slug resolved (for claims enrichment).
+/// </summary>
+public sealed record RoleAssignmentDto(
+    Guid BrandId,
+    string BrandSlug,
+    Guid? ShopId,
+    StaffRole Role);

@@ -34,11 +34,10 @@ public static class BffEndpoints
         HttpContext context,
         IHostEnvironment env,
         IConfiguration config,
-        ILoggerFactory loggerFactory,
+        ILogger<BffEndpointMarker> logger,
         string? mock      = null,
         string? returnUrl = null)
     {
-        var logger = loggerFactory.CreateLogger("BffEndpoints");
         var useMock = env.IsDevelopment() &&
                       config.GetValue<bool>("Authentication:UseMockAuth");
 
@@ -72,8 +71,8 @@ public static class BffEndpoints
     // -------------------------------------------------------------------------
 
     /// <summary>
-    /// Signs the user out of the cookie session and returns 200.
-    /// When mock auth is disabled, also triggers a federated sign-out with the OIDC provider.
+    /// Signs the user out of the cookie session.
+    /// When mock auth is disabled, also triggers a federated sign-out redirect to the OIDC provider.
     /// </summary>
     private static async Task<IResult> HandleLogout(
         HttpContext context,
@@ -87,7 +86,10 @@ public static class BffEndpoints
 
         if (!useMock)
         {
+            // OIDC SignOut sets a 302 redirect to the IdP's end_session_endpoint.
+            // Do NOT return a JSON body — let the redirect take effect.
             await context.SignOutAsync(AuthConstants.Schemes.Oidc);
+            return Results.Empty;
         }
 
         return Results.Ok(new { message = "Signed out" });
@@ -163,3 +165,6 @@ public static class BffEndpoints
         return "/";
     }
 }
+
+/// <summary>Marker type for ILogger injection in BFF endpoints (static class cannot be used as type parameter).</summary>
+internal sealed class BffEndpointMarker;
