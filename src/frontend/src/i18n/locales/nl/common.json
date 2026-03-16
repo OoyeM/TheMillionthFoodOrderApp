@@ -21,6 +21,23 @@
       "basePrice": "Basisprijs",
       "imageUrl": "Afbeelding URL",
       "noProducts": "Nog geen producten. Maak het eerste product aan."
+    },
+    "menuCategories": {
+      "productsSection": {
+        "title": "Producten in deze categorie",
+        "loading": "Producten laden…",
+        "loadError": "Producten konden niet worden geladen.",
+        "empty": "Geen producten in deze categorie.",
+        "position": "#",
+        "productName": "Naam",
+        "basePrice": "Basisprijs",
+        "order": "Volgorde",
+        "moveUp": "Omhoog",
+        "moveDown": "Omlaag",
+        "saveOrder": "Volgorde opslaan",
+        "savingOrder": "Opslaan…",
+        "saveOrderError": "Volgorde opslaan mislukt. Probeer opnieuw."
+      }
     }
   }
 }

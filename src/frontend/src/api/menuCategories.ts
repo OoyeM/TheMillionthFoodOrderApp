@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { MenuCategory, MenuCategoryListItem } from '../types/common';
+import type { MenuCategory, MenuCategoryListItem, ProductListItem } from '../types/common';
 
 export interface MenuCategoryTranslationInput {
   languageCode: string;
@@ -25,6 +25,10 @@ export interface ReorderMenuCategoryRequest {
 export interface AssignProductRequest {
   productId: string;
   categoryId: string;
+}
+
+export interface ReorderProductsRequest {
+  productIds: string[];
 }
 
 /**
@@ -77,5 +81,22 @@ export const menuCategoriesApi = {
   ): Promise<void> =>
     apiClient
       .post<void>(`/brands/${brandSlug}/menu-categories/assign-product`, data)
+      .then(() => undefined),
+
+  listProducts: (brandSlug: string, categoryId: string): Promise<ProductListItem[]> =>
+    apiClient
+      .get<ProductListItem[]>(`/brands/${brandSlug}/menu-categories/${categoryId}/products`)
+      .then((r) => r.data),
+
+  reorderProducts: (
+    brandSlug: string,
+    categoryId: string,
+    data: ReorderProductsRequest,
+  ): Promise<void> =>
+    apiClient
+      .put<void>(
+        `/brands/${brandSlug}/menu-categories/${categoryId}/products/order`,
+        data,
+      )
       .then(() => undefined),
 };

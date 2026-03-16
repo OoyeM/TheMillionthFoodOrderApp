@@ -62,6 +62,49 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
     }
 
     /// <inheritdoc/>
+    public async Task<Product?> UpdateScalarAsync(Guid id, Action<Product> mutate, CancellationToken cancellationToken = default)
+    {
+        var product = await dbContext.Products
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        if (product is null)
+            return null;
+
+        mutate(product);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return product;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
+        => await dbContext.Products
+            .Include(p => p.Translations)
+            .Where(p => p.MenuCategoryId == categoryId)
+            .OrderBy(p => p.SortOrderInCategory)
+            .ToListAsync(cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task<int> GetMaxSortOrderInCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
+    {
+        var max = await dbContext.Products
+            .Where(p => p.MenuCategoryId == categoryId)
+            .MaxAsync(p => (int?)p.SortOrderInCategory, cancellationToken);
+
+        return max ?? -1;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<Product>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids.ToList();
+        return await dbContext.Products
+            .Include(p => p.Translations)
+            .Where(p => idList.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SaveChangesAsync(cancellationToken);
 }

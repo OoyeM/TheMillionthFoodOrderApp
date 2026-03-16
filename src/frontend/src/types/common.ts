@@ -76,6 +76,7 @@ export interface Product {
   basePrice: Money;
   imageUrl: string | null;
   menuCategoryId: string | null;
+  sortOrderInCategory: number;
   translations: ProductTranslation[];
   createdAt: string;
   updatedAt: string;
@@ -90,6 +91,7 @@ export interface ProductListItem {
   basePrice: Money;
   imageUrl: string | null;
   menuCategoryId: string | null;
+  sortOrderInCategory: number;
   createdAt: string;
 }
 

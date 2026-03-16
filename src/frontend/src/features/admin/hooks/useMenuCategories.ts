@@ -4,12 +4,15 @@ import type {
   CreateMenuCategoryRequest,
   UpdateMenuCategoryRequest,
   ReorderMenuCategoryRequest,
+  ReorderProductsRequest,
 } from '@api/menuCategories';
 
 /** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
 export const menuCategoryKeys = {
   all: (brandSlug: string) => ['menuCategories', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['menuCategories', brandSlug, id] as const,
+  products: (brandSlug: string, id: string) =>
+    ['menuCategories', brandSlug, id, 'products'] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -103,6 +106,32 @@ export function useAssignProductToCategory(brandSlug: string, categoryId: string
       void queryClient.invalidateQueries({ queryKey: menuCategoryKeys.all(brandSlug) });
       void queryClient.invalidateQueries({
         queryKey: menuCategoryKeys.detail(brandSlug, categoryId),
+      });
+    },
+  });
+}
+
+/** Fetch all products assigned to a menu category, ordered by sortOrderInCategory. */
+export function useCategoryProducts(brandSlug: string, categoryId: string) {
+  return useQuery({
+    queryKey: menuCategoryKeys.products(brandSlug, categoryId),
+    queryFn: () => menuCategoriesApi.listProducts(brandSlug, categoryId),
+    enabled: brandSlug.length > 0 && categoryId.length > 0,
+  });
+}
+
+/** Reorder products within a menu category. Invalidates the products list on success. */
+export function useReorderCategoryProducts(brandSlug: string, categoryId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (productIds: string[]) => {
+      const data: ReorderProductsRequest = { productIds };
+      return menuCategoriesApi.reorderProducts(brandSlug, categoryId, data);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: menuCategoryKeys.products(brandSlug, categoryId),
       });
     },
   });

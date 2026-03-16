@@ -21,6 +21,23 @@
       "basePrice": "Prix de base",
       "imageUrl": "URL de l'image",
       "noProducts": "Aucun produit. Créez le premier."
+    },
+    "menuCategories": {
+      "productsSection": {
+        "title": "Produits dans cette catégorie",
+        "loading": "Chargement des produits…",
+        "loadError": "Impossible de charger les produits.",
+        "empty": "Aucun produit dans cette catégorie.",
+        "position": "#",
+        "productName": "Nom",
+        "basePrice": "Prix de base",
+        "order": "Ordre",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "saveOrder": "Enregistrer l'ordre",
+        "savingOrder": "Enregistrement…",
+        "saveOrderError": "Échec de l'enregistrement de l'ordre. Veuillez réessayer."
+      }
     }
   }
 }
