@@ -77,6 +77,7 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 - **Soft-delete:** Implement `ISoftDeletable` (IsDeleted + DeletedAt). Add a global query filter on `BrandDbContext`: `HasQueryFilter(e => !e.IsDeleted)`. Use `IgnoreQueryFilters()` only when historical data is needed.
 - **Translations:** Use a child entity (e.g. `ProductTranslation`) with composite unique index on `(ParentId, LanguageCode)`. Load eagerly with `Include()`. On update, clear the collection and re-add — avoids EF Core orphan tracking issues.
 - **Money:** `Money` value object (Amount + Currency), mapped as EF owned entity with explicit column names (`BasePrice_Amount`, `BasePrice_Currency`).
+- **Sort ordering:** Use an `int SortOrder` field. Reorder via a dedicated endpoint that accepts an ordered list of IDs and assigns 0..n-1 sequentially. Last-write-wins for MVP.
 
 ## Domain Constraints
 

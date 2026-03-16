@@ -18,6 +18,7 @@ public sealed record ProductResponse(
     Guid Id,
     MoneyResponse BasePrice,
     string? ImageUrl,
+    Guid? MenuCategoryId,
     IReadOnlyList<TranslationResponse> Translations,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -27,4 +28,5 @@ public sealed record ProductListItemResponse(
     string Name,
     MoneyResponse BasePrice,
     string? ImageUrl,
+    Guid? MenuCategoryId,
     DateTimeOffset CreatedAt);

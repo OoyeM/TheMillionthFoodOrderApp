@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
+using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 
@@ -22,6 +23,7 @@ public sealed class BrandDbSeeder(
 
         await SeedBrandSettingsAsync(context, cancellationToken);
         await SeedShopsAsync(context, cancellationToken);
+        await SeedMenuCategoriesAsync(context, cancellationToken);
         await SeedProductsAsync(context, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -91,6 +93,48 @@ public sealed class BrandDbSeeder(
 
             await context.Shops.AddAsync(shop, cancellationToken);
             logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
+        }
+    }
+
+    private async Task SeedMenuCategoriesAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await context.MenuCategories.AnyAsync(cancellationToken);
+        if (exists)
+        {
+            logger.LogDebug("Seed: Menu categories already exist — skipping.");
+            return;
+        }
+
+        var categories = new[]
+        {
+            MenuCategory.Create(
+                imageUrl: null,
+                sortOrder: 0,
+                translations: new[] { ("nl", "Frietjes", (string?)"Verse frieten in verschillende maten"), ("fr", "Frites", (string?)"Frites fraîches en différentes tailles") }),
+
+            MenuCategory.Create(
+                imageUrl: null,
+                sortOrder: 1,
+                translations: new[] { ("nl", "Sauzen", (string?)"Huisgemaakte en klassieke sauzen"), ("fr", "Sauces", (string?)"Sauces maison et classiques") }),
+
+            MenuCategory.Create(
+                imageUrl: null,
+                sortOrder: 2,
+                translations: new[] { ("nl", "Snacks", (string?)"Belgische snacks en lekkernijen"), ("fr", "Snacks", (string?)"Snacks et délices belges") }),
+
+            MenuCategory.Create(
+                imageUrl: null,
+                sortOrder: 3,
+                translations: new[] { ("nl", "Burgers", (string?)"Iconische Belgische burgers"), ("fr", "Burgers", (string?)"Burgers belges iconiques") }),
+        };
+
+        foreach (var category in categories)
+        {
+            await context.MenuCategories.AddAsync(category, cancellationToken);
+            var name = category.Translations.First().Name;
+            logger.LogInformation("Seed: Created menu category '{Name}'.", name);
         }
     }
 

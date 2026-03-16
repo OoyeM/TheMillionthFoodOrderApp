@@ -1,18 +1,15 @@
 using TheMillionthFoodOrderApp.Domain.Common;
-using TheMillionthFoodOrderApp.Domain.MenuCategories;
 
-namespace TheMillionthFoodOrderApp.Domain.Products;
+namespace TheMillionthFoodOrderApp.Domain.MenuCategories;
 
-public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
+public sealed class MenuCategory : AggregateRoot<Guid>, IAuditable, ISoftDeletable
 {
-    public Money BasePrice { get; private set; } = null!;
     public string? ImageUrl { get; private set; }
 
     /// <summary>
-    /// Optional reference to the menu category this product belongs to.
-    /// Null means the product is uncategorised.
+    /// Display order for menu rendering. Lower values appear first.
     /// </summary>
-    public Guid? MenuCategoryId { get; private set; }
+    public int SortOrder { get; private set; }
 
     public bool IsDeleted { get; private set; }
     public DateTimeOffset? DeletedAt { get; private set; }
@@ -20,19 +17,19 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    private readonly List<ProductTranslation> _translations = [];
-    public IReadOnlyCollection<ProductTranslation> Translations => _translations.AsReadOnly();
+    private readonly List<MenuCategoryTranslation> _translations = [];
+    public IReadOnlyCollection<MenuCategoryTranslation> Translations => _translations.AsReadOnly();
 
     // Required by EF Core
-    private Product() { }
+    private MenuCategory() { }
 
     /// <summary>
-    /// Factory method — the only way to create a valid Product.
+    /// Factory method — the only way to create a valid MenuCategory.
     /// Requires at least one translation.
     /// </summary>
-    public static Product Create(
-        Money basePrice,
+    public static MenuCategory Create(
         string? imageUrl,
+        int sortOrder,
         IEnumerable<(string languageCode, string name, string? description)> translations)
     {
         var translationList = translations.ToList();
@@ -40,11 +37,11 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
             throw new ArgumentException("At least one translation is required.", nameof(translations));
 
         var now = DateTimeOffset.UtcNow;
-        var product = new Product
+        var category = new MenuCategory
         {
             Id = Guid.CreateVersion7(),
-            BasePrice = basePrice,
             ImageUrl = imageUrl,
+            SortOrder = sortOrder,
             IsDeleted = false,
             CreatedAt = now,
             UpdatedAt = now,
@@ -52,59 +49,50 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
 
         foreach (var (languageCode, name, description) in translationList)
         {
-            product._translations.Add(
-                ProductTranslation.Create(product.Id, languageCode, name, description));
+            category._translations.Add(
+                MenuCategoryTranslation.Create(category.Id, languageCode, name, description));
         }
 
-        product.AddDomainEvent(new ProductCreatedEvent(product.Id));
+        category.AddDomainEvent(new MenuCategoryCreatedEvent(category.Id));
 
-        return product;
+        return category;
     }
 
     /// <summary>
-    /// Updates product details. Replaces all translations (clear + re-add).
+    /// Updates category details. Replaces all translations (clear + re-add).
     /// </summary>
     public void Update(
-        Money basePrice,
         string? imageUrl,
+        int sortOrder,
         IEnumerable<(string languageCode, string name, string? description)> translations)
     {
         var translationList = translations.ToList();
         if (translationList.Count == 0)
             throw new ArgumentException("At least one translation is required.", nameof(translations));
 
-        BasePrice = basePrice;
         ImageUrl = imageUrl;
+        SortOrder = sortOrder;
         UpdatedAt = DateTimeOffset.UtcNow;
 
         _translations.Clear();
         foreach (var (languageCode, name, description) in translationList)
         {
             _translations.Add(
-                ProductTranslation.Create(Id, languageCode, name, description));
+                MenuCategoryTranslation.Create(Id, languageCode, name, description));
         }
     }
 
     /// <summary>
-    /// Assigns this product to the specified menu category.
+    /// Updates the sort order without touching translations. Used by the reorder endpoint.
     /// </summary>
-    public void AssignCategory(Guid menuCategoryId)
+    public void Reorder(int sortOrder)
     {
-        MenuCategoryId = menuCategoryId;
+        SortOrder = sortOrder;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
-    /// Removes this product from its current menu category (makes it uncategorised).
-    /// </summary>
-    public void RemoveCategory()
-    {
-        MenuCategoryId = null;
-        UpdatedAt = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>
-    /// Soft-deletes this product. Hidden from storefronts but retained for historical order records.
+    /// Soft-deletes this category. Hidden from storefronts but retained for historical data.
     /// </summary>
     public void SoftDelete()
     {
@@ -114,6 +102,6 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         IsDeleted = true;
         DeletedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
-        AddDomainEvent(new ProductDeletedEvent(Id));
+        AddDomainEvent(new MenuCategoryDeletedEvent(Id));
     }
 }

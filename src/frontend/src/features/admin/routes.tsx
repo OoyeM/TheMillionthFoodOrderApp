@@ -42,6 +42,18 @@ const LazyProductEdit = lazy(() =>
   import('./pages/ProductEdit').then((m) => ({ default: m.ProductEdit })),
 );
 
+const LazyMenuCategoryList = lazy(() =>
+  import('./pages/MenuCategoryList').then((m) => ({ default: m.MenuCategoryList })),
+);
+
+const LazyMenuCategoryCreate = lazy(() =>
+  import('./pages/MenuCategoryCreate').then((m) => ({ default: m.MenuCategoryCreate })),
+);
+
+const LazyMenuCategoryEdit = lazy(() =>
+  import('./pages/MenuCategoryEdit').then((m) => ({ default: m.MenuCategoryEdit })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -137,6 +149,36 @@ export const adminRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
             <LazyProductEdit />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  // Menu category management (brand-scoped)
+  {
+    path: 'menu-categories',
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyMenuCategoryList />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'new',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyMenuCategoryCreate />
+          </Suspense>
+        ),
+      },
+      {
+        path: ':categoryId',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyMenuCategoryEdit />
           </Suspense>
         ),
       },

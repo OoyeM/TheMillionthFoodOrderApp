@@ -75,6 +75,7 @@ export interface Product {
   id: string;
   basePrice: Money;
   imageUrl: string | null;
+  menuCategoryId: string | null;
   translations: ProductTranslation[];
   createdAt: string;
   updatedAt: string;
@@ -88,5 +89,39 @@ export interface ProductListItem {
   name: string;
   basePrice: Money;
   imageUrl: string | null;
+  menuCategoryId: string | null;
+  createdAt: string;
+}
+
+/**
+ * Translation of a menu category name into a specific locale.
+ */
+export interface MenuCategoryTranslation {
+  languageCode: SupportedLocale;
+  name: string;
+}
+
+/**
+ * Full menu category entity as returned by the brand-scoped API.
+ */
+export interface MenuCategory {
+  id: string;
+  sortOrder: number;
+  imageUrl: string | null;
+  productCount: number;
+  translations: MenuCategoryTranslation[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight menu category list item (name resolved to single language).
+ */
+export interface MenuCategoryListItem {
+  id: string;
+  name: string;
+  sortOrder: number;
+  imageUrl: string | null;
+  productCount: number;
   createdAt: string;
 }
