@@ -1,6 +1,6 @@
 using System.Net;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
 namespace TheMillionthFoodOrderApp.Tests.Integration.Multitenancy;
@@ -19,7 +19,7 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
 
         var response = await client.GetAsync("/api/brands/unknown-brand-xyz/settings");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var client = fixture.Factory.CreateClient();
         var response = await client.GetAsync($"/api/brands/{inactiveSlug}/settings");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var response = await client.GetAsync("/api/brands");
 
         // Middleware must not return 403/404 for brand validation — any 2xx confirms pass-through.
-        response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
-        response.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldNotBe(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldNotBe(HttpStatusCode.NotFound);
     }
 }

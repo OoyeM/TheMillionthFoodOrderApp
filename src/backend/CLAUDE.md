@@ -72,6 +72,12 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 - `dotnet ef migrations add <Name> --project TheMillionthFoodOrderApp.Infrastructure --startup-project TheMillionthFoodOrderApp.Api --context PlatformDbContext --output-dir Persistence/Migrations/Platform` — add platform migration
 - `dotnet ef migrations add <Name> --project TheMillionthFoodOrderApp.Infrastructure --startup-project TheMillionthFoodOrderApp.Api --context BrandDbContext --output-dir Persistence/Migrations/Brand` — add brand migration
 
+## Domain Patterns
+
+- **Soft-delete:** Implement `ISoftDeletable` (IsDeleted + DeletedAt). Add a global query filter on `BrandDbContext`: `HasQueryFilter(e => !e.IsDeleted)`. Use `IgnoreQueryFilters()` only when historical data is needed.
+- **Translations:** Use a child entity (e.g. `ProductTranslation`) with composite unique index on `(ParentId, LanguageCode)`. Load eagerly with `Include()`. On update, clear the collection and re-add — avoids EF Core orphan tracking issues.
+- **Money:** `Money` value object (Amount + Currency), mapped as EF owned entity with explicit column names (`BasePrice_Amount`, `BasePrice_Currency`).
+
 ## Domain Constraints
 
 - Belgian VAT: 6% takeaway, 21% eat-in
@@ -84,7 +90,7 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 
 ## Testing
 
-- xUnit + FluentAssertions, integration tests hit a real database (not mocks)
+- xUnit + Shouldly (assertions), integration tests hit a real database (not mocks)
 - **Testcontainers.MsSql** for integration tests — spins up SQL Server in Docker automatically
 - `IntegrationTestWebAppFactory` replaces Aspire's pooled PlatformDbContext with a standard registration pointing at the test container
 - `IntegrationTestBase` provisions multiple brand databases (alpha, beta, gamma) on the same container to verify cross-brand isolation

@@ -58,3 +58,35 @@ export interface Shop {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Translation of a product name/description into a specific locale.
+ */
+export interface ProductTranslation {
+  languageCode: SupportedLocale;
+  name: string;
+  description: string | null;
+}
+
+/**
+ * Full product entity as returned by the brand-scoped API.
+ */
+export interface Product {
+  id: string;
+  basePrice: Money;
+  imageUrl: string | null;
+  translations: ProductTranslation[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight product list item (name resolved to single language).
+ */
+export interface ProductListItem {
+  id: string;
+  name: string;
+  basePrice: Money;
+  imageUrl: string | null;
+  createdAt: string;
+}

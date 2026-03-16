@@ -30,6 +30,18 @@ const LazyShopEdit = lazy(() =>
   import('./pages/ShopEdit').then((m) => ({ default: m.ShopEdit })),
 );
 
+const LazyProductList = lazy(() =>
+  import('./pages/ProductList').then((m) => ({ default: m.ProductList })),
+);
+
+const LazyProductCreate = lazy(() =>
+  import('./pages/ProductCreate').then((m) => ({ default: m.ProductCreate })),
+);
+
+const LazyProductEdit = lazy(() =>
+  import('./pages/ProductEdit').then((m) => ({ default: m.ProductEdit })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -95,6 +107,36 @@ export const adminRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
             <LazyShopEdit />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  // Product management (brand-scoped)
+  {
+    path: 'products',
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyProductList />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'new',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyProductCreate />
+          </Suspense>
+        ),
+      },
+      {
+        path: ':productId',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyProductEdit />
           </Suspense>
         ),
       },

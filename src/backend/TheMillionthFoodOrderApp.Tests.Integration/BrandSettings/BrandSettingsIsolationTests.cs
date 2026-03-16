@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using TheMillionthFoodOrderApp.Application.BrandSettings;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -23,7 +23,7 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         // Use Gamma — a brand that no other test writes to, so ordering doesn't matter.
         var response = await client.GetAsync($"/api/brands/{IntegrationTestBase.GammaSlug}/settings");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ── PUT settings (upsert) ────────────────────────────────────────────────
@@ -45,17 +45,17 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings",
             alphaSettings);
 
-        putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        putResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var alphaResult = await putResponse.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        alphaResult.Should().NotBeNull();
-        alphaResult!.DefaultLanguage.Should().Be("nl-BE");
+        alphaResult.ShouldNotBeNull();
+        alphaResult.DefaultLanguage.ShouldBe("nl-BE");
 
         // Beta should still return 404 — Alpha's data must not leak
         var betaGetResponse = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings");
 
-        betaGetResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        betaGetResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -81,26 +81,26 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         var alphaPut = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings",
             alphaSettings);
-        alphaPut.StatusCode.Should().Be(HttpStatusCode.OK);
+        alphaPut.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var betaPut = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings",
             betaSettings);
-        betaPut.StatusCode.Should().Be(HttpStatusCode.OK);
+        betaPut.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         // Read back Alpha — must not have Beta's language
         var alphaGet = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings");
-        alphaGet.StatusCode.Should().Be(HttpStatusCode.OK);
+        alphaGet.StatusCode.ShouldBe(HttpStatusCode.OK);
         var alphaResult = await alphaGet.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        alphaResult!.DefaultLanguage.Should().Be("nl-BE");
+        alphaResult!.DefaultLanguage.ShouldBe("nl-BE");
 
         // Read back Beta — must not have Alpha's language
         var betaGet = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings");
-        betaGet.StatusCode.Should().Be(HttpStatusCode.OK);
+        betaGet.StatusCode.ShouldBe(HttpStatusCode.OK);
         var betaResult = await betaGet.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        betaResult!.DefaultLanguage.Should().Be("fr-BE");
+        betaResult!.DefaultLanguage.ShouldBe("fr-BE");
     }
 
     [Fact]
@@ -128,9 +128,9 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings", updated);
 
-        updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await updateResponse.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        result!.DefaultLanguage.Should().Be("fr-BE");
-        result.Timezone.Should().Be("Europe/Paris");
+        result!.DefaultLanguage.ShouldBe("fr-BE");
+        result.Timezone.ShouldBe("Europe/Paris");
     }
 }

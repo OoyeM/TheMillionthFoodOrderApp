@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
+using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
@@ -21,6 +22,7 @@ public sealed class BrandDbSeeder(
 
         await SeedBrandSettingsAsync(context, cancellationToken);
         await SeedShopsAsync(context, cancellationToken);
+        await SeedProductsAsync(context, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -89,6 +91,44 @@ public sealed class BrandDbSeeder(
 
             await context.Shops.AddAsync(shop, cancellationToken);
             logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
+        }
+    }
+
+    private async Task SeedProductsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await context.Products.AnyAsync(cancellationToken);
+        if (exists)
+        {
+            logger.LogDebug("Seed: Products already exist — skipping.");
+            return;
+        }
+
+        var products = new[]
+        {
+            Product.Create(
+                new Money(3.50m, "EUR"), null,
+                new[] { ("nl", "Kleine Friet", (string?)"Knapperig gebakken frieten, klein portie"), ("fr", "Petites Frites", (string?)"Frites croustillantes, petite portion") }),
+            Product.Create(
+                new Money(5.00m, "EUR"), null,
+                new[] { ("nl", "Grote Friet", (string?)"Knapperig gebakken frieten, groot portie"), ("fr", "Grandes Frites", (string?)"Frites croustillantes, grande portion") }),
+            Product.Create(
+                new Money(1.50m, "EUR"), null,
+                new[] { ("nl", "Stoofvleessaus", (string?)"Klassieke Vlaamse stoofvleessaus"), ("fr", "Sauce Carbonade", (string?)"Sauce carbonade flamande classique") }),
+            Product.Create(
+                new Money(2.50m, "EUR"), null,
+                new[] { ("nl", "Frikandel", (string?)"Gekruide gehaktstaaf"), ("fr", "Fricandelle", (string?)"Rouleau de viande épicé") }),
+            Product.Create(
+                new Money(4.50m, "EUR"), null,
+                new[] { ("nl", "Bicky Burger", (string?)"Iconische Belgische burger met bickysaus"), ("fr", "Bicky Burger", (string?)"Burger belge iconique avec sauce bicky") }),
+        };
+
+        foreach (var product in products)
+        {
+            await context.Products.AddAsync(product, cancellationToken);
+            var name = product.Translations.First().Name;
+            logger.LogInformation("Seed: Created product '{Name}'.", name);
         }
     }
 }

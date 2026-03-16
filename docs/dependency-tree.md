@@ -44,7 +44,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-005** | Create and manage simple products | 001, 002 |
+| ✅ | **US-FP-005** | Create and manage simple products | 001, 002 |
 | ⬜ | **US-FP-006** | Add modifier groups to products | 005 |
 | ⬜ | **US-FP-007** | Create and manage combo products | 005 |
 | ⬜ | **US-FP-008** | Manage allergen and dietary information | 005 |
