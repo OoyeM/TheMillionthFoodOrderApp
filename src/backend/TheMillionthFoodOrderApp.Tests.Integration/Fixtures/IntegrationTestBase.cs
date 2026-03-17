@@ -64,16 +64,10 @@ public sealed class IntegrationTestBase : IAsyncLifetime
 
     /// <summary>
     /// Derives a brand database connection string from the platform connection string.
-    /// Mirrors the logic in <see cref="Infrastructure.Persistence.BrandDbContextFactory"/>.
+    /// Delegates to <see cref="BrandConnectionStringHelper"/> — the single source of truth.
     /// </summary>
-    public string GetBrandConnectionString(string brandSlug)
-    {
-        var builder = new SqlConnectionStringBuilder(PlatformConnectionString)
-        {
-            InitialCatalog = $"brand_{brandSlug}"
-        };
-        return builder.ConnectionString;
-    }
+    public string GetBrandConnectionString(string brandSlug) =>
+        BrandConnectionStringHelper.DeriveBrandConnectionString(PlatformConnectionString, brandSlug);
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
@@ -90,14 +84,11 @@ public sealed class IntegrationTestBase : IAsyncLifetime
     private async Task ProvisionBrandDatabaseAsync(string brandSlug)
     {
         var brandConnectionString = GetBrandConnectionString(brandSlug);
+        var masterConnectionString = BrandConnectionStringHelper.DeriveMasterConnectionString(
+            PlatformConnectionString);
 
         // Create the brand database on the SQL Server container
-        var masterBuilder = new SqlConnectionStringBuilder(PlatformConnectionString)
-        {
-            InitialCatalog = "master"
-        };
-
-        await using var connection = new SqlConnection(masterBuilder.ConnectionString);
+        await using var connection = new SqlConnection(masterConnectionString);
         await connection.OpenAsync();
 
         var databaseName = $"brand_{brandSlug}";

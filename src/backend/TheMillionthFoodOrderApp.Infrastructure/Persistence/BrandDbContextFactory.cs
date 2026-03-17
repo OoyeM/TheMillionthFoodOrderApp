@@ -1,4 +1,3 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
@@ -51,7 +50,8 @@ public sealed class BrandDbContextFactory(
                 "Platform connection string 'platform' is not configured. " +
                 "Verify Aspire has injected the connection string.");
 
-        var brandConnectionString = DeriveBrandConnectionString(platformConnectionString, slug);
+        var brandConnectionString = BrandConnectionStringHelper.DeriveBrandConnectionString(
+            platformConnectionString, slug);
 
         var options = new DbContextOptionsBuilder<BrandDbContext>()
             .UseSqlServer(brandConnectionString)
@@ -59,19 +59,5 @@ public sealed class BrandDbContextFactory(
             .Options;
 
         return new BrandDbContext(options);
-    }
-
-    /// <summary>
-    /// Derives a brand-specific connection string by replacing the database name
-    /// in the platform connection string with <c>brand_{slug}</c>.
-    /// </summary>
-    private static string DeriveBrandConnectionString(string platformConnectionString, string brandSlug)
-    {
-        var builder = new SqlConnectionStringBuilder(platformConnectionString)
-        {
-            InitialCatalog = $"brand_{brandSlug}"
-        };
-
-        return builder.ConnectionString;
     }
 }
