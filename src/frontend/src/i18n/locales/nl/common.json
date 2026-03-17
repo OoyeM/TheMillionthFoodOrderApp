@@ -53,6 +53,19 @@
         "savingOrder": "Opslaan…",
         "saveOrderError": "Volgorde opslaan mislukt. Probeer opnieuw."
       }
+    },
+    "platformAdmins": {
+      "title": "Platformbeheerders",
+      "invite": "Beheerder uitnodigen",
+      "email": "E-mailadres",
+      "displayName": "Weergavenaam",
+      "deactivate": "Deactiveren",
+      "confirmDeactivate": "Weet u zeker dat u de beheerdersrechten van \"{{name}}\" wilt intrekken?",
+      "lastAdminError": "Kan de laatste platformbeheerder niet deactiveren.",
+      "empty": "Nog geen platformbeheerders.",
+      "inviteSuccess": "Beheerder uitgenodigd.",
+      "deactivateSuccess": "Beheerder gedeactiveerd.",
+      "cancel": "Annuleren"
     }
   }
 }

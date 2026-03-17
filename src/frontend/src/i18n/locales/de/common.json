@@ -53,6 +53,19 @@
         "savingOrder": "Wird gespeichert…",
         "saveOrderError": "Reihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
       }
+    },
+    "platformAdmins": {
+      "title": "Plattform-Administratoren",
+      "invite": "Administrator einladen",
+      "email": "E-Mail-Adresse",
+      "displayName": "Anzeigename",
+      "deactivate": "Deaktivieren",
+      "confirmDeactivate": "Sind Sie sicher, dass Sie die Administratorrechte von \"{{name}}\" widerrufen möchten?",
+      "lastAdminError": "Der letzte Plattform-Administrator kann nicht deaktiviert werden.",
+      "empty": "Noch keine Plattform-Administratoren.",
+      "inviteSuccess": "Administrator eingeladen.",
+      "deactivateSuccess": "Administrator deaktiviert.",
+      "cancel": "Abbrechen"
     }
   }
 }

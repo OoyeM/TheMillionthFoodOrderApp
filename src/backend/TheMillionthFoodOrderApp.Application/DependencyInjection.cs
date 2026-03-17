@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IBrandSettingsService, BrandSettingsService>();
         services.AddScoped<IMenuCategoryService, MenuCategoryService>();
+        services.AddScoped<IPlatformAdminService, PlatformAdminService>();
 
         return services;
     }

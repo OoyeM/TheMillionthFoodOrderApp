@@ -53,6 +53,19 @@
         "savingOrder": "Enregistrement…",
         "saveOrderError": "Échec de l'enregistrement de l'ordre. Veuillez réessayer."
       }
+    },
+    "platformAdmins": {
+      "title": "Administrateurs de la plateforme",
+      "invite": "Inviter un administrateur",
+      "email": "Adresse e-mail",
+      "displayName": "Nom d'affichage",
+      "deactivate": "Désactiver",
+      "confirmDeactivate": "Êtes-vous sûr de vouloir révoquer les droits d'administrateur de \"{{name}}\" ?",
+      "lastAdminError": "Impossible de désactiver le dernier administrateur de la plateforme.",
+      "empty": "Aucun administrateur de plateforme.",
+      "inviteSuccess": "Administrateur invité.",
+      "deactivateSuccess": "Administrateur désactivé.",
+      "cancel": "Annuler"
     }
   }
 }
