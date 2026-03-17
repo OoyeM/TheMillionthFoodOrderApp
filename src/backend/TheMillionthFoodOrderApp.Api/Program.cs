@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Api.Auth;
 using TheMillionthFoodOrderApp.Api.Middleware;
@@ -10,6 +11,7 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 using TheMillionthFoodOrderApp.ServiceDefaults;
 using Wolverine;
+using Wolverine.ErrorHandling;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +60,16 @@ builder.AddSqlServerDbContext<PlatformDbContext>("platform",
     });
 
 builder.Services.AddApplication();
-builder.Host.UseWolverine();
+builder.Host.UseWolverine(opts =>
+{
+    // Retry transient SQL failures with cooldown periods: 1s, 5s, then 15s before dead-lettering.
+    opts.OnException<SqlException>()
+        .RetryWithCooldown(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck<BrandDatabaseHealthCheck>("brand-databases");
+
 builder.Services.AddFastEndpoints();
 builder.Services.SwaggerDocument(o =>
 {
