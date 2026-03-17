@@ -134,3 +134,15 @@ export interface MenuCategoryListItem {
   productCount: number;
   createdAt: string;
 }
+
+/**
+ * Platform admin account as returned by the platform API.
+ */
+export interface PlatformAdmin {
+  id: string;
+  email: string;
+  displayName: string;
+  isPlatformAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

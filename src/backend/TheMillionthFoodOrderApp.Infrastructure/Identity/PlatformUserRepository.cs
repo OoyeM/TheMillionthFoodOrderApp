@@ -89,6 +89,23 @@ public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatf
         return results.Select(x => (x.Role, x.Slug)).ToList();
     }
 
+    public async Task<IReadOnlyList<PlatformUser>> GetAllPlatformAdminsAsync(
+        CancellationToken cancellationToken = default)
+        => await dbContext.PlatformUsers
+            .Where(u => u.IsPlatformAdmin)
+            .ToListAsync(cancellationToken);
+
+    public async Task<PlatformUser?> GetByEmailAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+        => await dbContext.PlatformUsers
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
+    public async Task<int> CountPlatformAdminsAsync(
+        CancellationToken cancellationToken = default)
+        => await dbContext.PlatformUsers
+            .CountAsync(u => u.IsPlatformAdmin, cancellationToken);
+
     public async Task AddRoleAsync(
         BrandUserRole role,
         CancellationToken cancellationToken = default)

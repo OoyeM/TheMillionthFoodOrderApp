@@ -35,6 +35,15 @@ public interface IPlatformUserRepository
     /// <summary>Removes a role assignment.</summary>
     Task RemoveRoleAsync(BrandUserRole role, CancellationToken cancellationToken = default);
 
+    /// <summary>Returns all users where <see cref="PlatformUser.IsPlatformAdmin"/> is true.</summary>
+    Task<IReadOnlyList<PlatformUser>> GetAllPlatformAdminsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Looks up a user by their email address.</summary>
+    Task<PlatformUser?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns the count of users where <see cref="PlatformUser.IsPlatformAdmin"/> is true.</summary>
+    Task<int> CountPlatformAdminsAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Persists all pending changes to the underlying store.</summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

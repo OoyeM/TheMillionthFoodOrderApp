@@ -54,6 +54,10 @@ const LazyMenuCategoryEdit = lazy(() =>
   import('./pages/MenuCategoryEdit').then((m) => ({ default: m.MenuCategoryEdit })),
 );
 
+const LazyPlatformAdminList = lazy(() =>
+  import('./pages/PlatformAdminList').then((m) => ({ default: m.PlatformAdminList })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -183,5 +187,14 @@ export const adminRoutes: RouteObject[] = [
         ),
       },
     ],
+  },
+  // Platform admin management
+  {
+    path: 'platform-admins',
+    element: (
+      <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+        <LazyPlatformAdminList />
+      </Suspense>
+    ),
   },
 ];
