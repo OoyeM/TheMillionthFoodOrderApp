@@ -1,0 +1,4 @@
+# Ignore all uploaded files — only the directory structure is tracked
+*
+!.gitignore
+!.gitkeep

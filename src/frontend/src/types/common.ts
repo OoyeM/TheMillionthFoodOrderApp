@@ -147,6 +147,128 @@ export interface PlatformAdmin {
   updatedAt: string;
 }
 
+// ── Brand Theming ────────────────────────────────────────────────────────────
+
+/**
+ * Brand color palette. All values are CSS hex color strings (e.g. "#2563eb").
+ */
+export interface BrandColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+/**
+ * Brand typography settings. Font families are selected from the preset list.
+ */
+export interface BrandTypography {
+  headingFontFamily: string;
+  bodyFontFamily: string;
+}
+
+/**
+ * Full brand settings as returned by the settings API.
+ */
+export interface BrandSettings {
+  id: string;
+  defaultLanguage: string;
+  timezone: string;
+  currency: string;
+  logoUrl: string | null;
+  customDomain: string | null;
+  colors: BrandColors | null;
+  typography: BrandTypography | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight public theme response used by the storefront.
+ */
+export interface BrandTheme {
+  logoUrl: string | null;
+  customDomain: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  headingFontFamily: string;
+  bodyFontFamily: string;
+}
+
+/**
+ * Font families available for brand typography selection.
+ */
+export const PRESET_FONTS = [
+  'System Default',
+  'Inter',
+  'Roboto',
+  'Open Sans',
+  'Lato',
+  'Poppins',
+  'Montserrat',
+  'Nunito',
+  'Raleway',
+  'Source Sans 3',
+  'DM Sans',
+] as const;
+
+export type PresetFont = (typeof PRESET_FONTS)[number];
+
+// ── Modifier Groups ─────────────────────────────────────────────────────────
+
+/**
+ * Translation of a modifier or modifier group name into a specific locale.
+ */
+export interface ModifierTranslationResponse {
+  languageCode: string;
+  name: string;
+}
+
+/**
+ * A single modifier option within a modifier group.
+ * PriceAdjustment can be negative (e.g. discount).
+ */
+export interface ModifierResponse {
+  id: string;
+  priceAdjustment: number;
+  sortOrder: number;
+  translations: ModifierTranslationResponse[];
+}
+
+/**
+ * Full modifier group entity as returned by the brand-scoped API.
+ */
+export interface ModifierGroupResponse {
+  id: string;
+  translations: ModifierTranslationResponse[];
+  modifiers: ModifierResponse[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight modifier group list item (name resolved to single language).
+ */
+export interface ModifierGroupListItem {
+  id: string;
+  name: string;
+  modifierCount: number;
+  productCount: number;
+  createdAt: string;
+}
+
+/**
+ * Modifier group assigned to a product, including its modifiers and sort order on the product.
+ */
+export interface ProductModifierGroupResponse {
+  modifierGroupId: string;
+  name: string;
+  sortOrder: number;
+  modifiers: ModifierResponse[];
+}
+
+// ── Staff Management ─────────────────────────────────────────────────────────
+
 /**
  * Staff roles within the platform hierarchy.
  * Values match the backend StaffRole enum.

@@ -54,6 +54,25 @@
         "saveOrderError": "Volgorde opslaan mislukt. Probeer opnieuw."
       }
     },
+    "modifierGroups": {
+      "title": "Modifier-groepen",
+      "create": "Modifier-groep aanmaken",
+      "edit": "Modifier-groep bewerken",
+      "delete": "Verwijderen",
+      "confirmDelete": "\"{{name}}\" verwijderen? Deze modifier-groep wordt permanent verwijderd.",
+      "name": "Naam",
+      "modifiers": "Modifiers",
+      "addModifier": "Modifier toevoegen",
+      "modifierName": "Naam modifier",
+      "priceAdjustment": "Prijsaanpassing (EUR)",
+      "noModifierGroups": "Nog geen modifier-groepen. Maak de eerste aan.",
+      "modifierCount": "Aantal modifiers",
+      "productCount": "Aantal producten",
+      "assignedGroups": "Toegewezen modifier-groepen",
+      "noAssignedGroups": "Geen modifier-groepen toegewezen.",
+      "saveAssignments": "Toewijzingen opslaan",
+      "removeModifier": "Verwijderen"
+    },
     "platformAdmins": {
       "title": "Platformbeheerders",
       "invite": "Beheerder uitnodigen",
