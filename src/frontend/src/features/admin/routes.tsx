@@ -54,6 +54,10 @@ const LazyMenuCategoryEdit = lazy(() =>
   import('./pages/MenuCategoryEdit').then((m) => ({ default: m.MenuCategoryEdit })),
 );
 
+const LazyShopOpeningHours = lazy(() =>
+  import('./pages/ShopOpeningHours').then((m) => ({ default: m.ShopOpeningHours })),
+);
+
 const LazyPlatformAdminList = lazy(() =>
   import('./pages/PlatformAdminList').then((m) => ({ default: m.PlatformAdminList })),
 );
@@ -140,11 +144,24 @@ export const adminRoutes: RouteObject[] = [
       },
       {
         path: ':shopId',
-        element: (
-          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
-            <LazyShopEdit />
-          </Suspense>
-        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+                <LazyShopEdit />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'opening-hours',
+            element: (
+              <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+                <LazyShopOpeningHours />
+              </Suspense>
+            ),
+          },
+        ],
       },
     ],
   },

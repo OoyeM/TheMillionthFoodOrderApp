@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 {
     [DbContext(typeof(BrandDbContext))]
-    partial class BrandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319203120_AddOpeningHours")]
+    partial class AddOpeningHours
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,18 +39,10 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
-                    b.Property<string>("CustomDomain")
-                        .HasMaxLength(253)
-                        .HasColumnType("nvarchar(253)");
-
                     b.Property<string>("DefaultLanguage")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
 
                     b.Property<string>("Timezone")
                         .IsRequired()
@@ -121,133 +116,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .IsUnique();
 
                     b.ToTable("MenuCategoryTranslations", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.Modifier", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ModifierGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("PriceAdjustment")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModifierGroupId");
-
-                    b.ToTable("Modifiers", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ModifierGroups", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroupTranslation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("LanguageCode")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
-
-                    b.Property<Guid>("ModifierGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModifierGroupId", "LanguageCode")
-                        .IsUnique();
-
-                    b.ToTable("ModifierGroupTranslations", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierTranslation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("LanguageCode")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
-
-                    b.Property<Guid>("ModifierId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModifierId", "LanguageCode")
-                        .IsUnique();
-
-                    b.ToTable("ModifierTranslations", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ProductModifierGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ModifierGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModifierGroupId");
-
-                    b.HasIndex("ProductId", "ModifierGroupId")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "SortOrder")
-                        .HasDatabaseName("IX_ProductModifierGroups_ProductId_SortOrder");
-
-                    b.ToTable("ProductModifierGroups", (string)null);
                 });
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
@@ -394,111 +262,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.ToTable("Shops", (string)null);
                 });
 
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings", b =>
-                {
-                    b.OwnsOne("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandColors", "Colors", b1 =>
-                        {
-                            b1.Property<Guid>("BrandSettingsId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Accent")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Accent");
-
-                            b1.Property<string>("Primary")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Primary");
-
-                            b1.Property<string>("Secondary")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Secondary");
-
-                            b1.HasKey("BrandSettingsId");
-
-                            b1.ToTable("BrandSettings");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BrandSettingsId");
-                        });
-
-                    b.OwnsOne("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandTypography", "Typography", b1 =>
-                        {
-                            b1.Property<Guid>("BrandSettingsId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("BodyFontFamily")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Typography_BodyFontFamily");
-
-                            b1.Property<string>("HeadingFontFamily")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Typography_HeadingFontFamily");
-
-                            b1.HasKey("BrandSettingsId");
-
-                            b1.ToTable("BrandSettings");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BrandSettingsId");
-                        });
-
-                    b.Navigation("Colors");
-
-                    b.Navigation("Typography");
-                });
-
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategoryTranslation", b =>
                 {
                     b.HasOne("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategory", null)
                         .WithMany("Translations")
                         .HasForeignKey("MenuCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.Modifier", b =>
-                {
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroup", null)
-                        .WithMany("Modifiers")
-                        .HasForeignKey("ModifierGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroupTranslation", b =>
-                {
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroup", null)
-                        .WithMany("Translations")
-                        .HasForeignKey("ModifierGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierTranslation", b =>
-                {
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.ModifierGroups.Modifier", null)
-                        .WithMany("Translations")
-                        .HasForeignKey("ModifierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ProductModifierGroup", b =>
-                {
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroup", null)
-                        .WithMany()
-                        .HasForeignKey("ModifierGroupId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -606,18 +374,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategory", b =>
                 {
-                    b.Navigation("Translations");
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.Modifier", b =>
-                {
-                    b.Navigation("Translations");
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.ModifierGroups.ModifierGroup", b =>
-                {
-                    b.Navigation("Modifiers");
-
                     b.Navigation("Translations");
                 });
 

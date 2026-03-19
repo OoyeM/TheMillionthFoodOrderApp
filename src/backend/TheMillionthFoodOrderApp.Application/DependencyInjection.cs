@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformAdminService, PlatformAdminService>();
         services.AddScoped<IBrandStaffService, BrandStaffService>();
         services.AddScoped<IModifierGroupService, ModifierGroupService>();
+        services.AddScoped<IOpeningHoursService, OpeningHoursService>();
 
         return services;
     }
