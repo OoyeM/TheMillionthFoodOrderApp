@@ -18,6 +18,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
 {
     public DbSet<Domain.BrandSettings.BrandSettings> BrandSettings => Set<Domain.BrandSettings.BrandSettings>();
     public DbSet<Shop> Shops => Set<Shop>();
+    public DbSet<OpeningHoursTimeBlock> OpeningHoursTimeBlocks => Set<OpeningHoursTimeBlock>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductTranslation> ProductTranslations => Set<ProductTranslation>();
     public DbSet<MenuCategory> MenuCategories => Set<MenuCategory>();
@@ -30,6 +31,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         // All brand-specific tables live in the default "dbo" schema.
         modelBuilder.ApplyConfiguration(new BrandSettingsConfiguration());
         modelBuilder.ApplyConfiguration(new ShopConfiguration());
+        modelBuilder.ApplyConfiguration(new OpeningHoursTimeBlockConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductTranslationConfiguration());
         modelBuilder.ApplyConfiguration(new MenuCategoryConfiguration());

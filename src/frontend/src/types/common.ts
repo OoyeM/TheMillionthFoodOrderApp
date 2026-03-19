@@ -146,3 +146,46 @@ export interface PlatformAdmin {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * A single opening hours block for a specific day of the week.
+ * dayOfWeek follows .NET DayOfWeek: 0=Sunday, 1=Monday, ..., 6=Saturday.
+ */
+export interface OpeningHoursTimeBlock {
+  id: string;
+  dayOfWeek: number; // 0=Sunday, 6=Saturday
+  openTime: string;  // "HH:mm"
+  closeTime: string; // "HH:mm"
+}
+
+/**
+ * Request body for a single time block (no id — server assigns it).
+ */
+export interface TimeBlockRequest {
+  dayOfWeek: number;
+  openTime: string;
+  closeTime: string;
+}
+
+/**
+ * Request body for PUT /opening-hours — replaces the full weekly schedule.
+ */
+export interface SetOpeningHoursRequest {
+  timeBlocks: TimeBlockRequest[];
+}
+
+/**
+ * Response from GET /opening-hours.
+ */
+export interface OpeningHoursResponse {
+  timeBlocks: OpeningHoursTimeBlock[];
+}
+
+/**
+ * Response from GET /status — real-time open/closed state of a shop.
+ */
+export interface ShopStatusResponse {
+  isOpen: boolean;
+  nextOpeningTime: string | null;
+  timeZoneId: string;
+}

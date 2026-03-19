@@ -18,8 +18,17 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     public string? ContactPhone { get; private set; }
     public bool IsActive { get; private set; } = true;
 
+    /// <summary>
+    /// IANA time zone identifier for this shop (e.g. "Europe/Brussels").
+    /// Used to interpret <see cref="OpeningHours"/> blocks which are stored as local time.
+    /// </summary>
+    public string TimeZoneId { get; private set; } = "Europe/Brussels";
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    private readonly List<OpeningHoursTimeBlock> _openingHours = [];
+    public IReadOnlyCollection<OpeningHoursTimeBlock> OpeningHours => _openingHours.AsReadOnly();
 
     // Required by EF Core
     private Shop() { }
@@ -66,6 +75,120 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
         UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Replaces all opening hour time blocks for this shop atomically.
+    /// Clears existing blocks and sets new ones from <paramref name="blocks"/>.
+    /// Validates that no two blocks on the same day overlap.
+    /// </summary>
+    /// <param name="blocks">The complete new weekly schedule. May be empty to clear all hours.</param>
+    /// <exception cref="ArgumentException">Thrown when any two blocks on the same day overlap.</exception>
+    public void SetOpeningHours(IEnumerable<OpeningHoursTimeBlock> blocks)
+    {
+        var blockList = blocks.ToList();
+
+        // Validate: no overlapping blocks per day
+        var byDay = blockList.GroupBy(b => b.DayOfWeek);
+        foreach (var group in byDay)
+        {
+            var sorted = group.OrderBy(b => b.OpenTime).ToList();
+            for (var i = 0; i < sorted.Count - 1; i++)
+            {
+                if (sorted[i].CloseTime > sorted[i + 1].OpenTime)
+                    throw new ArgumentException(
+                        $"Overlapping time blocks on {group.Key}: " +
+                        $"{sorted[i].OpenTime}-{sorted[i].CloseTime} overlaps with {sorted[i + 1].OpenTime}-{sorted[i + 1].CloseTime}.");
+            }
+        }
+
+        _openingHours.Clear();
+        _openingHours.AddRange(blockList);
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Returns whether the shop is open at the given instant.
+    /// Converts <paramref name="now"/> to the shop's local time zone and checks against time blocks.
+    /// Returns false when no opening hours are configured.
+    /// </summary>
+    public bool IsOpenAt(DateTimeOffset now)
+    {
+        if (_openingHours.Count == 0)
+            return false;
+
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
+
+        var localNow = TimeZoneInfo.ConvertTime(now, tz);
+        var localTime = TimeOnly.FromDateTime(localNow.DateTime);
+        var dayOfWeek = localNow.DayOfWeek;
+
+        return _openingHours.Any(b =>
+            b.DayOfWeek == dayOfWeek &&
+            b.OpenTime <= localTime &&
+            localTime < b.CloseTime);
+    }
+
+    /// <summary>
+    /// Finds the next time this shop will open after <paramref name="now"/>.
+    /// Searches up to 8 days ahead (full week + 1 day buffer) to handle wrap-around.
+    /// Returns null when no opening hours are configured.
+    /// </summary>
+    public DateTimeOffset? GetNextOpeningTime(DateTimeOffset now)
+    {
+        if (_openingHours.Count == 0)
+            return null;
+
+        TimeZoneInfo tz;
+        try
+        {
+            tz = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return null;
+        }
+
+        var localNow = TimeZoneInfo.ConvertTime(now, tz);
+        var localTime = TimeOnly.FromDateTime(localNow.DateTime);
+        var todayDow = localNow.DayOfWeek;
+
+        // Search through the current day (remaining blocks) and the next 6 days (7 iterations = full week)
+        for (var dayOffset = 0; dayOffset <= 6; dayOffset++)
+        {
+            var candidateDow = (DayOfWeek)(((int)todayDow + dayOffset) % 7);
+            var candidateDate = localNow.Date.AddDays(dayOffset);
+
+            var blocksForDay = _openingHours
+                .Where(b => b.DayOfWeek == candidateDow)
+                .OrderBy(b => b.OpenTime)
+                .ToList();
+
+            foreach (var block in blocksForDay)
+            {
+                if (dayOffset == 0 && block.OpenTime <= localTime)
+                {
+                    // This block has already started (or is in the past) today — skip it
+                    continue;
+                }
+
+                // Found the next opening block; use ConvertTimeToUtc to handle DST correctly
+                var openDateTime = candidateDate.Add(block.OpenTime.ToTimeSpan());
+                var utcDateTime = TimeZoneInfo.ConvertTimeToUtc(
+                    DateTime.SpecifyKind(openDateTime, DateTimeKind.Unspecified), tz);
+                return new DateTimeOffset(utcDateTime, TimeSpan.Zero);
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

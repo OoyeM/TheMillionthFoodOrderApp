@@ -66,6 +66,28 @@
       "inviteSuccess": "Administrateur invité.",
       "deactivateSuccess": "Administrateur désactivé.",
       "cancel": "Annuler"
+    },
+    "shops": {
+      "openingHours": {
+        "title": "Heures d'ouverture",
+        "monday": "Lundi",
+        "tuesday": "Mardi",
+        "wednesday": "Mercredi",
+        "thursday": "Jeudi",
+        "friday": "Vendredi",
+        "saturday": "Samedi",
+        "sunday": "Dimanche",
+        "addBlock": "Ajouter un créneau",
+        "remove": "Supprimer",
+        "save": "Enregistrer les heures d'ouverture",
+        "saving": "Enregistrement…",
+        "saved": "Heures d'ouverture enregistrées",
+        "openTime": "Ouverture",
+        "closeTime": "Fermeture",
+        "closed": "Fermé",
+        "manageHours": "Gérer les heures d'ouverture",
+        "noBlocks": "Aucune heure d'ouverture définie — le magasin apparaîtra comme fermé"
+      }
     }
   }
 }

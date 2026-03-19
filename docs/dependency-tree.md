@@ -69,7 +69,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-040** | Set shop opening hours | 002 |
+| ✅ | **US-FP-040** | Set shop opening hours | 002 |
 | ⬜ | **US-FP-041** | Set special hours and holiday overrides | 040 |
 | ⬜ | **US-FP-020** | Configure time slot settings | 002 |
 | ⬜ | **US-FP-021** | Configure estimated wait times | 002 |

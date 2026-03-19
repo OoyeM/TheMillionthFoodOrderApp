@@ -34,6 +34,11 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
         builder.Property(s => s.IsActive)
             .IsRequired();
 
+        builder.Property(s => s.TimeZoneId)
+            .IsRequired()
+            .HasMaxLength(100)
+            .HasDefaultValue("Europe/Brussels");
+
         builder.Property(s => s.CreatedAt)
             .IsRequired();
 
@@ -68,6 +73,12 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
                 .IsRequired()
                 .HasMaxLength(2); // ISO 3166-1 alpha-2
         });
+
+        // Opening hours blocks — cascade delete so removing a shop removes its schedule
+        builder.HasMany(s => s.OpeningHours)
+            .WithOne()
+            .HasForeignKey(b => b.ShopId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Domain events are transient — never persisted
         builder.Ignore(s => s.DomainEvents);

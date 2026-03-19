@@ -66,6 +66,28 @@
       "inviteSuccess": "Beheerder uitgenodigd.",
       "deactivateSuccess": "Beheerder gedeactiveerd.",
       "cancel": "Annuleren"
+    },
+    "shops": {
+      "openingHours": {
+        "title": "Openingstijden",
+        "monday": "Maandag",
+        "tuesday": "Dinsdag",
+        "wednesday": "Woensdag",
+        "thursday": "Donderdag",
+        "friday": "Vrijdag",
+        "saturday": "Zaterdag",
+        "sunday": "Zondag",
+        "addBlock": "Tijdblok toevoegen",
+        "remove": "Verwijderen",
+        "save": "Openingstijden opslaan",
+        "saving": "Opslaan…",
+        "saved": "Openingstijden opgeslagen",
+        "openTime": "Opent",
+        "closeTime": "Sluit",
+        "closed": "Gesloten",
+        "manageHours": "Openingstijden beheren",
+        "noBlocks": "Geen openingstijden ingesteld — winkel verschijnt als gesloten"
+      }
     }
   }
 }
