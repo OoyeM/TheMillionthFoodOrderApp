@@ -6,6 +6,7 @@ using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
+using BrandSettingsDomain = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
 
@@ -42,11 +43,27 @@ public sealed class BrandDbSeeder(
             return;
         }
 
-        var settings = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings.CreateDefault();
+        // Seed Frietjes? brand settings with Belgian defaults and sample theming.
+        // The dark yellow/golden palette reflects a typical Belgian fries brand identity.
+        var settings = BrandSettingsDomain.Create(
+            defaultLanguage: "nl-BE",
+            timezone: "Europe/Brussels",
+            currency: "EUR");
+
+        settings.UpdateTheming(
+            colors: new BrandColors(
+                primary: "#1a1a1a",    // Near-black — header / primary actions
+                secondary: "#f59e0b",  // Amber — brand accent inspired by golden fries
+                accent: "#d97706"),    // Darker amber — hover / CTA accent
+            typography: new BrandTypography(
+                headingFontFamily: "Poppins",
+                bodyFontFamily: "Inter"),
+            customDomain: null);       // DNS routing is US-FP-067
+
         await context.BrandSettings.AddAsync(settings, cancellationToken);
 
         logger.LogInformation(
-            "Seed: Created default BrandSettings (language: {Language}, timezone: {Timezone}, currency: {Currency}).",
+            "Seed: Created BrandSettings for Frietjes? (language: {Language}, timezone: {Timezone}, currency: {Currency}).",
             settings.DefaultLanguage,
             settings.Timezone,
             settings.Currency);

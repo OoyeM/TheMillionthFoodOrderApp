@@ -5,6 +5,7 @@ import { AppVariantLayout } from '@components/AppVariantLayout';
 import { SuspenseWrapper } from '@components/SuspenseWrapper';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { adminRoutes } from '@features/admin/routes';
+import { ThemeProvider } from '@features/storefront/components/ThemeProvider';
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded feature pages — split into separate chunks by Vite/Rollup
@@ -31,16 +32,24 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       // ── Storefront (public — no auth required) ───────────────────────────
+      // ThemeProvider fetches the brand theme and injects CSS custom properties.
       {
         element: <AppVariantLayout variant="storefront" />,
         children: [
           {
-            index: true,
-            element: (
-              <SuspenseWrapper>
-                <LazyStorefrontHome />
-              </SuspenseWrapper>
-            ),
+            // ThemeProvider as layout: fetches brand theme, applies CSS custom properties,
+            // then renders child routes via <Outlet />.
+            element: <ThemeProvider />,
+            children: [
+              {
+                index: true,
+                element: (
+                  <SuspenseWrapper>
+                    <LazyStorefrontHome />
+                  </SuspenseWrapper>
+                ),
+              },
+            ],
           },
         ],
       },

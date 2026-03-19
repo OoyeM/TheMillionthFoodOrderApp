@@ -16,4 +16,29 @@ public interface IBrandSettingsService
     Task<BrandSettingsResponse> UpsertAsync(
         UpdateBrandSettingsRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates the visual theming configuration (colors, typography, custom domain).
+    /// Returns <c>null</c> if no BrandSettings record exists yet.
+    /// </summary>
+    Task<BrandSettingsResponse?> UpdateThemingAsync(
+        UpdateBrandThemingRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Saves the uploaded logo file and stores the resulting URL on BrandSettings.
+    /// Returns <c>null</c> if no BrandSettings record exists yet.
+    /// </summary>
+    Task<UploadBrandLogoResponse?> UploadLogoAsync(
+        string fileName,
+        string contentType,
+        Stream fileStream,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the lightweight public theme DTO for the storefront.
+    /// Always returns a response — applies default values when theming is not configured.
+    /// Returns <c>null</c> if no BrandSettings record exists yet.
+    /// </summary>
+    Task<BrandThemeResponse?> GetThemeAsync(CancellationToken cancellationToken = default);
 }

@@ -28,6 +28,31 @@ public sealed class BrandSettings : AggregateRoot<Guid>, IAuditable
     /// </summary>
     public string Currency { get; private set; } = "EUR";
 
+    // ── Theming ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// URL of the brand logo image. Null when no logo has been uploaded.
+    /// The storefront falls back to displaying the brand name as text.
+    /// </summary>
+    public string? LogoUrl { get; private set; }
+
+    /// <summary>
+    /// Custom domain for this brand's storefront (e.g. "order.frietjes.be").
+    /// Stored only — actual DNS routing is handled by US-FP-067.
+    /// </summary>
+    public string? CustomDomain { get; private set; }
+
+    /// <summary>
+    /// Brand color palette. Null until the brand admin has configured theming;
+    /// the storefront applies sensible defaults when null.
+    /// </summary>
+    public BrandColors? Colors { get; private set; }
+
+    /// <summary>
+    /// Brand typography settings. Null until the brand admin has configured theming.
+    /// </summary>
+    public BrandTypography? Typography { get; private set; }
+
     /// <inheritdoc />
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -79,6 +104,30 @@ public sealed class BrandSettings : AggregateRoot<Guid>, IAuditable
         DefaultLanguage = defaultLanguage;
         Timezone = timezone;
         Currency = currency;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the visual theming configuration: colors, typography, and custom domain.
+    /// Pass <c>null</c> for any parameter to clear that theming property.
+    /// </summary>
+    public void UpdateTheming(
+        BrandColors? colors,
+        BrandTypography? typography,
+        string? customDomain)
+    {
+        Colors = colors;
+        Typography = typography;
+        CustomDomain = customDomain;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets (or clears) the brand logo URL after a successful upload.
+    /// </summary>
+    public void SetLogoUrl(string? logoUrl)
+    {
+        LogoUrl = logoUrl;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 }
