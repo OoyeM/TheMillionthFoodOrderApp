@@ -146,3 +146,54 @@ export interface PlatformAdmin {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Translation of a modifier or modifier group name into a specific locale.
+ */
+export interface ModifierTranslationResponse {
+  languageCode: string;
+  name: string;
+}
+
+/**
+ * A single modifier option within a modifier group.
+ * PriceAdjustment can be negative (e.g. discount).
+ */
+export interface ModifierResponse {
+  id: string;
+  priceAdjustment: number;
+  sortOrder: number;
+  translations: ModifierTranslationResponse[];
+}
+
+/**
+ * Full modifier group entity as returned by the brand-scoped API.
+ */
+export interface ModifierGroupResponse {
+  id: string;
+  translations: ModifierTranslationResponse[];
+  modifiers: ModifierResponse[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight modifier group list item (name resolved to single language).
+ */
+export interface ModifierGroupListItem {
+  id: string;
+  name: string;
+  modifierCount: number;
+  productCount: number;
+  createdAt: string;
+}
+
+/**
+ * Modifier group assigned to a product, including its modifiers and sort order on the product.
+ */
+export interface ProductModifierGroupResponse {
+  modifierGroupId: string;
+  name: string;
+  sortOrder: number;
+  modifiers: ModifierResponse[];
+}
