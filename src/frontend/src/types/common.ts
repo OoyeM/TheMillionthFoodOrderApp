@@ -146,3 +146,53 @@ export interface PlatformAdmin {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Staff roles within the platform hierarchy.
+ * Values match the backend StaffRole enum.
+ * Brand-level roles (BrandAdmin, Customer) require BrandId but no ShopId.
+ * Shop-level roles (ShopManager, CounterStaff, KitchenStaff, FloorStaff) require both BrandId and ShopId.
+ */
+export type StaffRole =
+  | 'BrandAdmin'
+  | 'ShopManager'
+  | 'CounterStaff'
+  | 'KitchenStaff'
+  | 'FloorStaff'
+  | 'Customer';
+
+/** Numeric values matching the backend StaffRole enum for use in POST requests. */
+export const StaffRoleValue: Record<StaffRole, number> = {
+  BrandAdmin: 0,
+  ShopManager: 1,
+  CounterStaff: 2,
+  KitchenStaff: 3,
+  FloorStaff: 4,
+  Customer: 5,
+};
+
+/** Shop-level roles that require a ShopId when assigning. */
+export const ShopLevelRoles: ReadonlySet<StaffRole> = new Set<StaffRole>([
+  'ShopManager',
+  'CounterStaff',
+  'KitchenStaff',
+  'FloorStaff',
+]);
+
+/**
+ * A single brand staff role assignment as returned by the brand-scoped API.
+ * One user may appear multiple times if they hold multiple roles.
+ */
+export interface StaffMember {
+  /** Platform user ID of the staff member. */
+  id: string;
+  email: string;
+  displayName: string;
+  /** The unique ID of this specific role assignment (used for deactivation). */
+  roleId: string;
+  /** Numeric role value matching the backend StaffRole enum. */
+  role: number;
+  shopId: string | null;
+  shopName: string | null;
+  createdAt: string;
+}

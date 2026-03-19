@@ -66,6 +66,42 @@
       "inviteSuccess": "Administrator eingeladen.",
       "deactivateSuccess": "Administrator deaktiviert.",
       "cancel": "Abbrechen"
+    },
+    "staff": {
+      "title": "Mitarbeiter",
+      "invite": "Mitarbeiter einladen",
+      "deactivate": "Deaktivieren",
+      "cancel": "Abbrechen",
+      "empty": "Noch keine Mitarbeiter. Laden Sie den ersten ein.",
+      "confirmDeactivate": "Sind Sie sicher, dass Sie die Rolle von \"{{name}}\" widerrufen möchten?",
+      "lastAdminError": "Der letzte Markenadministrator kann nicht deaktiviert werden.",
+      "columns": {
+        "displayName": "Name",
+        "email": "E-Mail-Adresse",
+        "role": "Rolle",
+        "shop": "Geschäft",
+        "actions": "Aktionen"
+      },
+      "roles": {
+        "BrandAdmin": "Markenadministrator",
+        "ShopManager": "Geschäftsleiter",
+        "CounterStaff": "Kassenmitarbeiter",
+        "KitchenStaff": "Küchenmitarbeiter",
+        "FloorStaff": "Saalmitarbeiter",
+        "Customer": "Kunde"
+      },
+      "form": {
+        "email": "E-Mail-Adresse",
+        "emailRequired": "E-Mail-Adresse ist erforderlich.",
+        "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+        "displayName": "Anzeigename",
+        "displayNameRequired": "Anzeigename ist erforderlich.",
+        "role": "Rolle",
+        "shop": "Geschäft",
+        "shopRequired": "Geschäft ist für Rollen auf Geschäftsebene erforderlich.",
+        "selectShop": "Geschäft auswählen…",
+        "unknownError": "Unbekannter Fehler. Bitte erneut versuchen."
+      }
     }
   }
 }

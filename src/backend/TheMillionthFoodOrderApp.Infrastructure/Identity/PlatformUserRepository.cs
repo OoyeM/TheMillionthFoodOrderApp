@@ -106,6 +106,37 @@ public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatf
         => await dbContext.PlatformUsers
             .CountAsync(u => u.IsPlatformAdmin, cancellationToken);
 
+    public async Task<BrandUserRole?> GetRoleByIdAsync(
+        Guid roleId,
+        CancellationToken cancellationToken = default)
+        => await dbContext.BrandUserRoles.FindAsync([roleId], cancellationToken);
+
+    public async Task<IReadOnlyList<(PlatformUser User, IReadOnlyList<BrandUserRole> Roles)>> GetUsersByBrandAndShopAsync(
+        Guid brandId,
+        Guid shopId,
+        CancellationToken cancellationToken = default)
+    {
+        // Fetch roles scoped to the given brand+shop, then group by user in memory.
+        var shopRoles = await dbContext.BrandUserRoles
+            .Where(r => r.BrandId == brandId && r.ShopId == shopId)
+            .ToListAsync(cancellationToken);
+
+        if (shopRoles.Count == 0)
+            return [];
+
+        var userIds = shopRoles.Select(r => r.PlatformUserId).Distinct().ToList();
+
+        var users = await dbContext.PlatformUsers
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync(cancellationToken);
+
+        return users
+            .Select(u => (u, (IReadOnlyList<BrandUserRole>)shopRoles
+                .Where(r => r.PlatformUserId == u.Id)
+                .ToList()))
+            .ToList();
+    }
+
     public async Task AddRoleAsync(
         BrandUserRole role,
         CancellationToken cancellationToken = default)

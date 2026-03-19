@@ -58,6 +58,10 @@ const LazyPlatformAdminList = lazy(() =>
   import('./pages/PlatformAdminList').then((m) => ({ default: m.PlatformAdminList })),
 );
 
+const LazyStaffList = lazy(() =>
+  import('./pages/StaffList').then((m) => ({ default: m.StaffList })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -194,6 +198,15 @@ export const adminRoutes: RouteObject[] = [
     element: (
       <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
         <LazyPlatformAdminList />
+      </Suspense>
+    ),
+  },
+  // Brand staff management
+  {
+    path: 'staff',
+    element: (
+      <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+        <LazyStaffList />
       </Suspense>
     ),
   },
