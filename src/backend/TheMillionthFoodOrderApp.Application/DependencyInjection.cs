@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IBrandSettingsService, BrandSettingsService>();
         services.AddScoped<IMenuCategoryService, MenuCategoryService>();
         services.AddScoped<IPlatformAdminService, PlatformAdminService>();
+        services.AddScoped<IBrandStaffService, BrandStaffService>();
         services.AddScoped<IModifierGroupService, ModifierGroupService>();
 
         return services;

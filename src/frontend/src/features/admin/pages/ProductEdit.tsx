@@ -205,7 +205,7 @@ export function ProductEdit() {
     if (index === 0) return;
     setAssignedGroups((prev) => {
       const next = [...prev];
-      [next[index - 1], next[index]] = [next[index], next[index - 1]];
+      [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
   }
@@ -214,7 +214,7 @@ export function ProductEdit() {
     setAssignedGroups((prev) => {
       if (index >= prev.length - 1) return prev;
       const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1], next[index]];
+      [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
   }

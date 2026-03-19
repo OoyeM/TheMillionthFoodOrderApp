@@ -44,6 +44,15 @@ public interface IPlatformUserRepository
     /// <summary>Returns the count of users where <see cref="PlatformUser.IsPlatformAdmin"/> is true.</summary>
     Task<int> CountPlatformAdminsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Looks up a specific <see cref="BrandUserRole"/> by its ID.</summary>
+    Task<BrandUserRole?> GetRoleByIdAsync(Guid roleId, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns all users (with roles) who hold a specific role within the given brand and shop.</summary>
+    Task<IReadOnlyList<(PlatformUser User, IReadOnlyList<BrandUserRole> Roles)>> GetUsersByBrandAndShopAsync(
+        Guid brandId,
+        Guid shopId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Persists all pending changes to the underlying store.</summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
