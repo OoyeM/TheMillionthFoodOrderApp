@@ -24,6 +24,50 @@ public sealed class BrandSettingsConfiguration : IEntityTypeConfiguration<Domain
             .IsRequired()
             .HasMaxLength(3); // ISO 4217 codes are exactly 3 characters
 
+        // ── Theming ──────────────────────────────────────────────────────────
+
+        builder.Property(s => s.LogoUrl)
+            .HasMaxLength(2048) // Standard URL max length
+            .IsRequired(false);
+
+        builder.Property(s => s.CustomDomain)
+            .HasMaxLength(253) // Max DNS label length per RFC 1035
+            .IsRequired(false);
+
+        // BrandColors owned entity — nullable, stored as flat columns on the same table.
+        // All three color columns are nullable because the entire Colors object is optional.
+        builder.OwnsOne(s => s.Colors, colors =>
+        {
+            colors.Property(c => c.Primary)
+                .HasColumnName("Colors_Primary")
+                .HasMaxLength(7) // "#rrggbb"
+                .IsRequired(false);
+
+            colors.Property(c => c.Secondary)
+                .HasColumnName("Colors_Secondary")
+                .HasMaxLength(7)
+                .IsRequired(false);
+
+            colors.Property(c => c.Accent)
+                .HasColumnName("Colors_Accent")
+                .HasMaxLength(7)
+                .IsRequired(false);
+        });
+
+        // BrandTypography owned entity — nullable, stored as flat columns on the same table.
+        builder.OwnsOne(s => s.Typography, typography =>
+        {
+            typography.Property(t => t.HeadingFontFamily)
+                .HasColumnName("Typography_HeadingFontFamily")
+                .HasMaxLength(100)
+                .IsRequired(false);
+
+            typography.Property(t => t.BodyFontFamily)
+                .HasColumnName("Typography_BodyFontFamily")
+                .HasMaxLength(100)
+                .IsRequired(false);
+        });
+
         builder.Property(s => s.CreatedAt)
             .IsRequired();
 

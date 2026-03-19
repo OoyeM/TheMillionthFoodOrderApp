@@ -45,7 +45,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-005** | Create and manage simple products | 001, 002 |
-| ⬜ | **US-FP-006** | Add modifier groups to products | 005 |
+| ✅ | **US-FP-006** | Add modifier groups to products | 005 |
 | ⬜ | **US-FP-007** | Create and manage combo products | 005 |
 | ⬜ | **US-FP-008** | Manage allergen and dietary information | 005 |
 | ✅ | **US-FP-014** | Define menu categories | 005 |
@@ -57,13 +57,13 @@ Once brands + shops exist, these streams are **independent of each other**.
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-003** | Assign brand-level staff auth method | 001 |
 | 🚧 | **US-FP-037** | Customer registration and login | 001 |
-| 🚧 | **US-FP-032** | Manage staff accounts | 001, 003 |
+| ✅ | **US-FP-032** | Manage staff accounts | 001, 003 |
 | ⬜ | **US-FP-039** | Staff login with configured auth method | 003, 032 |
 
 **Notes:**
 - 003: Full-stack complete — domain, endpoint, frontend config UI with confirmation dialog and i18n
 - 037: Mock auth complete; real Entra External ID / SSO is TODO
-- 032: BrandUserRole entity + StaffRole enum exist; no endpoints or UI
+- 032: Complete — full-stack CRUD: invite by email with role+shop, list, deactivate, shop-filtered view, last-admin guard, 10 integration tests
 
 ### Stream C: Shop Configuration
 
@@ -81,7 +81,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-029** | Configure brand theming | 001 |
+| ✅ | **US-FP-029** | Configure brand theming | 001 |
 | ⬜ | **US-FP-030** | Provide translations for product catalog | 005 |
 | ⬜ | **US-FP-031** | Select language on the storefront | 030 |
 | ⬜ | **US-FP-067** | Configure custom domain for brand | 029 |

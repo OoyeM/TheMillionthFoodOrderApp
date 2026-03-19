@@ -6,6 +6,7 @@ using TheMillionthFoodOrderApp.Api.Auth;
 using TheMillionthFoodOrderApp.Api.Middleware;
 using TheMillionthFoodOrderApp.Application;
 using TheMillionthFoodOrderApp.Infrastructure;
+using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
@@ -16,6 +17,15 @@ using Wolverine.ErrorHandling;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+// Configure local file storage — uploads land in wwwroot/uploads/ and are served as static files.
+// In production this registration can be replaced with an Azure Blob Storage implementation.
+var uploadsPath = Path.Combine(builder.Environment.WebRootPath ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot"), "uploads");
+builder.Services.Configure<LocalFileStorageOptions>(opts =>
+{
+    opts.UploadsPath = uploadsPath;
+    opts.UrlPrefix = "/uploads";
+});
 
 // Register infrastructure services first (includes AuditSaveChangesInterceptor as singleton)
 builder.Services.AddInfrastructure();
@@ -115,6 +125,9 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.MapDefaultEndpoints();
+
+// Serve static files from wwwroot (includes uploaded logos at /uploads/*)
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

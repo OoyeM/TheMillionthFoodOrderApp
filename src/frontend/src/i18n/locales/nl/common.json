@@ -54,6 +54,25 @@
         "saveOrderError": "Volgorde opslaan mislukt. Probeer opnieuw."
       }
     },
+    "modifierGroups": {
+      "title": "Modifier-groepen",
+      "create": "Modifier-groep aanmaken",
+      "edit": "Modifier-groep bewerken",
+      "delete": "Verwijderen",
+      "confirmDelete": "\"{{name}}\" verwijderen? Deze modifier-groep wordt permanent verwijderd.",
+      "name": "Naam",
+      "modifiers": "Modifiers",
+      "addModifier": "Modifier toevoegen",
+      "modifierName": "Naam modifier",
+      "priceAdjustment": "Prijsaanpassing (EUR)",
+      "noModifierGroups": "Nog geen modifier-groepen. Maak de eerste aan.",
+      "modifierCount": "Aantal modifiers",
+      "productCount": "Aantal producten",
+      "assignedGroups": "Toegewezen modifier-groepen",
+      "noAssignedGroups": "Geen modifier-groepen toegewezen.",
+      "saveAssignments": "Toewijzingen opslaan",
+      "removeModifier": "Verwijderen"
+    },
     "platformAdmins": {
       "title": "Platformbeheerders",
       "invite": "Beheerder uitnodigen",
@@ -66,6 +85,42 @@
       "inviteSuccess": "Beheerder uitgenodigd.",
       "deactivateSuccess": "Beheerder gedeactiveerd.",
       "cancel": "Annuleren"
+    },
+    "staff": {
+      "title": "Medewerkers",
+      "invite": "Medewerker uitnodigen",
+      "deactivate": "Deactiveren",
+      "cancel": "Annuleren",
+      "empty": "Nog geen medewerkers. Nodig de eerste uit.",
+      "confirmDeactivate": "Weet u zeker dat u de rol van \"{{name}}\" wilt intrekken?",
+      "lastAdminError": "Kan de laatste merkbeheerder niet deactiveren.",
+      "columns": {
+        "displayName": "Naam",
+        "email": "E-mailadres",
+        "role": "Rol",
+        "shop": "Winkel",
+        "actions": "Acties"
+      },
+      "roles": {
+        "BrandAdmin": "Merkbeheerder",
+        "ShopManager": "Winkelmanager",
+        "CounterStaff": "Baliemedewerker",
+        "KitchenStaff": "Keukenmedewerker",
+        "FloorStaff": "Vloermedewerker",
+        "Customer": "Klant"
+      },
+      "form": {
+        "email": "E-mailadres",
+        "emailRequired": "E-mailadres is verplicht.",
+        "emailInvalid": "Voer een geldig e-mailadres in.",
+        "displayName": "Weergavenaam",
+        "displayNameRequired": "Weergavenaam is verplicht.",
+        "role": "Rol",
+        "shop": "Winkel",
+        "shopRequired": "Winkel is verplicht voor winkelniveau-rollen.",
+        "selectShop": "Selecteer een winkel…",
+        "unknownError": "Onbekende fout. Probeer opnieuw."
+      }
     },
     "shops": {
       "openingHours": {

@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
+using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
+using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Conventions;
 using TheMillionthFoodOrderApp.Infrastructure.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Shops;
@@ -23,6 +25,11 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
     public DbSet<ProductTranslation> ProductTranslations => Set<ProductTranslation>();
     public DbSet<MenuCategory> MenuCategories => Set<MenuCategory>();
     public DbSet<MenuCategoryTranslation> MenuCategoryTranslations => Set<MenuCategoryTranslation>();
+    public DbSet<ModifierGroup> ModifierGroups => Set<ModifierGroup>();
+    public DbSet<ModifierGroupTranslation> ModifierGroupTranslations => Set<ModifierGroupTranslation>();
+    public DbSet<Modifier> Modifiers => Set<Modifier>();
+    public DbSet<ModifierTranslation> ModifierTranslations => Set<ModifierTranslation>();
+    public DbSet<ProductModifierGroup> ProductModifierGroups => Set<ProductModifierGroup>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,10 +43,16 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         modelBuilder.ApplyConfiguration(new ProductTranslationConfiguration());
         modelBuilder.ApplyConfiguration(new MenuCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new MenuCategoryTranslationConfiguration());
+        modelBuilder.ApplyConfiguration(new ModifierGroupConfiguration());
+        modelBuilder.ApplyConfiguration(new ModifierGroupTranslationConfiguration());
+        modelBuilder.ApplyConfiguration(new ModifierConfiguration());
+        modelBuilder.ApplyConfiguration(new ModifierTranslationConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductModifierGroupConfiguration());
 
         // Global query filter: soft-deleted entities are excluded by default
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<MenuCategory>().HasQueryFilter(c => !c.IsDeleted);
+        modelBuilder.Entity<ModifierGroup>().HasQueryFilter(g => !g.IsDeleted);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

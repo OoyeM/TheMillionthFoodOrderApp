@@ -54,6 +54,25 @@
         "saveOrderError": "Échec de l'enregistrement de l'ordre. Veuillez réessayer."
       }
     },
+    "modifierGroups": {
+      "title": "Groupes de modificateurs",
+      "create": "Créer un groupe de modificateurs",
+      "edit": "Modifier le groupe",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer \"{{name}}\" ? Ce groupe de modificateurs sera définitivement supprimé.",
+      "name": "Nom",
+      "modifiers": "Modificateurs",
+      "addModifier": "Ajouter un modificateur",
+      "modifierName": "Nom du modificateur",
+      "priceAdjustment": "Ajustement de prix (EUR)",
+      "noModifierGroups": "Aucun groupe de modificateurs. Créez le premier.",
+      "modifierCount": "Nombre de modificateurs",
+      "productCount": "Nombre de produits",
+      "assignedGroups": "Groupes de modificateurs assignés",
+      "noAssignedGroups": "Aucun groupe de modificateurs assigné.",
+      "saveAssignments": "Enregistrer les assignations",
+      "removeModifier": "Supprimer"
+    },
     "platformAdmins": {
       "title": "Administrateurs de la plateforme",
       "invite": "Inviter un administrateur",
@@ -66,6 +85,42 @@
       "inviteSuccess": "Administrateur invité.",
       "deactivateSuccess": "Administrateur désactivé.",
       "cancel": "Annuler"
+    },
+    "staff": {
+      "title": "Personnel",
+      "invite": "Inviter un membre du personnel",
+      "deactivate": "Désactiver",
+      "cancel": "Annuler",
+      "empty": "Aucun membre du personnel. Invitez le premier.",
+      "confirmDeactivate": "Êtes-vous sûr de vouloir révoquer le rôle de \"{{name}}\" ?",
+      "lastAdminError": "Impossible de désactiver le dernier administrateur de la marque.",
+      "columns": {
+        "displayName": "Nom",
+        "email": "Adresse e-mail",
+        "role": "Rôle",
+        "shop": "Boutique",
+        "actions": "Actions"
+      },
+      "roles": {
+        "BrandAdmin": "Administrateur de marque",
+        "ShopManager": "Responsable de boutique",
+        "CounterStaff": "Agent de comptoir",
+        "KitchenStaff": "Personnel de cuisine",
+        "FloorStaff": "Personnel de salle",
+        "Customer": "Client"
+      },
+      "form": {
+        "email": "Adresse e-mail",
+        "emailRequired": "L'adresse e-mail est obligatoire.",
+        "emailInvalid": "Veuillez saisir une adresse e-mail valide.",
+        "displayName": "Nom d'affichage",
+        "displayNameRequired": "Le nom d'affichage est obligatoire.",
+        "role": "Rôle",
+        "shop": "Boutique",
+        "shopRequired": "La boutique est obligatoire pour les rôles au niveau de la boutique.",
+        "selectShop": "Sélectionner une boutique…",
+        "unknownError": "Erreur inconnue. Veuillez réessayer."
+      }
     },
     "shops": {
       "openingHours": {

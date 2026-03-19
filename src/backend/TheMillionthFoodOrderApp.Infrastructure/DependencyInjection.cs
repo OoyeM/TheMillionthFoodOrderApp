@@ -5,12 +5,15 @@ using TheMillionthFoodOrderApp.Domain.Brands;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.Identity;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
+using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
+using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
 using TheMillionthFoodOrderApp.Infrastructure.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
+using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
@@ -55,10 +58,17 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IBrandSettingsRepository, BrandSettingsRepository>();
         services.AddScoped<IMenuCategoryRepository, MenuCategoryRepository>();
+        services.AddScoped<IModifierGroupRepository, ModifierGroupRepository>();
 
         // Seeders (scoped — they depend on scoped DbContext)
         services.AddScoped<PlatformDbSeeder>();
         services.AddScoped<BrandDbSeeder>();
+
+        // File storage — LocalFileStorageService is the dev/default implementation.
+        // The caller (Api/Program.cs) configures LocalFileStorageOptions with the correct
+        // uploads path. In production, replace this registration with an Azure Blob Storage
+        // implementation without changing Application or API layers.
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }
