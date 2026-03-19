@@ -146,3 +146,70 @@ export interface PlatformAdmin {
   createdAt: string;
   updatedAt: string;
 }
+
+// ── Brand Theming ────────────────────────────────────────────────────────────
+
+/**
+ * Brand color palette. All values are CSS hex color strings (e.g. "#2563eb").
+ */
+export interface BrandColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+/**
+ * Brand typography settings. Font families are selected from the preset list.
+ */
+export interface BrandTypography {
+  headingFontFamily: string;
+  bodyFontFamily: string;
+}
+
+/**
+ * Full brand settings as returned by the settings API.
+ */
+export interface BrandSettings {
+  id: string;
+  defaultLanguage: string;
+  timezone: string;
+  currency: string;
+  logoUrl: string | null;
+  customDomain: string | null;
+  colors: BrandColors | null;
+  typography: BrandTypography | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lightweight public theme response used by the storefront.
+ */
+export interface BrandTheme {
+  logoUrl: string | null;
+  customDomain: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  headingFontFamily: string;
+  bodyFontFamily: string;
+}
+
+/**
+ * Font families available for brand typography selection.
+ */
+export const PRESET_FONTS = [
+  'System Default',
+  'Inter',
+  'Roboto',
+  'Open Sans',
+  'Lato',
+  'Poppins',
+  'Montserrat',
+  'Nunito',
+  'Raleway',
+  'Source Sans 3',
+  'DM Sans',
+] as const;
+
+export type PresetFont = (typeof PRESET_FONTS)[number];
