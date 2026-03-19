@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
+using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using BrandSettingsDomain = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings;
@@ -27,6 +28,7 @@ public sealed class BrandDbSeeder(
         await SeedMenuCategoriesAsync(context, cancellationToken);
         await SeedProductsAsync(context, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+        await SeedModifierGroupsAsync(context, cancellationToken);
     }
 
     private async Task SeedBrandSettingsAsync(
@@ -190,6 +192,72 @@ public sealed class BrandDbSeeder(
             await context.Products.AddAsync(product, cancellationToken);
             var name = product.Translations.First().Name;
             logger.LogInformation("Seed: Created product '{Name}'.", name);
+        }
+    }
+
+    private async Task SeedModifierGroupsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await context.ModifierGroups.AnyAsync(cancellationToken);
+        if (exists)
+        {
+            logger.LogDebug("Seed: Modifier groups already exist — skipping.");
+            return;
+        }
+
+        // Group 1: Size — Klein (+0), Medium (+1), Groot (+2)
+        var sizeGroup = ModifierGroup.Create(
+            translations: new[]
+            {
+                ("nl", "Maat"),
+                ("fr", "Taille"),
+                ("de", "Groesse"),
+            },
+            modifiers: new[]
+            {
+                (0m, 0, (IEnumerable<(string, string)>)new[] { ("nl", "Klein"), ("fr", "Petit"), ("de", "Klein") }),
+                (1m, 1, (IEnumerable<(string, string)>)new[] { ("nl", "Medium"), ("fr", "Moyen"), ("de", "Mittel") }),
+                (2m, 2, (IEnumerable<(string, string)>)new[] { ("nl", "Groot"), ("fr", "Grand"), ("de", "Gross") }),
+            });
+
+        await context.ModifierGroups.AddAsync(sizeGroup, cancellationToken);
+        logger.LogInformation("Seed: Created modifier group 'Maat/Taille/Groesse' with {Count} modifiers.", sizeGroup.Modifiers.Count);
+
+        // Group 2: Sauces — Mayonaise (+0), Stoofvleessaus (+0.50), Speciaal (+0.50)
+        var saucesGroup = ModifierGroup.Create(
+            translations: new[]
+            {
+                ("nl", "Sauzen"),
+                ("fr", "Sauces"),
+                ("de", "Sossen"),
+            },
+            modifiers: new[]
+            {
+                (0m, 0, (IEnumerable<(string, string)>)new[] { ("nl", "Mayonaise"), ("fr", "Mayonnaise"), ("de", "Mayonnaise") }),
+                (0.50m, 1, (IEnumerable<(string, string)>)new[] { ("nl", "Stoofvleessaus"), ("fr", "Sauce Carbonade"), ("de", "Fleischsauce") }),
+                (0.50m, 2, (IEnumerable<(string, string)>)new[] { ("nl", "Speciaal"), ("fr", "Spéciale"), ("de", "Spezial") }),
+            });
+
+        await context.ModifierGroups.AddAsync(saucesGroup, cancellationToken);
+        logger.LogInformation("Seed: Created modifier group 'Sauzen/Sauces/Sossen' with {Count} modifiers.", saucesGroup.Modifiers.Count);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        // Link the Size group to the first seeded product (Kleine Friet)
+        var firstProduct = await context.Products
+            .OrderBy(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (firstProduct is not null)
+        {
+            var assignment = ProductModifierGroup.Create(firstProduct.Id, sizeGroup.Id, sortOrder: 0);
+            await context.ProductModifierGroups.AddAsync(assignment, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation(
+                "Seed: Linked modifier group 'Maat/Taille/Groesse' to product '{ProductId}'.",
+                firstProduct.Id);
         }
     }
 }

@@ -54,6 +54,25 @@
         "saveOrderError": "Reihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
       }
     },
+    "modifierGroups": {
+      "title": "Modifikatorgruppen",
+      "create": "Modifikatorgruppe erstellen",
+      "edit": "Modifikatorgruppe bearbeiten",
+      "delete": "Löschen",
+      "confirmDelete": "\"{{name}}\" löschen? Diese Modifikatorgruppe wird dauerhaft gelöscht.",
+      "name": "Name",
+      "modifiers": "Modifikatoren",
+      "addModifier": "Modifikator hinzufügen",
+      "modifierName": "Modifikatorname",
+      "priceAdjustment": "Preisanpassung (EUR)",
+      "noModifierGroups": "Noch keine Modifikatorgruppen. Erstellen Sie die erste.",
+      "modifierCount": "Anzahl Modifikatoren",
+      "productCount": "Anzahl Produkte",
+      "assignedGroups": "Zugewiesene Modifikatorgruppen",
+      "noAssignedGroups": "Keine Modifikatorgruppen zugewiesen.",
+      "saveAssignments": "Zuweisungen speichern",
+      "removeModifier": "Entfernen"
+    },
     "platformAdmins": {
       "title": "Plattform-Administratoren",
       "invite": "Administrator einladen",

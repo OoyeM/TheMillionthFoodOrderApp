@@ -62,6 +62,18 @@ const LazyBrandTheming = lazy(() =>
   import('./pages/BrandTheming').then((m) => ({ default: m.BrandTheming })),
 );
 
+const LazyModifierGroupList = lazy(() =>
+  import('./pages/ModifierGroupList').then((m) => ({ default: m.ModifierGroupList })),
+);
+
+const LazyModifierGroupCreate = lazy(() =>
+  import('./pages/ModifierGroupCreate').then((m) => ({ default: m.ModifierGroupCreate })),
+);
+
+const LazyModifierGroupEdit = lazy(() =>
+  import('./pages/ModifierGroupEdit').then((m) => ({ default: m.ModifierGroupEdit })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -187,6 +199,36 @@ export const adminRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
             <LazyMenuCategoryEdit />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  // Modifier group management (brand-scoped)
+  {
+    path: 'modifier-groups',
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyModifierGroupList />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'new',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyModifierGroupCreate />
+          </Suspense>
+        ),
+      },
+      {
+        path: ':modifierGroupId',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyModifierGroupEdit />
           </Suspense>
         ),
       },

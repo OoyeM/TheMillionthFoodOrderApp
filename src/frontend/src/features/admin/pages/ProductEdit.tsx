@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useProduct, useUpdateProduct, useDeleteProduct } from '../hooks/useProducts';
-import type { SupportedLocale } from '../../../types/common';
+import {
+  useProductModifierGroups,
+  useModifierGroups,
+  useSetProductModifierGroups,
+} from '../hooks/useModifierGroups';
+import type { SupportedLocale, ProductModifierGroupResponse } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -37,6 +43,7 @@ interface FormErrors {
 
 export function ProductEdit() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { brandSlug, lang, productId } = useParams<{
     brandSlug: string;
     lang: string;
@@ -50,12 +57,28 @@ export function ProductEdit() {
   const updateProduct = useUpdateProduct(resolvedBrandSlug, resolvedProductId);
   const deleteProduct = useDeleteProduct(resolvedBrandSlug);
 
+  // Modifier groups
+  const { data: productModifierGroups } = useProductModifierGroups(resolvedBrandSlug, resolvedProductId);
+  const { data: allModifierGroups } = useModifierGroups(resolvedBrandSlug);
+  const setProductModifierGroups = useSetProductModifierGroups(resolvedBrandSlug, resolvedProductId);
+  const [assignedGroups, setAssignedGroups] = useState<ProductModifierGroupResponse[]>([]);
+  const [assignmentsInitialized, setAssignmentsInitialized] = useState(false);
+  const [selectedGroupToAdd, setSelectedGroupToAdd] = useState('');
+
   const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
   const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
   const [basePrice, setBasePrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [formInitialized, setFormInitialized] = useState(false);
+
+  // Populate assigned modifier groups when data arrives
+  useEffect(() => {
+    if (productModifierGroups !== undefined && !assignmentsInitialized) {
+      setAssignedGroups(productModifierGroups);
+      setAssignmentsInitialized(true);
+    }
+  }, [productModifierGroups, assignmentsInitialized]);
 
   // Populate form when product data arrives
   useEffect(() => {
@@ -144,6 +167,65 @@ export function ProductEdit() {
 
   function handleCancel() {
     navigate(`/${brandSlug}/${lang}/admin/products`);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Modifier group assignment handlers
+  // ---------------------------------------------------------------------------
+
+  function handleAddModifierGroup() {
+    if (!selectedGroupToAdd) return;
+    const alreadyAssigned = assignedGroups.some(
+      (g) => g.modifierGroupId === selectedGroupToAdd,
+    );
+    if (alreadyAssigned) return;
+
+    const groupInfo = allModifierGroups?.find((g) => g.id === selectedGroupToAdd);
+    if (!groupInfo) return;
+
+    const newGroup: ProductModifierGroupResponse = {
+      modifierGroupId: groupInfo.id,
+      name: groupInfo.name,
+      sortOrder: assignedGroups.length,
+      modifiers: [],
+    };
+    setAssignedGroups((prev) => [...prev, newGroup]);
+    setSelectedGroupToAdd('');
+  }
+
+  function handleRemoveAssignedGroup(modifierGroupId: string) {
+    setAssignedGroups((prev) =>
+      prev
+        .filter((g) => g.modifierGroupId !== modifierGroupId)
+        .map((g, index) => ({ ...g, sortOrder: index })),
+    );
+  }
+
+  function handleMoveGroupUp(index: number) {
+    if (index === 0) return;
+    setAssignedGroups((prev) => {
+      const next = [...prev];
+      [next[index - 1], next[index]] = [next[index], next[index - 1]];
+      return next.map((g, i) => ({ ...g, sortOrder: i }));
+    });
+  }
+
+  function handleMoveGroupDown(index: number) {
+    setAssignedGroups((prev) => {
+      if (index >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[index], next[index + 1]] = [next[index + 1], next[index]];
+      return next.map((g, i) => ({ ...g, sortOrder: i }));
+    });
+  }
+
+  function handleSaveAssignments() {
+    setProductModifierGroups.mutate({
+      modifierGroups: assignedGroups.map((g) => ({
+        modifierGroupId: g.modifierGroupId,
+        sortOrder: g.sortOrder,
+      })),
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -360,6 +442,170 @@ export function ProductEdit() {
           </button>
         </div>
       </form>
+
+      {/* Modifier Groups Section */}
+      <section
+        style={{
+          marginTop: '2.5rem',
+          borderTop: '2px solid #e5e7eb',
+          paddingTop: '1.5rem',
+        }}
+      >
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '1rem' }}>
+          {t('admin.modifierGroups.title')}
+        </h2>
+
+        {/* Assigned groups list */}
+        {assignedGroups.length === 0 ? (
+          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+            {t('admin.modifierGroups.noAssignedGroups')}
+          </p>
+        ) : (
+          <div style={{ marginBottom: '1rem' }}>
+            {assignedGroups.map((group, index) => (
+              <div
+                key={group.modifierGroupId}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.625rem 0.75rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.375rem',
+                  marginBottom: '0.5rem',
+                  background: '#f9fafb',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{group.name}</span>
+                  {group.modifiers.length > 0 && (
+                    <span style={{ color: '#6b7280', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                      {group.modifiers.length} {t('admin.modifierGroups.modifiers').toLowerCase()}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleMoveGroupUp(index)}
+                  disabled={index === 0}
+                  style={{
+                    ...reorderButtonStyle,
+                    opacity: index === 0 ? 0.3 : 1,
+                    cursor: index === 0 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  &#9650;
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMoveGroupDown(index)}
+                  disabled={index === assignedGroups.length - 1}
+                  style={{
+                    ...reorderButtonStyle,
+                    opacity: index === assignedGroups.length - 1 ? 0.3 : 1,
+                    cursor: index === assignedGroups.length - 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  &#9660;
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveAssignedGroup(group.modifierGroupId)}
+                  style={{
+                    padding: '0.125rem 0.5rem',
+                    fontSize: '0.75rem',
+                    background: '#fff',
+                    border: '1px solid #fca5a5',
+                    borderRadius: '0.25rem',
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('admin.modifierGroups.removeModifier')}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add group dropdown */}
+        {allModifierGroups !== undefined && allModifierGroups.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
+            <select
+              value={selectedGroupToAdd}
+              onChange={(e) => setSelectedGroupToAdd(e.target.value)}
+              style={{
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.9rem',
+                flex: 1,
+                maxWidth: '20rem',
+              }}
+            >
+              <option value="">-- Select a modifier group --</option>
+              {allModifierGroups
+                .filter((g) => !assignedGroups.some((a) => a.modifierGroupId === g.id))
+                .map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleAddModifierGroup}
+              disabled={!selectedGroupToAdd}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#f9fafb',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                cursor: selectedGroupToAdd ? 'pointer' : 'not-allowed',
+                opacity: selectedGroupToAdd ? 1 : 0.5,
+                fontSize: '0.875rem',
+              }}
+            >
+              + Add
+            </button>
+          </div>
+        )}
+
+        {/* Save assignments */}
+        {setProductModifierGroups.isError && (
+          <p style={{ color: '#dc2626', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+            {setProductModifierGroups.error instanceof Error
+              ? setProductModifierGroups.error.message
+              : 'Failed to save assignments. Please try again.'}
+          </p>
+        )}
+
+        {setProductModifierGroups.isSuccess && (
+          <p style={{ color: '#16a34a', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+            Assignments saved.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSaveAssignments}
+          disabled={setProductModifierGroups.isPending}
+          style={{
+            padding: '0.5rem 1.25rem',
+            background: '#111827',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '0.375rem',
+            cursor: setProductModifierGroups.isPending ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: setProductModifierGroups.isPending ? 0.6 : 1,
+          }}
+        >
+          {setProductModifierGroups.isPending
+            ? 'Saving...'
+            : t('admin.modifierGroups.saveAssignments')}
+        </button>
+      </section>
     </main>
   );
 }
@@ -382,6 +628,15 @@ const secondaryButtonStyle: React.CSSProperties = {
   border: '1px solid #d1d5db',
   borderRadius: '0.375rem',
   cursor: 'pointer',
+};
+
+const reorderButtonStyle: React.CSSProperties = {
+  padding: '0.125rem 0.4rem',
+  fontSize: '0.75rem',
+  background: '#fff',
+  border: '1px solid #d1d5db',
+  borderRadius: '0.25rem',
+  lineHeight: 1,
 };
 
 function inputStyle(hasError: boolean): React.CSSProperties {

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 {
     [DbContext(typeof(BrandDbContext))]
-    partial class BrandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319204803_AddModifierGroups")]
+    partial class AddModifierGroups
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,18 +39,10 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
-                    b.Property<string>("CustomDomain")
-                        .HasMaxLength(253)
-                        .HasColumnType("nvarchar(253)");
-
                     b.Property<string>("DefaultLanguage")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
 
                     b.Property<string>("Timezone")
                         .IsRequired()
@@ -359,64 +354,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .IsUnique();
 
                     b.ToTable("Shops", (string)null);
-                });
-
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings", b =>
-                {
-                    b.OwnsOne("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandColors", "Colors", b1 =>
-                        {
-                            b1.Property<Guid>("BrandSettingsId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Accent")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Accent");
-
-                            b1.Property<string>("Primary")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Primary");
-
-                            b1.Property<string>("Secondary")
-                                .HasMaxLength(7)
-                                .HasColumnType("nvarchar(7)")
-                                .HasColumnName("Colors_Secondary");
-
-                            b1.HasKey("BrandSettingsId");
-
-                            b1.ToTable("BrandSettings");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BrandSettingsId");
-                        });
-
-                    b.OwnsOne("TheMillionthFoodOrderApp.Domain.BrandSettings.BrandTypography", "Typography", b1 =>
-                        {
-                            b1.Property<Guid>("BrandSettingsId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("BodyFontFamily")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Typography_BodyFontFamily");
-
-                            b1.Property<string>("HeadingFontFamily")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Typography_HeadingFontFamily");
-
-                            b1.HasKey("BrandSettingsId");
-
-                            b1.ToTable("BrandSettings");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BrandSettingsId");
-                        });
-
-                    b.Navigation("Colors");
-
-                    b.Navigation("Typography");
                 });
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategoryTranslation", b =>
