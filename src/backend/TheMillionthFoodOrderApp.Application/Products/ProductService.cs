@@ -64,6 +64,13 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         UpdateComboProductRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Verify the product exists and is actually a combo before entering the update transaction
+        var existing = await productRepository.GetByIdAsync(id, cancellationToken);
+        if (existing is null)
+            throw new KeyNotFoundException($"Combo product with id '{id}' was not found.");
+        if (existing.ProductType != ProductType.Combo)
+            throw new InvalidOperationException($"Product with id '{id}' is not a combo product.");
+
         var componentProducts = await ValidateComponentProductsAsync(request.ComponentProductIds, cancellationToken);
 
         var money = new Money(request.BasePrice, "EUR");
@@ -79,11 +86,8 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             },
             cancellationToken);
 
-        if (product is null)
-            throw new KeyNotFoundException($"Combo product with id '{id}' was not found.");
-
         var componentNames = BuildComponentNameLookup(componentProducts);
-        return MapToResponse(product, componentNames);
+        return MapToResponse(product!, componentNames);
     }
 
     public async Task DeleteProductAsync(Guid id, CancellationToken cancellationToken = default)

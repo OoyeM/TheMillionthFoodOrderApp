@@ -66,6 +66,12 @@
       "createButton": "Combo aanmaken",
       "saveChanges": "Wijzigingen opslaan",
       "allProductsSelected": "Alle beschikbare producten zijn geselecteerd.",
+      "creating": "Aanmaken…",
+      "saving": "Opslaan…",
+      "deleting": "Verwijderen…",
+      "confirmDelete": "\"{{name}}\" verwijderen? Deze combo wordt verborgen voor klanten.",
+      "noSimpleProducts": "Geen eenvoudige producten beschikbaar. Maak eerst producten aan.",
+      "selectModifierGroup": "-- Selecteer een modifier-groep --",
       "errors": {
         "priceRequired": "Bundelprijs moet groter zijn dan nul.",
         "nlNameRequired": "Nederlandse (NL) naam is verplicht.",

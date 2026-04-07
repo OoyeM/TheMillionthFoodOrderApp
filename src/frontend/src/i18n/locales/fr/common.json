@@ -66,6 +66,12 @@
       "createButton": "Cr\u00e9er le combo",
       "saveChanges": "Enregistrer les modifications",
       "allProductsSelected": "Tous les produits disponibles sont s\u00e9lectionn\u00e9s.",
+      "creating": "Cr\u00e9ation…",
+      "saving": "Enregistrement…",
+      "deleting": "Suppression…",
+      "confirmDelete": "Supprimer \"{{name}}\" ? Ce combo sera masqu\u00e9 pour les clients.",
+      "noSimpleProducts": "Aucun produit simple disponible. Cr\u00e9ez d'abord des produits.",
+      "selectModifierGroup": "-- S\u00e9lectionner un groupe de modificateurs --",
       "errors": {
         "priceRequired": "Le prix du lot doit \u00eatre sup\u00e9rieur \u00e0 z\u00e9ro.",
         "nlNameRequired": "Le nom n\u00e9erlandais (NL) est obligatoire.",

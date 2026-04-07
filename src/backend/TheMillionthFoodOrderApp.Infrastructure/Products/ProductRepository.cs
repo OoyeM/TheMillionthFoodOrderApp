@@ -118,7 +118,9 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
     /// <inheritdoc/>
     public async Task<bool> IsComponentOfAnyComboAsync(Guid productId, CancellationToken cancellationToken = default)
         => await dbContext.ComboItems
-            .AnyAsync(ci => ci.ComponentProductId == productId, cancellationToken);
+            .Where(ci => ci.ComponentProductId == productId)
+            .Join(dbContext.Products, ci => ci.ComboProductId, p => p.Id, (ci, p) => p)
+            .AnyAsync(cancellationToken);
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

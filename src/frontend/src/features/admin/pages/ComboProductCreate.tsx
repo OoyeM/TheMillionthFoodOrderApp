@@ -344,6 +344,11 @@ export function ComboProductCreate() {
           )}
 
           {/* Available products to add */}
+          {simpleProducts.length === 0 && selectedComponents.length === 0 && (
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              {t('admin.comboProducts.noSimpleProducts')}
+            </p>
+          )}
           {simpleProducts.length > 0 && (
             <div
               style={{
@@ -417,7 +422,7 @@ export function ComboProductCreate() {
               opacity: createCombo.isPending ? 0.6 : 1,
             }}
           >
-            {createCombo.isPending ? 'Creating...' : t('admin.comboProducts.createButton')}
+            {createCombo.isPending ? t('admin.comboProducts.creating') : t('admin.comboProducts.createButton')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel

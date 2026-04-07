@@ -211,7 +211,7 @@ export function ComboProductEdit() {
 
   function handleDelete() {
     const name = translations.nl.name || '(unnamed)';
-    if (window.confirm(`Delete "${name}"? This combo will be hidden from the storefront.`)) {
+    if (window.confirm(t('admin.comboProducts.confirmDelete', { name }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
           navigate(`/${brandSlug}/${lang}/admin/products`);
@@ -528,6 +528,11 @@ export function ComboProductEdit() {
           )}
 
           {/* Available products to add */}
+          {simpleProducts.length === 0 && selectedComponents.length === 0 && (
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              {t('admin.comboProducts.noSimpleProducts')}
+            </p>
+          )}
           {simpleProducts.length > 0 && (
             <div
               style={{
@@ -601,7 +606,7 @@ export function ComboProductEdit() {
               opacity: updateCombo.isPending ? 0.6 : 1,
             }}
           >
-            {updateCombo.isPending ? 'Saving...' : t('admin.comboProducts.saveChanges')}
+            {updateCombo.isPending ? t('admin.comboProducts.saving') : t('admin.comboProducts.saveChanges')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
@@ -621,7 +626,7 @@ export function ComboProductEdit() {
               marginLeft: 'auto',
             }}
           >
-            {deleteProduct.isPending ? 'Deleting...' : t('admin.comboProducts.delete')}
+            {deleteProduct.isPending ? t('admin.comboProducts.deleting') : t('admin.comboProducts.delete')}
           </button>
         </div>
       </form>
@@ -726,7 +731,7 @@ export function ComboProductEdit() {
                 maxWidth: '20rem',
               }}
             >
-              <option value="">-- Select a modifier group --</option>
+              <option value="">{t('admin.comboProducts.selectModifierGroup')}</option>
               {allModifierGroups
                 .filter((g) => !assignedGroups.some((a) => a.modifierGroupId === g.id))
                 .map((g) => (
