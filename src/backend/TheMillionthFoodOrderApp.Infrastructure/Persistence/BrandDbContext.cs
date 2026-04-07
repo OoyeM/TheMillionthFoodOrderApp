@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
+using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
+using TheMillionthFoodOrderApp.Infrastructure.OrderLifecycle;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Conventions;
 using TheMillionthFoodOrderApp.Infrastructure.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Shops;
@@ -30,6 +32,10 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
     public DbSet<Modifier> Modifiers => Set<Modifier>();
     public DbSet<ModifierTranslation> ModifierTranslations => Set<ModifierTranslation>();
     public DbSet<ProductModifierGroup> ProductModifierGroups => Set<ProductModifierGroup>();
+    public DbSet<OrderLifecycleConfig> OrderLifecycleConfigs => Set<OrderLifecycleConfig>();
+    public DbSet<OrderStatus> OrderStatuses => Set<OrderStatus>();
+    public DbSet<OrderStatusTransition> OrderStatusTransitions => Set<OrderStatusTransition>();
+    public DbSet<ComboItem> ComboItems => Set<ComboItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +54,10 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         modelBuilder.ApplyConfiguration(new ModifierConfiguration());
         modelBuilder.ApplyConfiguration(new ModifierTranslationConfiguration());
         modelBuilder.ApplyConfiguration(new ProductModifierGroupConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderLifecycleConfigConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderStatusConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderStatusTransitionConfiguration());
+        modelBuilder.ApplyConfiguration(new ComboItemConfiguration());
 
         // Global query filter: soft-deleted entities are excluded by default
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);

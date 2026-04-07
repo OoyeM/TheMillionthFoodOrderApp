@@ -37,5 +37,11 @@ public interface IProductRepository
     /// </summary>
     Task<IReadOnlyList<Product>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns true if the product with <paramref name="productId"/> is referenced
+    /// as a component in any combo product.
+    /// </summary>
+    Task<bool> IsComponentOfAnyComboAsync(Guid productId, CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

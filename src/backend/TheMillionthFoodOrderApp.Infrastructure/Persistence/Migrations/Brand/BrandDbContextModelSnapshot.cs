@@ -250,7 +250,8 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.ToTable("ProductModifierGroups", (string)null);
                 });
 
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderLifecycleConfig", b =>
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -259,8 +260,127 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopId")
+                        .IsUnique();
+
+                    b.ToTable("OrderLifecycleConfigs", (string)null);
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ColorHex")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsTerminal")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("OrderLifecycleConfigId")
+                    b.Property<Guid>("ComboProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ComponentProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SystemKey")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderLifecycleConfigId", "SortOrder")
+                        .IsUnique()
+                        .HasDatabaseName("IX_OrderStatuses_ConfigId_SortOrder");
+
+                    b.ToTable("OrderStatuses", (string)null);
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatusTransition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FromStatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrderLifecycleConfigId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ToStatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromStatusId");
+
+                    b.HasIndex("ToStatusId");
+
+                    b.HasIndex("OrderLifecycleConfigId", "FromStatusId", "ToStatusId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_OrderStatusTransitions_ConfigId_From_To");
+
+                    b.ToTable("OrderStatusTransitions", (string)null);
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentProductId");
+
+                    b.HasIndex("ComboProductId", "ComponentProductId")
+                        .IsUnique();
+
+                    b.HasIndex("ComboProductId", "SortOrder");
+
+                    b.ToTable("ComboItems", (string)null);
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.PrimitiveCollection<string>("Allergens")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Allergens");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.PrimitiveCollection<string>("DietaryTags")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("DietaryTags");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(2048)
@@ -271,6 +391,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 
                     b.Property<Guid?>("MenuCategoryId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ProductType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("SortOrderInCategory")
                         .ValueGeneratedOnAdd()
@@ -503,6 +628,51 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderLifecycleConfig", b =>
+                {
+                    b.HasMany("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", "Statuses")
+                        .WithOne()
+                        .HasForeignKey("OrderLifecycleConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasMany("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatusTransition", "Transitions")
+                        .WithOne()
+                        .HasForeignKey("OrderLifecycleConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Statuses");
+
+                    b.Navigation("Transitions");
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatusTransition", b =>
+                {
+                    b.HasOne("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", null)
+                        .WithMany()
+                        .HasForeignKey("FromStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", null)
+                        .WithMany()
+                        .HasForeignKey("ToStatusId")
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
+                {
+                    b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
+                        .WithMany("ComboItems")
+                        .HasForeignKey("ComboProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ComponentProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
                 {
                     b.HasOne("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategory", null)
@@ -623,6 +793,8 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
                 {
+                    b.Navigation("ComboItems");
+
                     b.Navigation("Translations");
                 });
 

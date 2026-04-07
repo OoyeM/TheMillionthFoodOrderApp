@@ -25,6 +25,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 .IsRequired();
         });
 
+        builder.Property(p => p.ProductType)
+            .IsRequired()
+            .HasDefaultValue(ProductType.Simple);
+
         builder.Property(p => p.ImageUrl)
             .HasMaxLength(2048);
 
@@ -54,6 +58,16 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(p => p.MenuCategoryId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(p => p.Allergens)
+            .HasField("_allergens")
+            .HasColumnName("Allergens")
+            .HasColumnType("nvarchar(max)");
+
+        builder.Property(p => p.DietaryTags)
+            .HasField("_dietaryTags")
+            .HasColumnName("DietaryTags")
+            .HasColumnType("nvarchar(max)");
 
         builder.HasMany(p => p.Translations)
             .WithOne()

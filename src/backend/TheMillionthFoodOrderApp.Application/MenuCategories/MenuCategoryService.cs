@@ -234,9 +234,13 @@ public sealed class MenuCategoryService(
                 t => t.LanguageCode,
                 t => t.Name,
                 primaryLanguage),
+            product.ProductType.ToString(),
+            product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
             product.MenuCategoryId,
             product.SortOrderInCategory,
+            product.Allergens.Select(a => (int)a).ToList().AsReadOnly(),
+            product.DietaryTags.Select(d => (int)d).ToList().AsReadOnly(),
             product.CreatedAt);
 }

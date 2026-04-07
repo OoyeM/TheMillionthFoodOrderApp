@@ -147,4 +147,124 @@ public sealed class ProductTests
         product.DeletedAt.ShouldBe(firstDeletedAt);
         product.DomainEvents.Count.ShouldBe(0); // No duplicate event
     }
+
+    // ── Allergens & Dietary Tags ─────────────────────────────────────────────
+
+    [Fact]
+    public void Create_WithAllergens_SetsAllergens()
+    {
+        var allergens = new[] { Allergen.Gluten, Allergen.Milk, Allergen.Eggs };
+
+        var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, allergens);
+
+        product.Allergens.Count.ShouldBe(3);
+        product.Allergens.ShouldContain(Allergen.Gluten);
+        product.Allergens.ShouldContain(Allergen.Milk);
+        product.Allergens.ShouldContain(Allergen.Eggs);
+    }
+
+    [Fact]
+    public void Create_WithDietaryTags_SetsDietaryTags()
+    {
+        var dietaryTags = new[] { DietaryTag.Vegan, DietaryTag.GlutenFree };
+
+        var product = Product.Create(
+            new Money(3.50m, "EUR"), null, ValidTranslations, dietaryTags: dietaryTags);
+
+        product.DietaryTags.Count.ShouldBe(2);
+        product.DietaryTags.ShouldContain(DietaryTag.Vegan);
+        product.DietaryTags.ShouldContain(DietaryTag.GlutenFree);
+    }
+
+    [Fact]
+    public void Create_WithNullAllergens_DefaultsToEmpty()
+    {
+        var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
+
+        product.Allergens.Count.ShouldBe(0);
+        product.DietaryTags.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Create_WithDuplicateAllergens_DeduplicatesSilently()
+    {
+        var allergens = new[] { Allergen.Gluten, Allergen.Gluten, Allergen.Milk };
+
+        var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, allergens);
+
+        product.Allergens.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Create_WithInvalidAllergenValue_ThrowsArgumentException()
+    {
+        var invalid = new[] { (Allergen)999 };
+
+        Should.Throw<ArgumentException>(() =>
+            Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, invalid));
+    }
+
+    [Fact]
+    public void Create_WithInvalidDietaryTagValue_ThrowsArgumentException()
+    {
+        var invalid = new[] { (DietaryTag)42 };
+
+        Should.Throw<ArgumentException>(() =>
+            Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, dietaryTags: invalid));
+    }
+
+    [Fact]
+    public void Update_ReplacesAllergens()
+    {
+        var product = Product.Create(
+            new Money(3.50m, "EUR"), null, ValidTranslations,
+            new[] { Allergen.Gluten, Allergen.Milk });
+
+        product.Update(
+            new Money(3.50m, "EUR"), null, ValidTranslations,
+            new[] { Allergen.Fish });
+
+        product.Allergens.Count.ShouldBe(1);
+        product.Allergens.ShouldContain(Allergen.Fish);
+        product.Allergens.ShouldNotContain(Allergen.Gluten);
+    }
+
+    [Fact]
+    public void Update_WithNullAllergens_ClearsAllergens()
+    {
+        var product = Product.Create(
+            new Money(3.50m, "EUR"), null, ValidTranslations,
+            new[] { Allergen.Gluten });
+
+        product.Update(new Money(3.50m, "EUR"), null, ValidTranslations);
+
+        product.Allergens.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Update_ReplacesDietaryTags()
+    {
+        var product = Product.Create(
+            new Money(3.50m, "EUR"), null, ValidTranslations,
+            dietaryTags: new[] { DietaryTag.Vegan });
+
+        product.Update(
+            new Money(3.50m, "EUR"), null, ValidTranslations,
+            dietaryTags: new[] { DietaryTag.Halal, DietaryTag.Vegetarian });
+
+        product.DietaryTags.Count.ShouldBe(2);
+        product.DietaryTags.ShouldContain(DietaryTag.Halal);
+        product.DietaryTags.ShouldNotContain(DietaryTag.Vegan);
+    }
+
+    [Fact]
+    public void Update_WithInvalidAllergenValue_ThrowsArgumentException()
+    {
+        var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
+
+        Should.Throw<ArgumentException>(() =>
+            product.Update(
+                new Money(3.50m, "EUR"), null, ValidTranslations,
+                new[] { (Allergen)(-1) }));
+    }
 }

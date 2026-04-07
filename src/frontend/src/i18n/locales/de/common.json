@@ -8,6 +8,28 @@
   "pos": {
     "description": "Kassensystem für den Laden."
   },
+  "allergens": {
+    "Gluten": "Gluten",
+    "Crustaceans": "Krebstiere",
+    "Eggs": "Eier",
+    "Fish": "Fisch",
+    "Peanuts": "Erdnüsse",
+    "Soybeans": "Soja",
+    "Milk": "Milch",
+    "Nuts": "Schalenfrüchte",
+    "Celery": "Sellerie",
+    "Mustard": "Senf",
+    "Sesame": "Sesam",
+    "Sulphites": "Sulfite",
+    "Lupin": "Lupinen",
+    "Molluscs": "Weichtiere"
+  },
+  "dietaryTags": {
+    "Vegan": "Vegan",
+    "Vegetarian": "Vegetarisch",
+    "GlutenFree": "Glutenfrei",
+    "Halal": "Halal"
+  },
   "admin": {
     "description": "Verwalten Sie Marken, Geschäfte, Produkte und Bestellungen.",
     "products": {
@@ -20,7 +42,31 @@
       "description": "Beschreibung",
       "basePrice": "Grundpreis",
       "imageUrl": "Bild-URL",
-      "noProducts": "Noch keine Produkte. Erstellen Sie das erste."
+      "noProducts": "Noch keine Produkte. Erstellen Sie das erste.",
+      "allergens": "Allergene",
+      "dietaryTags": "Ernährungslabels",
+      "translations": "Übersetzungen",
+      "optional": "(optional)",
+      "cancel": "Abbrechen",
+      "creating": "Wird erstellt…",
+      "saving": "Wird gespeichert…",
+      "saveChanges": "Änderungen speichern",
+      "deleting": "Wird gelöscht…",
+      "loadingProduct": "Produkt wird geladen…",
+      "loadError": "Produkt konnte nicht geladen werden:",
+      "notFound": "Produkt nicht gefunden.",
+      "backToList": "Zurück zur Liste",
+      "createError": "Produkt konnte nicht erstellt werden. Bitte erneut versuchen.",
+      "updateError": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen.",
+      "createdAt": "Erstellt",
+      "updatedAt": "Zuletzt aktualisiert",
+      "namePlaceholder": "Produktname in {{lang}}",
+      "descriptionPlaceholder": "Produktbeschreibung in {{lang}}",
+      "pricePlaceholder": "z.B. 3,50",
+      "validation": {
+        "basePriceRequired": "Der Grundpreis muss größer als null sein.",
+        "nlNameRequired": "Der niederländische (NL) Name ist erforderlich."
+      }
     },
     "staffAuth": {
       "title": "Mitarbeiter-Authentifizierung",
@@ -52,6 +98,30 @@
         "saveOrder": "Reihenfolge speichern",
         "savingOrder": "Wird gespeichert…",
         "saveOrderError": "Reihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
+      }
+    },
+    "comboProducts": {
+      "create": "Komboprodukt erstellen",
+      "edit": "Komboprodukt bearbeiten",
+      "delete": "Combo l\u00f6schen",
+      "bundlePrice": "B\u00fcndelpreis",
+      "translations": "\u00dcbersetzungen",
+      "componentProducts": "Bestandteilprodukte",
+      "componentProductsHint": "W\u00e4hlen Sie mindestens zwei Produkte aus, die zu diesem Combo geh\u00f6ren.",
+      "remove": "Entfernen",
+      "createButton": "Combo erstellen",
+      "saveChanges": "\u00c4nderungen speichern",
+      "allProductsSelected": "Alle verf\u00fcgbaren Produkte sind ausgew\u00e4hlt.",
+      "creating": "Erstellen…",
+      "saving": "Speichern…",
+      "deleting": "L\u00f6schen…",
+      "confirmDelete": "\"{{name}}\" l\u00f6schen? Dieses Combo wird f\u00fcr Kunden ausgeblendet.",
+      "noSimpleProducts": "Keine einfachen Produkte verf\u00fcgbar. Erstellen Sie zuerst Produkte.",
+      "selectModifierGroup": "-- Modifikatorgruppe ausw\u00e4hlen --",
+      "errors": {
+        "priceRequired": "Der B\u00fcndelpreis muss gr\u00f6\u00dfer als null sein.",
+        "nlNameRequired": "Der niederl\u00e4ndische (NL) Name ist erforderlich.",
+        "minComponents": "Ein Komboprodukt muss mindestens zwei Produkte enthalten."
       }
     },
     "modifierGroups": {
@@ -142,6 +212,32 @@
         "closed": "Geschlossen",
         "manageHours": "Öffnungszeiten verwalten",
         "noBlocks": "Keine Öffnungszeiten festgelegt — Geschäft erscheint als geschlossen"
+      },
+      "orderLifecycle": {
+        "title": "Bestellstatus-Lebenszyklus",
+        "statuses": "Status",
+        "transitions": "Übergänge",
+        "statusName": "Statusname",
+        "terminal": "Endstatus",
+        "color": "Farbe",
+        "addStatus": "Status hinzufügen",
+        "addTransition": "Übergang hinzufügen",
+        "remove": "Entfernen",
+        "save": "Lebenszyklus speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Lebenszyklus gespeichert",
+        "resetToDefault": "Standard wiederherstellen",
+        "resetConfirmTitle": "Standard wiederherstellen?",
+        "resetConfirmMessage": "Dies ersetzt die aktuelle Konfiguration durch den Standard-Lebenszyklus. Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmReset": "Ja, wiederherstellen",
+        "cancel": "Abbrechen",
+        "minTwoStatuses": "Mindestens zwei Status sind erforderlich.",
+        "needTerminal": "Mindestens ein Status muss ein Endstatus sein.",
+        "nameRequired": "Alle Status müssen einen Namen haben.",
+        "loading": "Wird geladen…",
+        "loadError": "Der Bestellstatus-Lebenszyklus konnte nicht geladen werden.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "manageLifecycle": "Bestellstatus-Lebenszyklus verwalten"
       }
     }
   }

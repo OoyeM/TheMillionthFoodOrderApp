@@ -346,8 +346,8 @@ export function ShopEdit() {
           {new Date(shop.updatedAt).toLocaleString()}
         </p>
 
-        {/* Quick link to opening hours */}
-        <div style={{ marginBottom: '1.5rem' }}>
+        {/* Quick links to shop config pages */}
+        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={() =>
@@ -364,6 +364,23 @@ export function ShopEdit() {
             }}
           >
             Manage Opening Hours
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}/order-lifecycle`)
+            }
+            style={{
+              padding: '0.5rem 1.25rem',
+              background: '#fff',
+              color: '#374151',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            Manage Order Lifecycle
           </button>
         </div>
 

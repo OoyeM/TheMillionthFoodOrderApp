@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreateProduct } from '../hooks/useProducts';
 import { useBrandSettings } from '../hooks/useBrandSettings';
-import { extractPrimaryLocale } from '../../../types/common';
+import { Allergen, DietaryTag, ALLERGEN_KEYS, DIETARY_TAG_KEYS, extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -39,6 +40,7 @@ interface FormErrors {
 
 export function ProductCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const resolvedBrandSlug = brandSlug ?? '';
   const createProduct = useCreateProduct(resolvedBrandSlug);
@@ -52,6 +54,8 @@ export function ProductCreate() {
   const [basePrice, setBasePrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+  const [selectedAllergens, setSelectedAllergens] = useState<Set<number>>(new Set());
+  const [selectedDietaryTags, setSelectedDietaryTags] = useState<Set<number>>(new Set());
 
   // Sync active tab when brand settings load (useState ignores updates to its initializer)
   const tabSynced = useRef(false);
@@ -73,11 +77,29 @@ export function ProductCreate() {
     }));
   }
 
+  function toggleAllergen(value: number) {
+    setSelectedAllergens((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
+  function toggleDietaryTag(value: number) {
+    setSelectedDietaryTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
   function validate(): FormErrors {
     const next: FormErrors = {};
     const price = parseFloat(basePrice);
     if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = 'Base price must be greater than zero.';
+      next.basePrice = t('admin.products.validation.basePriceRequired');
     }
     if (translations[primaryLocale].name.trim().length === 0) {
       next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
@@ -107,6 +129,8 @@ export function ProductCreate() {
         basePrice: parseFloat(basePrice),
         imageUrl: imageUrl.trim() || null,
         translations: translationInputs,
+        allergens: [...selectedAllergens],
+        dietaryTags: [...selectedDietaryTags],
       },
       {
         onSuccess: () => {
@@ -123,14 +147,14 @@ export function ProductCreate() {
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-        Create Product
+        {t('admin.products.create')}
       </h1>
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
-            Base Price (EUR) <RequiredMark />
+            {t('admin.products.basePrice')} (EUR) <RequiredMark />
           </label>
           <input
             id="basePrice"
@@ -140,7 +164,7 @@ export function ProductCreate() {
             value={basePrice}
             onChange={(e) => setBasePrice(e.target.value)}
             style={inputStyle(!!errors.basePrice)}
-            placeholder="e.g. 3.50"
+            placeholder={t('admin.products.pricePlaceholder')}
           />
           {errors.basePrice && <FieldError message={errors.basePrice} />}
         </div>
@@ -148,7 +172,8 @@ export function ProductCreate() {
         {/* Image URL */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={labelStyle} htmlFor="imageUrl">
-            Image URL <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+            {t('admin.products.imageUrl')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
           </label>
           <input
             id="imageUrl"
@@ -176,9 +201,65 @@ export function ProductCreate() {
           )}
         </div>
 
+        {/* Allergens */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.allergens')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {ALLERGEN_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedAllergens.has(Allergen[key])}
+                  onChange={() => toggleAllergen(Allergen[key])}
+                />
+                {t(`allergens.${key}`)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Dietary Tags */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.dietaryTags')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {DIETARY_TAG_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDietaryTags.has(DietaryTag[key])}
+                  onChange={() => toggleDietaryTag(DietaryTag[key])}
+                />
+                {t(`dietaryTags.${key}`)}
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Translation Tabs */}
         <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-          Translations <RequiredMark />
+          {t('admin.products.translations')} <RequiredMark />
         </p>
         <div
           style={{
@@ -227,7 +308,8 @@ export function ProductCreate() {
 
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+            {t('admin.products.description')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
           </label>
           <textarea
             id={`desc-${activeTab}`}
@@ -235,7 +317,7 @@ export function ProductCreate() {
             onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
             rows={3}
             style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={`Product description in ${activeTab.toUpperCase()}`}
+            placeholder={t('admin.products.descriptionPlaceholder', { lang: activeTab.toUpperCase() })}
           />
         </div>
 
@@ -244,7 +326,7 @@ export function ProductCreate() {
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
             {createProduct.error instanceof Error
               ? createProduct.error.message
-              : 'Failed to create product. Please try again.'}
+              : t('admin.products.createError')}
           </p>
         )}
 
@@ -263,10 +345,10 @@ export function ProductCreate() {
               opacity: createProduct.isPending ? 0.6 : 1,
             }}
           >
-            {createProduct.isPending ? 'Creating...' : 'Create Product'}
+            {createProduct.isPending ? t('admin.products.creating') : t('admin.products.create')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            Cancel
+            {t('admin.products.cancel')}
           </button>
         </div>
       </form>
