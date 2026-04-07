@@ -14,12 +14,14 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => await dbContext.Products
             .Include(p => p.Translations)
+            .Include(p => p.ComboItems)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken cancellationToken = default)
         => await dbContext.Products
             .Include(p => p.Translations)
+            .Include(p => p.ComboItems)
             .OrderBy(p => p.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -52,9 +54,16 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
             .Where(t => t.ProductId == id)
             .ExecuteDeleteAsync(cancellationToken);
 
+        await dbContext.ComboItems
+            .Where(ci => ci.ComboProductId == id)
+            .ExecuteDeleteAsync(cancellationToken);
+
         mutate(product);
 
         dbContext.ProductTranslations.AddRange(product.Translations);
+
+        if (product.ComboItems.Count > 0)
+            dbContext.ComboItems.AddRange(product.ComboItems);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -80,6 +89,7 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
     public async Task<IReadOnlyList<Product>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
         => await dbContext.Products
             .Include(p => p.Translations)
+            .Include(p => p.ComboItems)
             .Where(p => p.MenuCategoryId == categoryId)
             .OrderBy(p => p.SortOrderInCategory)
             .ToListAsync(cancellationToken);
@@ -100,9 +110,15 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
         var idList = ids.ToList();
         return await dbContext.Products
             .Include(p => p.Translations)
+            .Include(p => p.ComboItems)
             .Where(p => idList.Contains(p.Id))
             .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> IsComponentOfAnyComboAsync(Guid productId, CancellationToken cancellationToken = default)
+        => await dbContext.ComboItems
+            .AnyAsync(ci => ci.ComponentProductId == productId, cancellationToken);
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

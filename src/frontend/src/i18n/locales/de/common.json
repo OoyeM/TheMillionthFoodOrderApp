@@ -54,6 +54,24 @@
         "saveOrderError": "Reihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
       }
     },
+    "comboProducts": {
+      "create": "Komboprodukt erstellen",
+      "edit": "Komboprodukt bearbeiten",
+      "delete": "Combo l\u00f6schen",
+      "bundlePrice": "B\u00fcndelpreis",
+      "translations": "\u00dcbersetzungen",
+      "componentProducts": "Bestandteilprodukte",
+      "componentProductsHint": "W\u00e4hlen Sie mindestens zwei Produkte aus, die zu diesem Combo geh\u00f6ren.",
+      "remove": "Entfernen",
+      "createButton": "Combo erstellen",
+      "saveChanges": "\u00c4nderungen speichern",
+      "allProductsSelected": "Alle verf\u00fcgbaren Produkte sind ausgew\u00e4hlt.",
+      "errors": {
+        "priceRequired": "Der B\u00fcndelpreis muss gr\u00f6\u00dfer als null sein.",
+        "nlNameRequired": "Der niederl\u00e4ndische (NL) Name ist erforderlich.",
+        "minComponents": "Ein Komboprodukt muss mindestens zwei Produkte enthalten."
+      }
+    },
     "modifierGroups": {
       "title": "Modifikatorgruppen",
       "create": "Modifikatorgruppe erstellen",

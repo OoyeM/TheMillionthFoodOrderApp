@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@api/products';
-import type { CreateProductRequest, UpdateProductRequest } from '@api/products';
+import type {
+  CreateProductRequest,
+  UpdateProductRequest,
+  CreateComboProductRequest,
+  UpdateComboProductRequest,
+} from '@api/products';
 
 /** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
 export const productKeys = {
@@ -67,6 +72,35 @@ export function useDeleteProduct(brandSlug: string) {
     mutationFn: (id: string) => productsApi.remove(brandSlug, id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Combo product mutations
+// ---------------------------------------------------------------------------
+
+/** Create a new combo product. Invalidates the product list on success. */
+export function useCreateComboProduct(brandSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateComboProductRequest) => productsApi.createCombo(brandSlug, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
+    },
+  });
+}
+
+/** Update combo product details. Invalidates list and detail on success. */
+export function useUpdateComboProduct(brandSlug: string, id: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateComboProductRequest) => productsApi.updateCombo(brandSlug, id, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
+      void queryClient.invalidateQueries({ queryKey: productKeys.detail(brandSlug, id) });
     },
   });
 }

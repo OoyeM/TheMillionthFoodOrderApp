@@ -54,6 +54,24 @@
         "saveOrderError": "Volgorde opslaan mislukt. Probeer opnieuw."
       }
     },
+    "comboProducts": {
+      "create": "Comboproduct aanmaken",
+      "edit": "Comboproduct bewerken",
+      "delete": "Combo verwijderen",
+      "bundlePrice": "Bundelprijs",
+      "translations": "Vertalingen",
+      "componentProducts": "Samenstellende producten",
+      "componentProductsHint": "Selecteer minstens twee producten die deel uitmaken van deze combo.",
+      "remove": "Verwijderen",
+      "createButton": "Combo aanmaken",
+      "saveChanges": "Wijzigingen opslaan",
+      "allProductsSelected": "Alle beschikbare producten zijn geselecteerd.",
+      "errors": {
+        "priceRequired": "Bundelprijs moet groter zijn dan nul.",
+        "nlNameRequired": "Nederlandse (NL) naam is verplicht.",
+        "minComponents": "Een comboproduct moet minstens twee producten bevatten."
+      }
+    },
     "modifierGroups": {
       "title": "Modifier-groepen",
       "create": "Modifier-groep aanmaken",

@@ -30,6 +30,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
     public DbSet<Modifier> Modifiers => Set<Modifier>();
     public DbSet<ModifierTranslation> ModifierTranslations => Set<ModifierTranslation>();
     public DbSet<ProductModifierGroup> ProductModifierGroups => Set<ProductModifierGroup>();
+    public DbSet<ComboItem> ComboItems => Set<ComboItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         modelBuilder.ApplyConfiguration(new ModifierConfiguration());
         modelBuilder.ApplyConfiguration(new ModifierTranslationConfiguration());
         modelBuilder.ApplyConfiguration(new ProductModifierGroupConfiguration());
+        modelBuilder.ApplyConfiguration(new ComboItemConfiguration());
 
         // Global query filter: soft-deleted entities are excluded by default
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);

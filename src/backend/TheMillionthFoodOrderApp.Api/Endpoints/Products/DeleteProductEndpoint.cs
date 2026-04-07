@@ -20,6 +20,7 @@ public sealed class DeleteProductEndpoint(IProductService productService)
             s.Description = "Brand Admin soft-deletes a product. Hidden from storefronts but retained for historical order records.";
             s.Response(204, "Product deleted successfully.");
             s.Response(404, "Product not found.");
+            s.Response(409, "Product is a component of one or more combo products.");
         });
     }
 
@@ -33,6 +34,11 @@ public sealed class DeleteProductEndpoint(IProductService productService)
         catch (KeyNotFoundException)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            AddError(ex.Message);
+            await SendErrorsAsync(409, ct);
         }
     }
 }
