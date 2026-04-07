@@ -142,6 +142,29 @@
         "closed": "Fermé",
         "manageHours": "Gérer les heures d'ouverture",
         "noBlocks": "Aucune heure d'ouverture définie — le magasin apparaîtra comme fermé"
+      },
+      "orderLifecycle": {
+        "title": "Cycle de vie des commandes",
+        "statuses": "Statuts",
+        "transitions": "Transitions",
+        "statusName": "Nom du statut",
+        "terminal": "Statut final",
+        "color": "Couleur",
+        "addStatus": "Ajouter un statut",
+        "addTransition": "Ajouter une transition",
+        "remove": "Supprimer",
+        "save": "Enregistrer le cycle de vie",
+        "saving": "Enregistrement…",
+        "saved": "Cycle de vie enregistré",
+        "resetToDefault": "Rétablir les valeurs par défaut",
+        "resetConfirmTitle": "Rétablir les valeurs par défaut ?",
+        "resetConfirmMessage": "Cela remplacera la configuration actuelle par le cycle de vie par défaut. Cette action est irréversible.",
+        "confirmReset": "Oui, rétablir",
+        "cancel": "Annuler",
+        "minTwoStatuses": "Au moins deux statuts sont requis.",
+        "needTerminal": "Au moins un statut doit être un statut final.",
+        "nameRequired": "Tous les statuts doivent avoir un nom.",
+        "manageLifecycle": "Gérer le cycle de vie des commandes"
       }
     }
   }

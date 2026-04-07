@@ -58,6 +58,10 @@ const LazyShopOpeningHours = lazy(() =>
   import('./pages/ShopOpeningHours').then((m) => ({ default: m.ShopOpeningHours })),
 );
 
+const LazyShopOrderLifecycle = lazy(() =>
+  import('./pages/ShopOrderLifecycle').then((m) => ({ default: m.ShopOrderLifecycle })),
+);
+
 const LazyPlatformAdminList = lazy(() =>
   import('./pages/PlatformAdminList').then((m) => ({ default: m.PlatformAdminList })),
 );
@@ -158,6 +162,14 @@ export const adminRoutes: RouteObject[] = [
             element: (
               <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
                 <LazyShopOpeningHours />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'order-lifecycle',
+            element: (
+              <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+                <LazyShopOrderLifecycle />
               </Suspense>
             ),
           },

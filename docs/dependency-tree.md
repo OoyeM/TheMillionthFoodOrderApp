@@ -73,7 +73,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ⬜ | **US-FP-041** | Set special hours and holiday overrides | 040 |
 | ⬜ | **US-FP-020** | Configure time slot settings | 002 |
 | ⬜ | **US-FP-021** | Configure estimated wait times | 002 |
-| ⬜ | **US-FP-022** | Configure order lifecycle statuses | 002 |
+| ✅ | **US-FP-022** | Configure order lifecycle statuses | 002 |
 | ⬜ | **US-FP-066** | Enable or disable eat-in ordering | 002 |
 | ⬜ | **US-FP-065** | Generate QR codes for tables | 002 |
 

@@ -363,3 +363,45 @@ export interface ShopStatusResponse {
   nextOpeningTime: string | null;
   timeZoneId: string;
 }
+
+// ── Order Lifecycle ─────────────────────────────────────────────────────────
+
+export interface OrderStatusResponse {
+  id: string;
+  name: string;
+  systemKey: string | null;
+  sortOrder: number;
+  isEnabled: boolean;
+  isTerminal: boolean;
+  colorHex: string | null;
+}
+
+export interface OrderStatusTransitionResponse {
+  id: string;
+  fromStatusId: string;
+  toStatusId: string;
+}
+
+export interface OrderLifecycleResponse {
+  shopId: string;
+  statuses: OrderStatusResponse[];
+  transitions: OrderStatusTransitionResponse[];
+}
+
+export interface OrderStatusRequest {
+  name: string;
+  systemKey: string | null;
+  sortOrder: number;
+  isTerminal: boolean;
+  colorHex: string | null;
+}
+
+export interface OrderStatusTransitionRequest {
+  fromSortOrder: number;
+  toSortOrder: number;
+}
+
+export interface ConfigureOrderLifecycleRequest {
+  statuses: OrderStatusRequest[];
+  transitions: OrderStatusTransitionRequest[];
+}
