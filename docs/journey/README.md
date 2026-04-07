@@ -20,3 +20,5 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 011 | 2026-03-15 | [Startup seeding fix & UUIDv7 migration](./011-startup-seeding-and-guidv7.md) |
 | 012 | 2026-03-16 | [US-FP-005: Simple product management](./012-simple-products.md) |
 | 013 | 2026-03-16 | [US-FP-014: Menu categories](./013-menu-categories.md) |
+| 014 | 2026-03-16 | [US-FP-015: Order products within categories](./014-product-ordering-in-categories.md) |
+| 015 | 2026-04-07 | [US-FP-022: Configure order lifecycle statuses](./015-order-lifecycle-statuses.md) |
