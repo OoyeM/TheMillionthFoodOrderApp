@@ -8,7 +8,9 @@ public sealed record CreateProductApiRequest(
     [property: RouteParam] string BrandSlug,
     decimal BasePrice,
     string? ImageUrl,
-    List<TranslationInput> Translations);
+    List<TranslationInput> Translations,
+    List<int>? Allergens,
+    List<int>? DietaryTags);
 
 public sealed record TranslationInput(string LanguageCode, string Name, string? Description);
 
@@ -46,6 +48,26 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductApiRe
         RuleFor(x => x.ImageUrl)
             .MaximumLength(2048)
             .When(x => x.ImageUrl is not null);
+
+        RuleForEach(x => x.Allergens)
+            .InclusiveBetween(0, 13)
+            .WithMessage("Invalid allergen value. Must be between 0 and 13.")
+            .When(x => x.Allergens is not null);
+
+        RuleFor(x => x.Allergens)
+            .Must(a => a!.Distinct().Count() == a!.Count)
+            .When(x => x.Allergens is { Count: > 0 })
+            .WithMessage("Duplicate allergen values are not allowed.");
+
+        RuleForEach(x => x.DietaryTags)
+            .InclusiveBetween(0, 3)
+            .WithMessage("Invalid dietary tag value. Must be between 0 and 3.")
+            .When(x => x.DietaryTags is not null);
+
+        RuleFor(x => x.DietaryTags)
+            .Must(d => d!.Distinct().Count() == d!.Count)
+            .When(x => x.DietaryTags is { Count: > 0 })
+            .WithMessage("Duplicate dietary tag values are not allowed.");
     }
 }
 
@@ -72,7 +94,9 @@ public sealed class CreateProductEndpoint(IProductService productService)
             req.ImageUrl,
             req.Translations
                 .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
-                .ToList().AsReadOnly());
+                .ToList().AsReadOnly(),
+            req.Allergens?.AsReadOnly(),
+            req.DietaryTags?.AsReadOnly());
 
         var response = await productService.CreateProductAsync(appRequest, ct);
 

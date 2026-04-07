@@ -8,6 +8,28 @@
   "pos": {
     "description": "Kassasysteem voor in de winkel."
   },
+  "allergens": {
+    "Gluten": "Gluten",
+    "Crustaceans": "Schaaldieren",
+    "Eggs": "Eieren",
+    "Fish": "Vis",
+    "Peanuts": "Pinda's",
+    "Soybeans": "Soja",
+    "Milk": "Melk",
+    "Nuts": "Noten",
+    "Celery": "Selderij",
+    "Mustard": "Mosterd",
+    "Sesame": "Sesam",
+    "Sulphites": "Sulfieten",
+    "Lupin": "Lupine",
+    "Molluscs": "Weekdieren"
+  },
+  "dietaryTags": {
+    "Vegan": "Vegan",
+    "Vegetarian": "Vegetarisch",
+    "GlutenFree": "Glutenvrij",
+    "Halal": "Halal"
+  },
   "admin": {
     "description": "Beheer merken, winkels, producten en bestellingen.",
     "products": {
@@ -20,7 +42,9 @@
       "description": "Beschrijving",
       "basePrice": "Basisprijs",
       "imageUrl": "Afbeelding URL",
-      "noProducts": "Nog geen producten. Maak het eerste product aan."
+      "noProducts": "Nog geen producten. Maak het eerste product aan.",
+      "allergens": "Allergenen",
+      "dietaryTags": "Dieetlabels"
     },
     "staffAuth": {
       "title": "Personeelsauthenticatie",

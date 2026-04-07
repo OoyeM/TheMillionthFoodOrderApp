@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreateProduct } from '../hooks/useProducts';
+import { Allergen, DietaryTag, ALLERGEN_KEYS, DIETARY_TAG_KEYS } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +39,7 @@ interface FormErrors {
 
 export function ProductCreate() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const resolvedBrandSlug = brandSlug ?? '';
   const createProduct = useCreateProduct(resolvedBrandSlug);
@@ -48,6 +51,8 @@ export function ProductCreate() {
   const [basePrice, setBasePrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+  const [selectedAllergens, setSelectedAllergens] = useState<Set<number>>(new Set());
+  const [selectedDietaryTags, setSelectedDietaryTags] = useState<Set<number>>(new Set());
 
   function updateTranslation(
     locale: SupportedLocale,
@@ -58,6 +63,24 @@ export function ProductCreate() {
       ...prev,
       [locale]: { ...prev[locale], [field]: value },
     }));
+  }
+
+  function toggleAllergen(value: number) {
+    setSelectedAllergens((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
+  function toggleDietaryTag(value: number) {
+    setSelectedDietaryTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
   }
 
   function validate(): FormErrors {
@@ -94,6 +117,8 @@ export function ProductCreate() {
         basePrice: parseFloat(basePrice),
         imageUrl: imageUrl.trim() || null,
         translations: translationInputs,
+        allergens: [...selectedAllergens],
+        dietaryTags: [...selectedDietaryTags],
       },
       {
         onSuccess: () => {
@@ -161,6 +186,62 @@ export function ProductCreate() {
               }}
             />
           )}
+        </div>
+
+        {/* Allergens */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.allergens')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {ALLERGEN_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedAllergens.has(Allergen[key])}
+                  onChange={() => toggleAllergen(Allergen[key])}
+                />
+                {t(`allergens.${key}`)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Dietary Tags */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.dietaryTags')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {DIETARY_TAG_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDietaryTags.has(DietaryTag[key])}
+                  onChange={() => toggleDietaryTag(DietaryTag[key])}
+                />
+                {t(`dietaryTags.${key}`)}
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Translation Tabs */}

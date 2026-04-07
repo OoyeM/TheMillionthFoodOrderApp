@@ -7,6 +7,12 @@ import {
   useModifierGroups,
   useSetProductModifierGroups,
 } from '../hooks/useModifierGroups';
+import {
+  Allergen,
+  DietaryTag,
+  ALLERGEN_KEYS,
+  DIETARY_TAG_KEYS,
+} from '../../../types/common';
 import type { SupportedLocale, ProductModifierGroupResponse } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -71,6 +77,8 @@ export function ProductEdit() {
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [formInitialized, setFormInitialized] = useState(false);
+  const [selectedAllergens, setSelectedAllergens] = useState<Set<number>>(new Set());
+  const [selectedDietaryTags, setSelectedDietaryTags] = useState<Set<number>>(new Set());
 
   // Populate assigned modifier groups when data arrives
   useEffect(() => {
@@ -96,6 +104,8 @@ export function ProductEdit() {
         }
       }
       setTranslations(translationsMap);
+      setSelectedAllergens(new Set(product.allergens));
+      setSelectedDietaryTags(new Set(product.dietaryTags));
       setFormInitialized(true);
     }
   }, [product, formInitialized]);
@@ -109,6 +119,24 @@ export function ProductEdit() {
       ...prev,
       [locale]: { ...prev[locale], [field]: value },
     }));
+  }
+
+  function toggleAllergen(value: number) {
+    setSelectedAllergens((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
+  function toggleDietaryTag(value: number) {
+    setSelectedDietaryTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
   }
 
   function validate(): FormErrors {
@@ -145,6 +173,8 @@ export function ProductEdit() {
         basePrice: parseFloat(basePrice),
         imageUrl: imageUrl.trim() || null,
         translations: translationInputs,
+        allergens: [...selectedAllergens],
+        dietaryTags: [...selectedDietaryTags],
       },
       {
         onSuccess: () => {
@@ -323,6 +353,62 @@ export function ProductEdit() {
               }}
             />
           )}
+        </div>
+
+        {/* Allergens */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.allergens')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {ALLERGEN_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedAllergens.has(Allergen[key])}
+                  onChange={() => toggleAllergen(Allergen[key])}
+                />
+                {t(`allergens.${key}`)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Dietary Tags */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.products.dietaryTags')}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {DIETARY_TAG_KEYS.map((key) => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDietaryTags.has(DietaryTag[key])}
+                  onChange={() => toggleDietaryTag(DietaryTag[key])}
+                />
+                {t(`dietaryTags.${key}`)}
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Translation Tabs */}

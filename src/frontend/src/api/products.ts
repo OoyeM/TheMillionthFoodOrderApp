@@ -11,12 +11,16 @@ export interface CreateProductRequest {
   basePrice: number;
   imageUrl?: string | null;
   translations: TranslationInput[];
+  allergens?: number[];
+  dietaryTags?: number[];
 }
 
 export interface UpdateProductRequest {
   basePrice: number;
   imageUrl?: string | null;
   translations: TranslationInput[];
+  allergens?: number[];
+  dietaryTags?: number[];
 }
 
 /**

@@ -8,6 +8,28 @@
   "pos": {
     "description": "Kassensystem für den Laden."
   },
+  "allergens": {
+    "Gluten": "Gluten",
+    "Crustaceans": "Krebstiere",
+    "Eggs": "Eier",
+    "Fish": "Fisch",
+    "Peanuts": "Erdnüsse",
+    "Soybeans": "Soja",
+    "Milk": "Milch",
+    "Nuts": "Schalenfrüchte",
+    "Celery": "Sellerie",
+    "Mustard": "Senf",
+    "Sesame": "Sesam",
+    "Sulphites": "Sulfite",
+    "Lupin": "Lupinen",
+    "Molluscs": "Weichtiere"
+  },
+  "dietaryTags": {
+    "Vegan": "Vegan",
+    "Vegetarian": "Vegetarisch",
+    "GlutenFree": "Glutenfrei",
+    "Halal": "Halal"
+  },
   "admin": {
     "description": "Verwalten Sie Marken, Geschäfte, Produkte und Bestellungen.",
     "products": {
@@ -20,7 +42,9 @@
       "description": "Beschreibung",
       "basePrice": "Grundpreis",
       "imageUrl": "Bild-URL",
-      "noProducts": "Noch keine Produkte. Erstellen Sie das erste."
+      "noProducts": "Noch keine Produkte. Erstellen Sie das erste.",
+      "allergens": "Allergene",
+      "dietaryTags": "Ernährungslabels"
     },
     "staffAuth": {
       "title": "Mitarbeiter-Authentifizierung",

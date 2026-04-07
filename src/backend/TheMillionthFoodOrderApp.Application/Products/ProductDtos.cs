@@ -7,12 +7,16 @@ public sealed record MoneyResponse(decimal Amount, string Currency);
 public sealed record CreateProductRequest(
     decimal BasePrice,
     string? ImageUrl,
-    IReadOnlyList<TranslationRequest> Translations);
+    IReadOnlyList<TranslationRequest> Translations,
+    IReadOnlyList<int>? Allergens = null,
+    IReadOnlyList<int>? DietaryTags = null);
 
 public sealed record UpdateProductRequest(
     decimal BasePrice,
     string? ImageUrl,
-    IReadOnlyList<TranslationRequest> Translations);
+    IReadOnlyList<TranslationRequest> Translations,
+    IReadOnlyList<int>? Allergens = null,
+    IReadOnlyList<int>? DietaryTags = null);
 
 public sealed record ProductResponse(
     Guid Id,
@@ -21,6 +25,8 @@ public sealed record ProductResponse(
     Guid? MenuCategoryId,
     int SortOrderInCategory,
     IReadOnlyList<TranslationResponse> Translations,
+    IReadOnlyList<int> Allergens,
+    IReadOnlyList<int> DietaryTags,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -31,4 +37,6 @@ public sealed record ProductListItemResponse(
     string? ImageUrl,
     Guid? MenuCategoryId,
     int SortOrderInCategory,
+    IReadOnlyList<int> Allergens,
+    IReadOnlyList<int> DietaryTags,
     DateTimeOffset CreatedAt);

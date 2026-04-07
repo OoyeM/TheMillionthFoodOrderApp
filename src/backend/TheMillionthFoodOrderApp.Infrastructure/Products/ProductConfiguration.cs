@@ -55,6 +55,14 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Property(p => p.Allergens)
+            .HasField("_allergens")
+            .HasColumnName("Allergens");
+
+        builder.Property(p => p.DietaryTags)
+            .HasField("_dietaryTags")
+            .HasColumnName("DietaryTags");
+
         builder.HasMany(p => p.Translations)
             .WithOne()
             .HasForeignKey(t => t.ProductId)
