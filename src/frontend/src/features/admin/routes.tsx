@@ -86,6 +86,14 @@ const LazyModifierGroupEdit = lazy(() =>
   import('./pages/ModifierGroupEdit').then((m) => ({ default: m.ModifierGroupEdit })),
 );
 
+const LazyComboProductCreate = lazy(() =>
+  import('./pages/ComboProductCreate').then((m) => ({ default: m.ComboProductCreate })),
+);
+
+const LazyComboProductEdit = lazy(() =>
+  import('./pages/ComboProductEdit').then((m) => ({ default: m.ComboProductEdit })),
+);
+
 /**
  * Route configuration for the CMS admin panel.
  * These routes are nested under /:brandSlug/:lang/admin/ in the main router.
@@ -202,6 +210,28 @@ export const adminRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
             <LazyProductEdit />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+  // Combo product management (brand-scoped)
+  {
+    path: 'combo-products',
+    children: [
+      {
+        path: 'new',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyComboProductCreate />
+          </Suspense>
+        ),
+      },
+      {
+        path: ':productId',
+        element: (
+          <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+            <LazyComboProductEdit />
           </Suspense>
         ),
       },

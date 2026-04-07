@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useProduct, useUpdateProduct, useDeleteProduct } from '../hooks/useProducts';
+import {
+  useProduct,
+  useProducts,
+  useUpdateComboProduct,
+  useDeleteProduct,
+} from '../hooks/useProducts';
 import {
   useProductModifierGroups,
   useModifierGroups,
   useSetProductModifierGroups,
 } from '../hooks/useModifierGroups';
-import {
-  Allergen,
-  DietaryTag,
-  ALLERGEN_KEYS,
-  DIETARY_TAG_KEYS,
-} from '../../../types/common';
-import type { SupportedLocale, ProductModifierGroupResponse } from '../../../types/common';
+import type { SupportedLocale, ProductListItem, ProductModifierGroupResponse } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -41,13 +40,14 @@ const emptyTranslations: TranslationsMap = {
 interface FormErrors {
   basePrice?: string;
   nlName?: string;
+  components?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
-export function ProductEdit() {
+export function ComboProductEdit() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { brandSlug, lang, productId } = useParams<{
@@ -60,7 +60,8 @@ export function ProductEdit() {
   const resolvedProductId = productId ?? '';
 
   const { data: product, isLoading, isError, error } = useProduct(resolvedBrandSlug, resolvedProductId);
-  const updateProduct = useUpdateProduct(resolvedBrandSlug, resolvedProductId);
+  const { data: allProducts } = useProducts(resolvedBrandSlug);
+  const updateCombo = useUpdateComboProduct(resolvedBrandSlug, resolvedProductId);
   const deleteProduct = useDeleteProduct(resolvedBrandSlug);
 
   // Modifier groups
@@ -75,10 +76,11 @@ export function ProductEdit() {
   const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
   const [basePrice, setBasePrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [selectedComponents, setSelectedComponents] = useState<ProductListItem[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formInitialized, setFormInitialized] = useState(false);
-  const [selectedAllergens, setSelectedAllergens] = useState<Set<number>>(new Set());
-  const [selectedDietaryTags, setSelectedDietaryTags] = useState<Set<number>>(new Set());
+
+  const simpleProducts = allProducts?.filter((p) => p.productType === 'Simple') ?? [];
 
   // Populate assigned modifier groups when data arrives
   useEffect(() => {
@@ -90,25 +92,36 @@ export function ProductEdit() {
 
   // Populate form when product data arrives
   useEffect(() => {
-    if (product !== undefined && !formInitialized) {
+    if (product !== undefined && allProducts !== undefined && !formInitialized) {
       setBasePrice(product.basePrice.amount.toString());
       setImageUrl(product.imageUrl ?? '');
 
       const translationsMap: TranslationsMap = { ...emptyTranslations };
-      for (const t of product.translations) {
-        if (t.languageCode in translationsMap) {
-          translationsMap[t.languageCode as SupportedLocale] = {
-            name: t.name,
-            description: t.description ?? '',
+      for (const tr of product.translations) {
+        if (tr.languageCode in translationsMap) {
+          translationsMap[tr.languageCode as SupportedLocale] = {
+            name: tr.name,
+            description: tr.description ?? '',
           };
         }
       }
       setTranslations(translationsMap);
-      setSelectedAllergens(new Set(product.allergens));
-      setSelectedDietaryTags(new Set(product.dietaryTags));
+
+      // Populate combo items from product data
+      if (product.comboItems) {
+        const components: ProductListItem[] = [];
+        for (const ci of product.comboItems.sort((a, b) => a.sortOrder - b.sortOrder)) {
+          const found = allProducts.find((p) => p.id === ci.componentProductId);
+          if (found) {
+            components.push(found);
+          }
+        }
+        setSelectedComponents(components);
+      }
+
       setFormInitialized(true);
     }
-  }, [product, formInitialized]);
+  }, [product, allProducts, formInitialized]);
 
   function updateTranslation(
     locale: SupportedLocale,
@@ -121,34 +134,47 @@ export function ProductEdit() {
     }));
   }
 
-  function toggleAllergen(value: number) {
-    setSelectedAllergens((prev) => {
-      const next = new Set(prev);
-      if (next.has(value)) next.delete(value);
-      else next.add(value);
-      return next;
-    });
-  }
-
-  function toggleDietaryTag(value: number) {
-    setSelectedDietaryTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(value)) next.delete(value);
-      else next.add(value);
-      return next;
-    });
-  }
-
   function validate(): FormErrors {
     const next: FormErrors = {};
     const price = parseFloat(basePrice);
     if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = t('admin.products.validation.basePriceRequired');
+      next.basePrice = t('admin.comboProducts.errors.priceRequired');
     }
     if (translations.nl.name.trim().length === 0) {
-      next.nlName = t('admin.products.validation.nlNameRequired');
+      next.nlName = t('admin.comboProducts.errors.nlNameRequired');
+    }
+    if (selectedComponents.length < 2) {
+      next.components = t('admin.comboProducts.errors.minComponents');
     }
     return next;
+  }
+
+  function handleToggleComponent(product: ProductListItem) {
+    setSelectedComponents((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      if (exists) {
+        return prev.filter((p) => p.id !== product.id);
+      }
+      return [...prev, product];
+    });
+  }
+
+  function handleMoveUp(index: number) {
+    if (index === 0) return;
+    setSelectedComponents((prev) => {
+      const next = [...prev];
+      [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+      return next;
+    });
+  }
+
+  function handleMoveDown(index: number) {
+    setSelectedComponents((prev) => {
+      if (index >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+      return next;
+    });
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -168,13 +194,12 @@ export function ProductEdit() {
       description: translations[l.code].description.trim() || null,
     }));
 
-    updateProduct.mutate(
+    updateCombo.mutate(
       {
         basePrice: parseFloat(basePrice),
         imageUrl: imageUrl.trim() || null,
         translations: translationInputs,
-        allergens: [...selectedAllergens],
-        dietaryTags: [...selectedDietaryTags],
+        componentProductIds: selectedComponents.map((p) => p.id),
       },
       {
         onSuccess: () => {
@@ -186,7 +211,7 @@ export function ProductEdit() {
 
   function handleDelete() {
     const name = translations.nl.name || '(unnamed)';
-    if (window.confirm(t('admin.products.confirmDelete', { name }))) {
+    if (window.confirm(t('admin.comboProducts.confirmDelete', { name }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
           navigate(`/${brandSlug}/${lang}/admin/products`);
@@ -265,7 +290,7 @@ export function ProductEdit() {
   if (isLoading) {
     return (
       <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>{t('admin.products.loadingProduct')}</p>
+        <p style={{ color: '#6b7280' }}>Loading combo product...</p>
       </main>
     );
   }
@@ -274,11 +299,11 @@ export function ProductEdit() {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
-          {t('admin.products.loadError')}{' '}
-          {error instanceof Error ? error.message : t('error')}
+          Failed to load combo product:{' '}
+          {error instanceof Error ? error.message : 'Unknown error'}
         </p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
-          {t('admin.products.backToList')}
+          Back to list
         </button>
       </main>
     );
@@ -287,9 +312,9 @@ export function ProductEdit() {
   if (product === undefined) {
     return (
       <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>{t('admin.products.notFound')}</p>
+        <p style={{ color: '#6b7280' }}>Combo product not found.</p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
-          {t('admin.products.backToList')}
+          Back to list
         </button>
       </main>
     );
@@ -302,14 +327,14 @@ export function ProductEdit() {
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-        {t('admin.products.edit')}
+        {t('admin.comboProducts.edit')}
       </h1>
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
-            {t('admin.products.basePrice')} (EUR) <RequiredMark />
+            {t('admin.comboProducts.bundlePrice')} (EUR) <RequiredMark />
           </label>
           <input
             id="basePrice"
@@ -319,7 +344,7 @@ export function ProductEdit() {
             value={basePrice}
             onChange={(e) => setBasePrice(e.target.value)}
             style={inputStyle(!!errors.basePrice)}
-            placeholder={t('admin.products.pricePlaceholder')}
+            placeholder="e.g. 3.50"
           />
           {errors.basePrice && <FieldError message={errors.basePrice} />}
         </div>
@@ -327,8 +352,7 @@ export function ProductEdit() {
         {/* Image URL */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={labelStyle} htmlFor="imageUrl">
-            {t('admin.products.imageUrl')}{' '}
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
+            Image URL <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
           </label>
           <input
             id="imageUrl"
@@ -356,65 +380,9 @@ export function ProductEdit() {
           )}
         </div>
 
-        {/* Allergens */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-            {t('admin.products.allergens')}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {ALLERGEN_KEYS.map((key) => (
-              <label
-                key={key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedAllergens.has(Allergen[key])}
-                  onChange={() => toggleAllergen(Allergen[key])}
-                />
-                {t(`allergens.${key}`)}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Dietary Tags */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-            {t('admin.products.dietaryTags')}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {DIETARY_TAG_KEYS.map((key) => (
-              <label
-                key={key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedDietaryTags.has(DietaryTag[key])}
-                  onChange={() => toggleDietaryTag(DietaryTag[key])}
-                />
-                {t(`dietaryTags.${key}`)}
-              </label>
-            ))}
-          </div>
-        </div>
-
         {/* Translation Tabs */}
         <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-          {t('admin.products.translations')} <RequiredMark />
+          {t('admin.comboProducts.translations')} <RequiredMark />
         </p>
         <div
           style={{
@@ -448,7 +416,7 @@ export function ProductEdit() {
         {/* Active tab content */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            {t('admin.products.name')} {activeTab === 'nl' && <RequiredMark />}
+            Name {activeTab === 'nl' && <RequiredMark />}
           </label>
           <input
             id={`name-${activeTab}`}
@@ -456,15 +424,14 @@ export function ProductEdit() {
             value={translations[activeTab].name}
             onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
             style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
-            placeholder={t('admin.products.namePlaceholder', { lang: activeTab.toUpperCase() })}
+            placeholder={`Combo name in ${activeTab.toUpperCase()}`}
           />
           {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
         </div>
 
         <div style={{ marginBottom: '0.5rem' }}>
           <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            {t('admin.products.description')}{' '}
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
+            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
           </label>
           <textarea
             id={`desc-${activeTab}`}
@@ -472,44 +439,177 @@ export function ProductEdit() {
             onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
             rows={3}
             style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={t('admin.products.descriptionPlaceholder', { lang: activeTab.toUpperCase() })}
+            placeholder={`Combo description in ${activeTab.toUpperCase()}`}
           />
         </div>
 
         {/* Metadata */}
         <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          {t('admin.products.createdAt')}: {new Date(product.createdAt).toLocaleString()} &mdash;{' '}
-          {t('admin.products.updatedAt')}: {new Date(product.updatedAt).toLocaleString()}
+          Created: {new Date(product.createdAt).toLocaleString()} &mdash; Last updated:{' '}
+          {new Date(product.updatedAt).toLocaleString()}
         </p>
 
+        {/* Component Products */}
+        <section style={{ marginBottom: '1.5rem' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            {t('admin.comboProducts.componentProducts')} <RequiredMark />
+          </p>
+          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+            {t('admin.comboProducts.componentProductsHint')}
+          </p>
+
+          {errors.components && <FieldError message={errors.components} />}
+
+          {/* Selected components with reorder controls */}
+          {selectedComponents.length > 0 && (
+            <div style={{ marginBottom: '0.75rem' }}>
+              {selectedComponents.map((comp, index) => (
+                <div
+                  key={comp.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.375rem',
+                    marginBottom: '0.375rem',
+                    background: '#f9fafb',
+                  }}
+                >
+                  <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>
+                    {comp.name}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                    {'\u20AC'} {comp.basePrice.amount.toFixed(2)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveUp(index)}
+                    disabled={index === 0}
+                    style={{
+                      ...reorderButtonStyle,
+                      opacity: index === 0 ? 0.3 : 1,
+                      cursor: index === 0 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    &#9650;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveDown(index)}
+                    disabled={index === selectedComponents.length - 1}
+                    style={{
+                      ...reorderButtonStyle,
+                      opacity: index === selectedComponents.length - 1 ? 0.3 : 1,
+                      cursor: index === selectedComponents.length - 1 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    &#9660;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleComponent(comp)}
+                    style={{
+                      padding: '0.125rem 0.5rem',
+                      fontSize: '0.75rem',
+                      background: '#fff',
+                      border: '1px solid #fca5a5',
+                      borderRadius: '0.25rem',
+                      color: '#dc2626',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {t('admin.comboProducts.remove')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Available products to add */}
+          {simpleProducts.length === 0 && selectedComponents.length === 0 && (
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              {t('admin.comboProducts.noSimpleProducts')}
+            </p>
+          )}
+          {simpleProducts.length > 0 && (
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '0.375rem',
+                maxHeight: '12rem',
+                overflowY: 'auto',
+              }}
+            >
+              {simpleProducts
+                .filter((p) => !selectedComponents.some((s) => s.id === p.id))
+                .map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => handleToggleComponent(p)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f3f4f6',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = '#f9fafb';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = 'transparent';
+                    }}
+                  >
+                    <span style={{ flex: 1, fontSize: '0.875rem' }}>{p.name}</span>
+                    <span
+                      style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}
+                    >
+                      {'\u20AC'} {p.basePrice.amount.toFixed(2)}
+                    </span>
+                    <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>+ Add</span>
+                  </div>
+                ))}
+              {simpleProducts.filter((p) => !selectedComponents.some((s) => s.id === p.id))
+                .length === 0 && (
+                <p style={{ padding: '0.75rem', color: '#9ca3af', fontSize: '0.875rem' }}>
+                  {t('admin.comboProducts.allProductsSelected')}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* API error */}
-        {updateProduct.isError && (
+        {updateCombo.isError && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateProduct.error instanceof Error
-              ? updateProduct.error.message
-              : t('admin.products.updateError')}
+            {updateCombo.error instanceof Error
+              ? updateCombo.error.message
+              : 'Failed to save changes. Please try again.'}
           </p>
         )}
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateProduct.isPending}
+            disabled={updateCombo.isPending}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateProduct.isPending ? 'not-allowed' : 'pointer',
+              cursor: updateCombo.isPending ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateProduct.isPending ? 0.6 : 1,
+              opacity: updateCombo.isPending ? 0.6 : 1,
             }}
           >
-            {updateProduct.isPending ? t('admin.products.saving') : t('admin.products.saveChanges')}
+            {updateCombo.isPending ? t('admin.comboProducts.saving') : t('admin.comboProducts.saveChanges')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            {t('admin.products.cancel')}
+            Cancel
           </button>
           <button
             type="button"
@@ -526,7 +626,7 @@ export function ProductEdit() {
               marginLeft: 'auto',
             }}
           >
-            {deleteProduct.isPending ? t('admin.products.deleting') : t('admin.products.delete')}
+            {deleteProduct.isPending ? t('admin.comboProducts.deleting') : t('admin.comboProducts.delete')}
           </button>
         </div>
       </form>
@@ -631,7 +731,7 @@ export function ProductEdit() {
                 maxWidth: '20rem',
               }}
             >
-              <option value="">-- Select a modifier group --</option>
+              <option value="">{t('admin.comboProducts.selectModifierGroup')}</option>
               {allModifierGroups
                 .filter((g) => !assignedGroups.some((a) => a.modifierGroupId === g.id))
                 .map((g) => (

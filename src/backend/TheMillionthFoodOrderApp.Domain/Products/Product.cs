@@ -5,6 +5,7 @@ namespace TheMillionthFoodOrderApp.Domain.Products;
 
 public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
 {
+    public ProductType ProductType { get; private set; }
     public Money BasePrice { get; private set; } = null!;
     public string? ImageUrl { get; private set; }
 
@@ -29,6 +30,14 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     private readonly List<ProductTranslation> _translations = [];
     public IReadOnlyCollection<ProductTranslation> Translations => _translations.AsReadOnly();
 
+    private readonly List<Allergen> _allergens = [];
+    public IReadOnlyCollection<Allergen> Allergens => _allergens.AsReadOnly();
+
+    private readonly List<DietaryTag> _dietaryTags = [];
+    public IReadOnlyCollection<DietaryTag> DietaryTags => _dietaryTags.AsReadOnly();
+    private readonly List<ComboItem> _comboItems = [];
+    public IReadOnlyCollection<ComboItem> ComboItems => _comboItems.AsReadOnly();
+
     // Required by EF Core
     private Product() { }
 
@@ -39,7 +48,9 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     public static Product Create(
         Money basePrice,
         string? imageUrl,
-        IEnumerable<(string languageCode, string name, string? description)> translations)
+        IEnumerable<(string languageCode, string name, string? description)> translations,
+        IEnumerable<Allergen>? allergens = null,
+        IEnumerable<DietaryTag>? dietaryTags = null)
     {
         var translationList = translations.ToList();
         if (translationList.Count == 0)
@@ -49,6 +60,7 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         var product = new Product
         {
             Id = Guid.CreateVersion7(),
+            ProductType = ProductType.Simple,
             BasePrice = basePrice,
             ImageUrl = imageUrl,
             IsDeleted = false,
@@ -63,6 +75,20 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
                 ProductTranslation.Create(product.Id, languageCode, name, description));
         }
 
+        if (allergens is not null)
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            product._allergens.AddRange(allergenList);
+        }
+
+        if (dietaryTags is not null)
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            product._dietaryTags.AddRange(dietaryTagList);
+        }
+
         product.AddDomainEvent(new ProductCreatedEvent(product.Id));
 
         return product;
@@ -74,7 +100,9 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     public void Update(
         Money basePrice,
         string? imageUrl,
-        IEnumerable<(string languageCode, string name, string? description)> translations)
+        IEnumerable<(string languageCode, string name, string? description)> translations,
+        IEnumerable<Allergen>? allergens = null,
+        IEnumerable<DietaryTag>? dietaryTags = null)
     {
         var translationList = translations.ToList();
         if (translationList.Count == 0)
@@ -89,6 +117,22 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         {
             _translations.Add(
                 ProductTranslation.Create(Id, languageCode, name, description));
+        }
+
+        _allergens.Clear();
+        if (allergens is not null)
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            _allergens.AddRange(allergenList);
+        }
+
+        _dietaryTags.Clear();
+        if (dietaryTags is not null)
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            _dietaryTags.AddRange(dietaryTagList);
         }
     }
 
@@ -134,5 +178,91 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         DeletedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new ProductDeletedEvent(Id));
+    }
+
+    // ── Validation helpers ───────────────────────────────────────────────────
+
+    private static void ValidateAllergens(IEnumerable<Allergen> allergens)
+    {
+        foreach (var allergen in allergens)
+        {
+            if (!Enum.IsDefined(allergen))
+                throw new ArgumentException($"Invalid allergen value: {(int)allergen}.", nameof(allergens));
+        }
+    }
+
+    private static void ValidateDietaryTags(IEnumerable<DietaryTag> dietaryTags)
+    {
+        foreach (var tag in dietaryTags)
+        {
+            if (!Enum.IsDefined(tag))
+                throw new ArgumentException($"Invalid dietary tag value: {(int)tag}.", nameof(dietaryTags));
+        }
+    /// <summary>
+    /// Factory method — creates a combo product bundling two or more existing simple products.
+    /// </summary>
+    public static Product CreateCombo(
+        Money basePrice,
+        string? imageUrl,
+        IEnumerable<(string languageCode, string name, string? description)> translations,
+        IReadOnlyList<Guid> componentProductIds)
+    {
+        var translationList = translations.ToList();
+        if (translationList.Count == 0)
+            throw new ArgumentException("At least one translation is required.", nameof(translations));
+
+        if (componentProductIds.Count < 2)
+            throw new ArgumentException("A combo product must contain at least two component products.", nameof(componentProductIds));
+
+        var now = DateTimeOffset.UtcNow;
+        var product = new Product
+        {
+            Id = Guid.CreateVersion7(),
+            ProductType = ProductType.Combo,
+            BasePrice = basePrice,
+            ImageUrl = imageUrl,
+            IsDeleted = false,
+            SortOrderInCategory = 0,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        foreach (var (languageCode, name, description) in translationList)
+        {
+            product._translations.Add(
+                ProductTranslation.Create(product.Id, languageCode, name, description));
+        }
+
+        for (var i = 0; i < componentProductIds.Count; i++)
+        {
+            product._comboItems.Add(
+                ComboItem.Create(product.Id, componentProductIds[i], i));
+        }
+
+        product.AddDomainEvent(new ProductCreatedEvent(product.Id));
+
+        return product;
+    }
+
+    /// <summary>
+    /// Replaces all component products in this combo (clear + re-add).
+    /// Only valid for combo products.
+    /// </summary>
+    public void UpdateComboItems(IReadOnlyList<Guid> componentProductIds)
+    {
+        if (ProductType != ProductType.Combo)
+            throw new InvalidOperationException("Only combo products can have component items.");
+
+        if (componentProductIds.Count < 2)
+            throw new ArgumentException("A combo product must contain at least two component products.", nameof(componentProductIds));
+
+        _comboItems.Clear();
+        for (var i = 0; i < componentProductIds.Count; i++)
+        {
+            _comboItems.Add(
+                ComboItem.Create(Id, componentProductIds[i], i));
+        }
+
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

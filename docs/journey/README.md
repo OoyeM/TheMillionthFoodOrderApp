@@ -22,3 +22,4 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 013 | 2026-03-16 | [US-FP-014: Menu categories](./013-menu-categories.md) |
 | 014 | 2026-03-16 | [US-FP-015: Order products within categories](./014-product-ordering-in-categories.md) |
 | 015 | 2026-04-07 | [US-FP-022: Configure order lifecycle statuses](./015-order-lifecycle-statuses.md) |
+| 018 | 2026-04-07 | [US-FP-007: Create and manage combo products](./018-combo-products.md) |

@@ -1,25 +1,25 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
+using TheMillionthFoodOrderApp.Api.Endpoints.Products;
 using TheMillionthFoodOrderApp.Application.Products;
-using TheMillionthFoodOrderApp.Domain.Products;
 
-namespace TheMillionthFoodOrderApp.Api.Endpoints.Products;
+namespace TheMillionthFoodOrderApp.Api.Endpoints.ComboProducts;
 
-public sealed record UpdateProductApiRequest(
+public sealed record UpdateComboProductApiRequest(
     [property: RouteParam] string BrandSlug,
     [property: RouteParam] Guid Id,
     decimal BasePrice,
     string? ImageUrl,
     List<TranslationInput> Translations,
-    List<int>? Allergens,
-    List<int>? DietaryTags);
+    List<Guid> ComponentProductIds);
 
-public sealed class UpdateProductRequestValidator : Validator<UpdateProductApiRequest>
+public sealed class UpdateComboProductRequestValidator : Validator<UpdateComboProductApiRequest>
 {
-    public UpdateProductRequestValidator()
+    public UpdateComboProductRequestValidator()
     {
         RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Product id is required.");
+            .NotEmpty().WithMessage("Combo product id is required.");
 
         RuleFor(x => x.BasePrice)
             .GreaterThan(0).WithMessage("Base price must be greater than zero.");
@@ -52,65 +52,57 @@ public sealed class UpdateProductRequestValidator : Validator<UpdateProductApiRe
             .MaximumLength(2048)
             .When(x => x.ImageUrl is not null);
 
-        RuleForEach(x => x.Allergens)
-            .Must(v => Enum.IsDefined(typeof(Allergen), v))
-            .WithMessage("Invalid allergen value.")
-            .When(x => x.Allergens is not null);
-
-        RuleFor(x => x.Allergens)
-            .Must(a => a!.Distinct().Count() == a!.Count)
-            .When(x => x.Allergens is { Count: > 0 })
-            .WithMessage("Duplicate allergen values are not allowed.");
-
-        RuleForEach(x => x.DietaryTags)
-            .Must(v => Enum.IsDefined(typeof(DietaryTag), v))
-            .WithMessage("Invalid dietary tag value.")
-            .When(x => x.DietaryTags is not null);
-
-        RuleFor(x => x.DietaryTags)
-            .Must(d => d!.Distinct().Count() == d!.Count)
-            .When(x => x.DietaryTags is { Count: > 0 })
-            .WithMessage("Duplicate dietary tag values are not allowed.");
+        RuleFor(x => x.ComponentProductIds)
+            .NotEmpty().WithMessage("At least two component products are required.")
+            .Must(ids => ids?.Count >= 2)
+            .WithMessage("A combo product must contain at least two component products.")
+            .Must(ids => ids?.Distinct().Count() == ids?.Count)
+            .When(x => x.ComponentProductIds is not null)
+            .WithMessage("Duplicate component product IDs are not allowed.");
     }
 }
 
-public sealed class UpdateProductEndpoint(IProductService productService)
-    : Endpoint<UpdateProductApiRequest, ProductResponse>
+public sealed class UpdateComboProductEndpoint(IProductService productService)
+    : Endpoint<UpdateComboProductApiRequest, ProductResponse>
 {
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/products/{id}");
+        Put("/api/brands/{brandSlug}/combo-products/{id}");
         AllowAnonymous();
         Summary(s =>
         {
-            s.Summary = "Update a product";
-            s.Description = "Brand Admin updates product details including translations.";
-            s.Response<ProductResponse>(200, "Product updated successfully.");
+            s.Summary = "Update a combo product";
+            s.Description = "Brand Admin updates combo product details including translations and component products.";
+            s.Response<ProductResponse>(200, "Combo product updated successfully.");
             s.Response(400, "Validation error.");
-            s.Response(404, "Product not found.");
+            s.Response(404, "Combo product not found.");
         });
     }
 
-    public override async Task HandleAsync(UpdateProductApiRequest req, CancellationToken ct)
+    public override async Task HandleAsync(UpdateComboProductApiRequest req, CancellationToken ct)
     {
         try
         {
-            var appRequest = new UpdateProductRequest(
+            var appRequest = new UpdateComboProductRequest(
                 req.BasePrice,
                 req.ImageUrl,
                 req.Translations
                     .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
                     .ToList().AsReadOnly(),
-                req.Allergens?.AsReadOnly(),
-                req.DietaryTags?.AsReadOnly());
+                req.ComponentProductIds.AsReadOnly());
 
-            var response = await productService.UpdateProductAsync(req.Id, appRequest, ct);
+            var response = await productService.UpdateComboProductAsync(req.Id, appRequest, ct);
 
             await HttpContext.Response.SendAsync(response, statusCode: 200, cancellation: ct);
         }
         catch (KeyNotFoundException)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("ComponentProductIds", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
     }
 }

@@ -11,12 +11,30 @@ export interface CreateProductRequest {
   basePrice: number;
   imageUrl?: string | null;
   translations: TranslationInput[];
+  allergens?: number[];
+  dietaryTags?: number[];
 }
 
 export interface UpdateProductRequest {
   basePrice: number;
   imageUrl?: string | null;
   translations: TranslationInput[];
+  allergens?: number[];
+  dietaryTags?: number[];
+}
+
+export interface CreateComboProductRequest {
+  basePrice: number;
+  imageUrl?: string | null;
+  translations: TranslationInput[];
+  componentProductIds: string[];
+}
+
+export interface UpdateComboProductRequest {
+  basePrice: number;
+  imageUrl?: string | null;
+  translations: TranslationInput[];
+  componentProductIds: string[];
 }
 
 /**
@@ -39,4 +57,10 @@ export const productsApi = {
 
   remove: (brandSlug: string, id: string): Promise<void> =>
     apiClient.delete(`/brands/${brandSlug}/products/${id}`).then(() => undefined),
+
+  createCombo: (brandSlug: string, data: CreateComboProductRequest): Promise<Product> =>
+    apiClient.post<Product>(`/brands/${brandSlug}/combo-products`, data).then((r) => r.data),
+
+  updateCombo: (brandSlug: string, id: string, data: UpdateComboProductRequest): Promise<Product> =>
+    apiClient.put<Product>(`/brands/${brandSlug}/combo-products/${id}`, data).then((r) => r.data),
 };

@@ -189,10 +189,13 @@ public sealed class MenuCategoryService(
     private static ProductListItemResponse MapProductToListItem(Product product) =>
         new(
             product.Id,
+            product.ProductType.ToString(),
             product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
             product.MenuCategoryId,
             product.SortOrderInCategory,
+            product.Allergens.Select(a => (int)a).ToList().AsReadOnly(),
+            product.DietaryTags.Select(d => (int)d).ToList().AsReadOnly(),
             product.CreatedAt);
 }

@@ -35,6 +35,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
     public DbSet<OrderLifecycleConfig> OrderLifecycleConfigs => Set<OrderLifecycleConfig>();
     public DbSet<OrderStatus> OrderStatuses => Set<OrderStatus>();
     public DbSet<OrderStatusTransition> OrderStatusTransitions => Set<OrderStatusTransition>();
+    public DbSet<ComboItem> ComboItems => Set<ComboItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,7 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         modelBuilder.ApplyConfiguration(new OrderLifecycleConfigConfiguration());
         modelBuilder.ApplyConfiguration(new OrderStatusConfiguration());
         modelBuilder.ApplyConfiguration(new OrderStatusTransitionConfiguration());
+        modelBuilder.ApplyConfiguration(new ComboItemConfiguration());
 
         // Global query filter: soft-deleted entities are excluded by default
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
