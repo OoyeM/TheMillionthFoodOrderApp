@@ -1,4 +1,6 @@
+using TheMillionthFoodOrderApp.Application.Common;
 using TheMillionthFoodOrderApp.Application.Products;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.Products;
 
@@ -6,12 +8,22 @@ namespace TheMillionthFoodOrderApp.Application.MenuCategories;
 
 public sealed class MenuCategoryService(
     IMenuCategoryRepository menuCategoryRepository,
-    IProductRepository productRepository) : IMenuCategoryService
+    IProductRepository productRepository,
+    IBrandSettingsRepository brandSettingsRepository) : IMenuCategoryService
 {
     public async Task<MenuCategoryResponse> CreateMenuCategoryAsync(
         CreateMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "menu category");
+
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
 
@@ -28,6 +40,15 @@ public sealed class MenuCategoryService(
         UpdateMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "menu category");
+
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
 
@@ -65,10 +86,13 @@ public sealed class MenuCategoryService(
     public async Task<IReadOnlyList<MenuCategoryListItemResponse>> GetMenuCategoriesAsync(
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
         var categories = await menuCategoryRepository.GetAllAsync(cancellationToken);
         var productCounts = await menuCategoryRepository.GetProductCountsAsync(cancellationToken);
         return categories
-            .Select(c => MapToListItem(c, productCounts.GetValueOrDefault(c.Id, 0)))
+            .Select(c => MapToListItem(c, productCounts.GetValueOrDefault(c.Id, 0), primaryLanguage))
             .ToList()
             .AsReadOnly();
     }
@@ -116,8 +140,11 @@ public sealed class MenuCategoryService(
         if (category is null)
             throw new KeyNotFoundException($"Menu category with id '{categoryId}' was not found.");
 
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
         var products = await productRepository.GetByCategoryAsync(categoryId, cancellationToken);
-        return products.Select(MapProductToListItem).ToList().AsReadOnly();
+        return products.Select(p => MapProductToListItem(p, primaryLanguage)).ToList().AsReadOnly();
     }
 
     public async Task ReorderProductsInCategoryAsync(
@@ -177,19 +204,28 @@ public sealed class MenuCategoryService(
             category.CreatedAt,
             category.UpdatedAt);
 
-    private static MenuCategoryListItemResponse MapToListItem(MenuCategory category, int productCount) =>
+    private static MenuCategoryListItemResponse MapToListItem(
+        MenuCategory category, int productCount, string primaryLanguage) =>
         new(
             category.Id,
-            category.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
+            TranslationResolver.ResolveName(
+                category.Translations,
+                t => t.LanguageCode,
+                t => t.Name,
+                primaryLanguage),
             category.ImageUrl,
             category.SortOrder,
             productCount,
             category.CreatedAt);
 
-    private static ProductListItemResponse MapProductToListItem(Product product) =>
+    private static ProductListItemResponse MapProductToListItem(Product product, string primaryLanguage) =>
         new(
             product.Id,
-            product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
+            TranslationResolver.ResolveName(
+                product.Translations,
+                t => t.LanguageCode,
+                t => t.Name,
+                primaryLanguage),
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
             product.MenuCategoryId,

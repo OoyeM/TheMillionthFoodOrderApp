@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Products;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Products;
@@ -67,15 +68,23 @@ public sealed class CreateProductEndpoint(IProductService productService)
 
     public override async Task HandleAsync(CreateProductApiRequest req, CancellationToken ct)
     {
-        var appRequest = new CreateProductRequest(
-            req.BasePrice,
-            req.ImageUrl,
-            req.Translations
-                .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
-                .ToList().AsReadOnly());
+        try
+        {
+            var appRequest = new CreateProductRequest(
+                req.BasePrice,
+                req.ImageUrl,
+                req.Translations
+                    .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
+                    .ToList().AsReadOnly());
 
-        var response = await productService.CreateProductAsync(appRequest, ct);
+            var response = await productService.CreateProductAsync(appRequest, ct);
 
-        await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+            await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
     }
 }

@@ -7,6 +7,8 @@ import {
   useModifierGroups,
   useSetProductModifierGroups,
 } from '../hooks/useModifierGroups';
+import { useBrandSettings } from '../hooks/useBrandSettings';
+import { extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale, ProductModifierGroupResponse } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -34,7 +36,7 @@ const emptyTranslations: TranslationsMap = {
 
 interface FormErrors {
   basePrice?: string;
-  nlName?: string;
+  primaryName?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +54,8 @@ export function ProductEdit() {
 
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedProductId = productId ?? '';
+  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
+  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
   const { data: product, isLoading, isError, error } = useProduct(resolvedBrandSlug, resolvedProductId);
   const updateProduct = useUpdateProduct(resolvedBrandSlug, resolvedProductId);
@@ -117,8 +121,8 @@ export function ProductEdit() {
     if (!basePrice.trim() || isNaN(price) || price <= 0) {
       next.basePrice = 'Base price must be greater than zero.';
     }
-    if (translations.nl.name.trim().length === 0) {
-      next.nlName = 'Dutch (NL) name is required.';
+    if (translations[primaryLocale].name.trim().length === 0) {
+      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
     }
     return next;
   }
@@ -353,7 +357,7 @@ export function ProductEdit() {
               }}
             >
               {l.label}
-              {l.code === 'nl' && ' *'}
+              {l.code === primaryLocale && ' *'}
             </button>
           ))}
         </div>
@@ -361,17 +365,17 @@ export function ProductEdit() {
         {/* Active tab content */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
+            Name {activeTab === primaryLocale && <RequiredMark />}
           </label>
           <input
             id={`name-${activeTab}`}
             type="text"
             value={translations[activeTab].name}
             onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
+            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Product name in ${activeTab.toUpperCase()}`}
           />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
+          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
         </div>
 
         <div style={{ marginBottom: '0.5rem' }}>

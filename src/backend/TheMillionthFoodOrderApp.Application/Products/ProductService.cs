@@ -1,13 +1,26 @@
+using TheMillionthFoodOrderApp.Application.Common;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.Products;
 
 namespace TheMillionthFoodOrderApp.Application.Products;
 
-public sealed class ProductService(IProductRepository productRepository) : IProductService
+public sealed class ProductService(
+    IProductRepository productRepository,
+    IBrandSettingsRepository brandSettingsRepository) : IProductService
 {
     public async Task<ProductResponse> CreateProductAsync(
         CreateProductRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "product");
+
         var money = new Money(request.BasePrice, "EUR");
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
@@ -25,6 +38,15 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         UpdateProductRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "product");
+
         var money = new Money(request.BasePrice, "EUR");
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
@@ -61,8 +83,11 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
     public async Task<IReadOnlyList<ProductListItemResponse>> GetProductsAsync(
         CancellationToken cancellationToken = default)
     {
+        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
+        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+
         var products = await productRepository.GetAllAsync(cancellationToken);
-        return products.Select(MapToListItem).ToList().AsReadOnly();
+        return products.Select(p => MapToListItem(p, primaryLanguage)).ToList().AsReadOnly();
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -80,10 +105,14 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.CreatedAt,
             product.UpdatedAt);
 
-    private static ProductListItemResponse MapToListItem(Product product) =>
+    private static ProductListItemResponse MapToListItem(Product product, string primaryLanguage) =>
         new(
             product.Id,
-            product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
+            TranslationResolver.ResolveName(
+                product.Translations,
+                t => t.LanguageCode,
+                t => t.Name,
+                primaryLanguage),
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
             product.MenuCategoryId,

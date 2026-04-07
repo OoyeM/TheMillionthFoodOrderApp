@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.MenuCategories;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.MenuCategories;
@@ -67,15 +68,23 @@ public sealed class CreateMenuCategoryEndpoint(IMenuCategoryService menuCategory
 
     public override async Task HandleAsync(CreateMenuCategoryApiRequest req, CancellationToken ct)
     {
-        var appRequest = new CreateMenuCategoryRequest(
-            req.ImageUrl,
-            req.SortOrder,
-            req.Translations
-                .Select(t => new MenuCategoryTranslationRequest(t.LanguageCode, t.Name, t.Description))
-                .ToList().AsReadOnly());
+        try
+        {
+            var appRequest = new CreateMenuCategoryRequest(
+                req.ImageUrl,
+                req.SortOrder,
+                req.Translations
+                    .Select(t => new MenuCategoryTranslationRequest(t.LanguageCode, t.Name, t.Description))
+                    .ToList().AsReadOnly());
 
-        var response = await menuCategoryService.CreateMenuCategoryAsync(appRequest, ct);
+            var response = await menuCategoryService.CreateMenuCategoryAsync(appRequest, ct);
 
-        await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+            await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
     }
 }

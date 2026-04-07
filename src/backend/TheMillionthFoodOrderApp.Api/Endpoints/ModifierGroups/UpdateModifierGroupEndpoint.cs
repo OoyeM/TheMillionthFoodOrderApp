@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.ModifierGroups;
@@ -104,6 +105,11 @@ public sealed class UpdateModifierGroupEndpoint(IModifierGroupService modifierGr
         catch (KeyNotFoundException)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
     }
 }

@@ -131,22 +131,22 @@ public sealed class BrandDbSeeder(
             MenuCategory.Create(
                 imageUrl: null,
                 sortOrder: 0,
-                translations: new[] { ("nl", "Frietjes", (string?)"Verse frieten in verschillende maten"), ("fr", "Frites", (string?)"Frites fraîches en différentes tailles") }),
+                translations: new[] { ("nl", "Frietjes", (string?)"Verse frieten in verschillende maten"), ("fr", "Frites", (string?)"Frites fraîches en différentes tailles"), ("de", "Pommes", (string?)"Frische Pommes in verschiedenen Größen") }),
 
             MenuCategory.Create(
                 imageUrl: null,
                 sortOrder: 1,
-                translations: new[] { ("nl", "Sauzen", (string?)"Huisgemaakte en klassieke sauzen"), ("fr", "Sauces", (string?)"Sauces maison et classiques") }),
+                translations: new[] { ("nl", "Sauzen", (string?)"Huisgemaakte en klassieke sauzen"), ("fr", "Sauces", (string?)"Sauces maison et classiques"), ("de", "Soßen", (string?)"Hausgemachte und klassische Soßen") }),
 
             MenuCategory.Create(
                 imageUrl: null,
                 sortOrder: 2,
-                translations: new[] { ("nl", "Snacks", (string?)"Belgische snacks en lekkernijen"), ("fr", "Snacks", (string?)"Snacks et délices belges") }),
+                translations: new[] { ("nl", "Snacks", (string?)"Belgische snacks en lekkernijen"), ("fr", "Snacks", (string?)"Snacks et délices belges"), ("de", "Snacks", (string?)"Belgische Snacks und Leckereien") }),
 
             MenuCategory.Create(
                 imageUrl: null,
                 sortOrder: 3,
-                translations: new[] { ("nl", "Burgers", (string?)"Iconische Belgische burgers"), ("fr", "Burgers", (string?)"Burgers belges iconiques") }),
+                translations: new[] { ("nl", "Burgers", (string?)"Iconische Belgische burgers"), ("fr", "Burgers", (string?)"Burgers belges iconiques"), ("de", "Burger", (string?)"Ikonische belgische Burger") }),
         };
 
         foreach (var category in categories)
@@ -172,19 +172,19 @@ public sealed class BrandDbSeeder(
         {
             Product.Create(
                 new Money(3.50m, "EUR"), null,
-                new[] { ("nl", "Kleine Friet", (string?)"Knapperig gebakken frieten, klein portie"), ("fr", "Petites Frites", (string?)"Frites croustillantes, petite portion") }),
+                new[] { ("nl", "Kleine Friet", (string?)"Knapperig gebakken frieten, klein portie"), ("fr", "Petites Frites", (string?)"Frites croustillantes, petite portion"), ("de", "Kleine Pommes", (string?)"Knusprige Pommes, kleine Portion") }),
             Product.Create(
                 new Money(5.00m, "EUR"), null,
-                new[] { ("nl", "Grote Friet", (string?)"Knapperig gebakken frieten, groot portie"), ("fr", "Grandes Frites", (string?)"Frites croustillantes, grande portion") }),
+                new[] { ("nl", "Grote Friet", (string?)"Knapperig gebakken frieten, groot portie"), ("fr", "Grandes Frites", (string?)"Frites croustillantes, grande portion"), ("de", "Große Pommes", (string?)"Knusprige Pommes, große Portion") }),
             Product.Create(
                 new Money(1.50m, "EUR"), null,
-                new[] { ("nl", "Stoofvleessaus", (string?)"Klassieke Vlaamse stoofvleessaus"), ("fr", "Sauce Carbonade", (string?)"Sauce carbonade flamande classique") }),
+                new[] { ("nl", "Stoofvleessaus", (string?)"Klassieke Vlaamse stoofvleessaus"), ("fr", "Sauce Carbonade", (string?)"Sauce carbonade flamande classique"), ("de", "Schmorfleischsoße", (string?)"Klassische flämische Schmorfleischsoße") }),
             Product.Create(
                 new Money(2.50m, "EUR"), null,
-                new[] { ("nl", "Frikandel", (string?)"Gekruide gehaktstaaf"), ("fr", "Fricandelle", (string?)"Rouleau de viande épicé") }),
+                new[] { ("nl", "Frikandel", (string?)"Gekruide gehaktstaaf"), ("fr", "Fricandelle", (string?)"Rouleau de viande épicé"), ("de", "Frikandel", (string?)"Gewürzte Fleischrolle") }),
             Product.Create(
                 new Money(4.50m, "EUR"), null,
-                new[] { ("nl", "Bicky Burger", (string?)"Iconische Belgische burger met bickysaus"), ("fr", "Bicky Burger", (string?)"Burger belge iconique avec sauce bicky") }),
+                new[] { ("nl", "Bicky Burger", (string?)"Iconische Belgische burger met bickysaus"), ("fr", "Bicky Burger", (string?)"Burger belge iconique avec sauce bicky"), ("de", "Bicky Burger", (string?)"Ikonischer belgischer Burger mit Bickysoße") }),
         };
 
         foreach (var product in products)

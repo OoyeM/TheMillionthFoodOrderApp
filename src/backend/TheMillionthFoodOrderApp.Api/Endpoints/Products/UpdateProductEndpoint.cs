@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Products;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Products;
@@ -86,6 +87,11 @@ public sealed class UpdateProductEndpoint(IProductService productService)
         catch (KeyNotFoundException)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
     }
 }

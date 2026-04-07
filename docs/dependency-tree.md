@@ -82,7 +82,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-029** | Configure brand theming | 001 |
-| ⬜ | **US-FP-030** | Provide translations for product catalog | 005 |
+| ✅ | **US-FP-030** | Provide translations for product catalog | 005 |
 | ⬜ | **US-FP-031** | Select language on the storefront | 030 |
 | ⬜ | **US-FP-067** | Configure custom domain for brand | 029 |
 
