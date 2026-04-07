@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Api.Endpoints.Products;
 using TheMillionthFoodOrderApp.Application.Products;
 
@@ -91,13 +92,13 @@ public sealed class CreateComboProductEndpoint(IProductService productService)
         }
         catch (KeyNotFoundException ex)
         {
-            AddError(ex.Message);
-            await SendErrorsAsync(400, ct);
+            var failures = new List<ValidationFailure> { new("ComponentProductIds", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
         catch (InvalidOperationException ex)
         {
-            AddError(ex.Message);
-            await SendErrorsAsync(400, ct);
+            var failures = new List<ValidationFailure> { new("ComponentProductIds", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
     }
 }

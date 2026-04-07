@@ -1,4 +1,5 @@
 using FastEndpoints;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Products;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Products;
@@ -37,8 +38,8 @@ public sealed class DeleteProductEndpoint(IProductService productService)
         }
         catch (InvalidOperationException ex)
         {
-            AddError(ex.Message);
-            await SendErrorsAsync(409, ct);
+            var failures = new List<ValidationFailure> { new("Id", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 409, cancellation: ct);
         }
     }
 }
