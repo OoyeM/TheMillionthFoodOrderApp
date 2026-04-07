@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 {
     [DbContext(typeof(BrandDbContext))]
-    partial class BrandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407103728_AddProductAllergensAndDietaryTags")]
+    partial class AddProductAllergensAndDietaryTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,33 +253,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.ToTable("ProductModifierGroups", (string)null);
                 });
 
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ComboProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ComponentProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComponentProductId");
-
-                    b.HasIndex("ComboProductId", "ComponentProductId")
-                        .IsUnique();
-
-                    b.HasIndex("ComboProductId", "SortOrder");
-
-                    b.ToTable("ComboItems", (string)null);
-                });
-
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -308,11 +284,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 
                     b.Property<Guid?>("MenuCategoryId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ProductType")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
 
                     b.Property<int>("SortOrderInCategory")
                         .ValueGeneratedOnAdd()
@@ -545,21 +516,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
-                {
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
-                        .WithMany("ComboItems")
-                        .HasForeignKey("ComboProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ComponentProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
                 {
                     b.HasOne("TheMillionthFoodOrderApp.Domain.MenuCategories.MenuCategory", null)
@@ -680,8 +636,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>
                 {
-                    b.Navigation("ComboItems");
-
                     b.Navigation("Translations");
                 });
 

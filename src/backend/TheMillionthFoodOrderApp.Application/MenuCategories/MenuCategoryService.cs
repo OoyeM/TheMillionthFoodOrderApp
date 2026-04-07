@@ -195,5 +195,7 @@ public sealed class MenuCategoryService(
             product.ImageUrl,
             product.MenuCategoryId,
             product.SortOrderInCategory,
+            product.Allergens.Select(a => (int)a).ToList().AsReadOnly(),
+            product.DietaryTags.Select(d => (int)d).ToList().AsReadOnly(),
             product.CreatedAt);
 }

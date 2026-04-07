@@ -11,8 +11,10 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         var money = new Money(request.BasePrice, "EUR");
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
+        var allergens = request.Allergens?.Select(a => (Allergen)a);
+        var dietaryTags = request.DietaryTags?.Select(d => (DietaryTag)d);
 
-        var product = Product.Create(money, request.ImageUrl, translations);
+        var product = Product.Create(money, request.ImageUrl, translations, allergens, dietaryTags);
 
         await productRepository.AddAsync(product, cancellationToken);
         await productRepository.SaveChangesAsync(cancellationToken);
@@ -28,10 +30,12 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         var money = new Money(request.BasePrice, "EUR");
         var translations = request.Translations
             .Select(t => (t.LanguageCode, t.Name, t.Description));
+        var allergens = request.Allergens?.Select(a => (Allergen)a);
+        var dietaryTags = request.DietaryTags?.Select(d => (DietaryTag)d);
 
         var product = await productRepository.UpdateAsync(
             id,
-            p => p.Update(money, request.ImageUrl, translations),
+            p => p.Update(money, request.ImageUrl, translations, allergens, dietaryTags),
             cancellationToken);
 
         if (product is null)
@@ -169,6 +173,8 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.Translations
                 .Select(t => new TranslationResponse(t.LanguageCode, t.Name, t.Description))
                 .ToList().AsReadOnly(),
+            product.Allergens.Select(a => (int)a).ToList().AsReadOnly(),
+            product.DietaryTags.Select(d => (int)d).ToList().AsReadOnly(),
             product.ProductType == ProductType.Combo
                 ? product.ComboItems
                     .OrderBy(ci => ci.SortOrder)
@@ -190,5 +196,7 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.ImageUrl,
             product.MenuCategoryId,
             product.SortOrderInCategory,
+            product.Allergens.Select(a => (int)a).ToList().AsReadOnly(),
+            product.DietaryTags.Select(d => (int)d).ToList().AsReadOnly(),
             product.CreatedAt);
 }

@@ -30,6 +30,11 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     private readonly List<ProductTranslation> _translations = [];
     public IReadOnlyCollection<ProductTranslation> Translations => _translations.AsReadOnly();
 
+    private readonly List<Allergen> _allergens = [];
+    public IReadOnlyCollection<Allergen> Allergens => _allergens.AsReadOnly();
+
+    private readonly List<DietaryTag> _dietaryTags = [];
+    public IReadOnlyCollection<DietaryTag> DietaryTags => _dietaryTags.AsReadOnly();
     private readonly List<ComboItem> _comboItems = [];
     public IReadOnlyCollection<ComboItem> ComboItems => _comboItems.AsReadOnly();
 
@@ -43,7 +48,9 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     public static Product Create(
         Money basePrice,
         string? imageUrl,
-        IEnumerable<(string languageCode, string name, string? description)> translations)
+        IEnumerable<(string languageCode, string name, string? description)> translations,
+        IEnumerable<Allergen>? allergens = null,
+        IEnumerable<DietaryTag>? dietaryTags = null)
     {
         var translationList = translations.ToList();
         if (translationList.Count == 0)
@@ -68,6 +75,20 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
                 ProductTranslation.Create(product.Id, languageCode, name, description));
         }
 
+        if (allergens is not null)
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            product._allergens.AddRange(allergenList);
+        }
+
+        if (dietaryTags is not null)
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            product._dietaryTags.AddRange(dietaryTagList);
+        }
+
         product.AddDomainEvent(new ProductCreatedEvent(product.Id));
 
         return product;
@@ -79,7 +100,9 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
     public void Update(
         Money basePrice,
         string? imageUrl,
-        IEnumerable<(string languageCode, string name, string? description)> translations)
+        IEnumerable<(string languageCode, string name, string? description)> translations,
+        IEnumerable<Allergen>? allergens = null,
+        IEnumerable<DietaryTag>? dietaryTags = null)
     {
         var translationList = translations.ToList();
         if (translationList.Count == 0)
@@ -94,6 +117,22 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         {
             _translations.Add(
                 ProductTranslation.Create(Id, languageCode, name, description));
+        }
+
+        _allergens.Clear();
+        if (allergens is not null)
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            _allergens.AddRange(allergenList);
+        }
+
+        _dietaryTags.Clear();
+        if (dietaryTags is not null)
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            _dietaryTags.AddRange(dietaryTagList);
         }
     }
 
@@ -141,6 +180,24 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         AddDomainEvent(new ProductDeletedEvent(Id));
     }
 
+    // ── Validation helpers ───────────────────────────────────────────────────
+
+    private static void ValidateAllergens(IEnumerable<Allergen> allergens)
+    {
+        foreach (var allergen in allergens)
+        {
+            if (!Enum.IsDefined(allergen))
+                throw new ArgumentException($"Invalid allergen value: {(int)allergen}.", nameof(allergens));
+        }
+    }
+
+    private static void ValidateDietaryTags(IEnumerable<DietaryTag> dietaryTags)
+    {
+        foreach (var tag in dietaryTags)
+        {
+            if (!Enum.IsDefined(tag))
+                throw new ArgumentException($"Invalid dietary tag value: {(int)tag}.", nameof(dietaryTags));
+        }
     /// <summary>
     /// Factory method — creates a combo product bundling two or more existing simple products.
     /// </summary>

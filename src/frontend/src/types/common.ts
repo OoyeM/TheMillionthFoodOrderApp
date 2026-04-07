@@ -75,6 +75,47 @@ export interface ProductTranslation {
   description: string | null;
 }
 
+// ── Allergens & Dietary Tags ────────────────────────────────────────────────
+
+/**
+ * The 14 EU-regulated allergens (Regulation EU 1169/2011).
+ * Values match the backend Allergen enum.
+ */
+export const Allergen = {
+  Gluten: 0,
+  Crustaceans: 1,
+  Eggs: 2,
+  Fish: 3,
+  Peanuts: 4,
+  Soybeans: 5,
+  Milk: 6,
+  Nuts: 7,
+  Celery: 8,
+  Mustard: 9,
+  Sesame: 10,
+  Sulphites: 11,
+  Lupin: 12,
+  Molluscs: 13,
+} as const;
+export type Allergen = (typeof Allergen)[keyof typeof Allergen];
+
+/** Label keys for allergens, used for i18n lookup. */
+export const ALLERGEN_KEYS = Object.keys(Allergen) as (keyof typeof Allergen)[];
+
+/**
+ * Dietary classification tags. Values match the backend DietaryTag enum.
+ */
+export const DietaryTag = {
+  Vegan: 0,
+  Vegetarian: 1,
+  GlutenFree: 2,
+  Halal: 3,
+} as const;
+export type DietaryTag = (typeof DietaryTag)[keyof typeof DietaryTag];
+
+/** Label keys for dietary tags, used for i18n lookup. */
+export const DIETARY_TAG_KEYS = Object.keys(DietaryTag) as (keyof typeof DietaryTag)[];
+
 /**
  * Product type discriminator: simple or combo.
  */
@@ -100,6 +141,8 @@ export interface Product {
   menuCategoryId: string | null;
   sortOrderInCategory: number;
   translations: ProductTranslation[];
+  allergens: number[];
+  dietaryTags: number[];
   comboItems: ComboItemResponse[] | null;
   createdAt: string;
   updatedAt: string;
@@ -116,6 +159,8 @@ export interface ProductListItem {
   imageUrl: string | null;
   menuCategoryId: string | null;
   sortOrderInCategory: number;
+  allergens: number[];
+  dietaryTags: number[];
   createdAt: string;
 }
 
