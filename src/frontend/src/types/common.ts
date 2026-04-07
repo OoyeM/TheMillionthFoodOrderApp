@@ -76,15 +76,31 @@ export interface ProductTranslation {
 }
 
 /**
+ * Product type discriminator: simple or combo.
+ */
+export type ProductType = 'Simple' | 'Combo';
+
+/**
+ * A component product within a combo, including display name and sort order.
+ */
+export interface ComboItemResponse {
+  componentProductId: string;
+  name: string;
+  sortOrder: number;
+}
+
+/**
  * Full product entity as returned by the brand-scoped API.
  */
 export interface Product {
   id: string;
+  productType: ProductType;
   basePrice: Money;
   imageUrl: string | null;
   menuCategoryId: string | null;
   sortOrderInCategory: number;
   translations: ProductTranslation[];
+  comboItems: ComboItemResponse[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -94,6 +110,7 @@ export interface Product {
  */
 export interface ProductListItem {
   id: string;
+  productType: ProductType;
   name: string;
   basePrice: Money;
   imageUrl: string | null;

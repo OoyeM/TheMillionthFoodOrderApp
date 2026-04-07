@@ -25,6 +25,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 .IsRequired();
         });
 
+        builder.Property(p => p.ProductType)
+            .IsRequired()
+            .HasDefaultValue(ProductType.Simple);
+
         builder.Property(p => p.ImageUrl)
             .HasMaxLength(2048);
 

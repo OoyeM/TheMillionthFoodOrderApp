@@ -21,12 +21,29 @@ function ProductRow({ product, onRowClick, onDelete, isDeleting }: ProductRowPro
     }
   }
 
+  const isCombo = product.productType === 'Combo';
+
   return (
     <tr
       onClick={() => onRowClick(product.id)}
       style={{ cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
     >
       <td style={{ padding: '0.75rem 1rem' }}>{product.name}</td>
+      <td style={{ padding: '0.75rem 1rem' }}>
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '0.125rem 0.5rem',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            borderRadius: '9999px',
+            background: isCombo ? '#dbeafe' : '#f3f4f6',
+            color: isCombo ? '#1d4ed8' : '#6b7280',
+          }}
+        >
+          {isCombo ? 'Combo' : 'Simple'}
+        </span>
+      </td>
       <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace' }}>
         {'\u20AC'} {product.basePrice.amount.toFixed(2)}
       </td>
@@ -82,8 +99,17 @@ export function ProductList() {
     navigate(`/${brandSlug}/${lang}/admin/products/new`);
   }
 
+  function handleCreateComboClick() {
+    navigate(`/${brandSlug}/${lang}/admin/combo-products/new`);
+  }
+
   function handleRowClick(id: string) {
-    navigate(`/${brandSlug}/${lang}/admin/products/${id}`);
+    const product = products?.find((p) => p.id === id);
+    if (product?.productType === 'Combo') {
+      navigate(`/${brandSlug}/${lang}/admin/combo-products/${id}`);
+    } else {
+      navigate(`/${brandSlug}/${lang}/admin/products/${id}`);
+    }
   }
 
   function handleDelete(id: string) {
@@ -101,20 +127,36 @@ export function ProductList() {
         }}
       >
         <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Products</h1>
-        <button
-          onClick={handleCreateClick}
-          style={{
-            padding: '0.5rem 1rem',
-            background: '#111827',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '0.375rem',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          + Create Product
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={handleCreateClick}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#111827',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            + Create Product
+          </button>
+          <button
+            onClick={handleCreateComboClick}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#1d4ed8',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            + Create Combo
+          </button>
+        </div>
       </div>
 
       {isLoading && <p style={{ color: '#6b7280' }}>Loading products...</p>}
@@ -142,6 +184,7 @@ export function ProductList() {
             <thead>
               <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
                 <th style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>Name</th>
+                <th style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>Type</th>
                 <th style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>Price</th>
                 <th style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>Image</th>
                 <th style={{ padding: '0.5rem 1rem', fontWeight: 600 }}>Created</th>

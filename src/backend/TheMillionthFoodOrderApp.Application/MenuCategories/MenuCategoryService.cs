@@ -189,6 +189,7 @@ public sealed class MenuCategoryService(
     private static ProductListItemResponse MapProductToListItem(Product product) =>
         new(
             product.Id,
+            product.ProductType.ToString(),
             product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,

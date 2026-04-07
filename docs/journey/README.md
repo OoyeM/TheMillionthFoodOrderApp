@@ -20,3 +20,4 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 011 | 2026-03-15 | [Startup seeding fix & UUIDv7 migration](./011-startup-seeding-and-guidv7.md) |
 | 012 | 2026-03-16 | [US-FP-005: Simple product management](./012-simple-products.md) |
 | 013 | 2026-03-16 | [US-FP-014: Menu categories](./013-menu-categories.md) |
+| 018 | 2026-04-07 | [US-FP-007: Create and manage combo products](./018-combo-products.md) |
