@@ -8,12 +8,23 @@ public sealed class ProductService(
     IProductRepository productRepository,
     IBrandSettingsRepository brandSettingsRepository) : IProductService
 {
+    private string? _cachedPrimaryLanguage;
+
+    private async Task<string> GetPrimaryLanguageAsync(CancellationToken ct)
+    {
+        if (_cachedPrimaryLanguage is null)
+        {
+            var settings = await brandSettingsRepository.GetAsync(ct);
+            _cachedPrimaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        }
+        return _cachedPrimaryLanguage;
+    }
+
     public async Task<ProductResponse> CreateProductAsync(
         CreateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -38,8 +49,7 @@ public sealed class ProductService(
         UpdateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -83,8 +93,7 @@ public sealed class ProductService(
     public async Task<IReadOnlyList<ProductListItemResponse>> GetProductsAsync(
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         var products = await productRepository.GetAllAsync(cancellationToken);
         return products.Select(p => MapToListItem(p, primaryLanguage)).ToList().AsReadOnly();

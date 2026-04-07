@@ -11,12 +11,23 @@ public sealed class MenuCategoryService(
     IProductRepository productRepository,
     IBrandSettingsRepository brandSettingsRepository) : IMenuCategoryService
 {
+    private string? _cachedPrimaryLanguage;
+
+    private async Task<string> GetPrimaryLanguageAsync(CancellationToken ct)
+    {
+        if (_cachedPrimaryLanguage is null)
+        {
+            var settings = await brandSettingsRepository.GetAsync(ct);
+            _cachedPrimaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        }
+        return _cachedPrimaryLanguage;
+    }
+
     public async Task<MenuCategoryResponse> CreateMenuCategoryAsync(
         CreateMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -40,8 +51,7 @@ public sealed class MenuCategoryService(
         UpdateMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -86,8 +96,7 @@ public sealed class MenuCategoryService(
     public async Task<IReadOnlyList<MenuCategoryListItemResponse>> GetMenuCategoriesAsync(
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         var categories = await menuCategoryRepository.GetAllAsync(cancellationToken);
         var productCounts = await menuCategoryRepository.GetProductCountsAsync(cancellationToken);
@@ -140,8 +149,7 @@ public sealed class MenuCategoryService(
         if (category is null)
             throw new KeyNotFoundException($"Menu category with id '{categoryId}' was not found.");
 
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         var products = await productRepository.GetByCategoryAsync(categoryId, cancellationToken);
         return products.Select(p => MapProductToListItem(p, primaryLanguage)).ToList().AsReadOnly();

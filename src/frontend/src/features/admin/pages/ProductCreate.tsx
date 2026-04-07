@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateProduct } from '../hooks/useProducts';
 import { useBrandSettings } from '../hooks/useBrandSettings';
@@ -52,6 +52,15 @@ export function ProductCreate() {
   const [basePrice, setBasePrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Sync active tab when brand settings load (useState ignores updates to its initializer)
+  const tabSynced = useRef(false);
+  useEffect(() => {
+    if (brandSettings && !tabSynced.current) {
+      setActiveTab(extractPrimaryLocale(brandSettings.defaultLanguage));
+      tabSynced.current = true;
+    }
+  }, [brandSettings]);
 
   function updateTranslation(
     locale: SupportedLocale,

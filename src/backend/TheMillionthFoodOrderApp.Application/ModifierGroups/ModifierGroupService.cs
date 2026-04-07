@@ -8,12 +8,23 @@ public sealed class ModifierGroupService(
     IModifierGroupRepository modifierGroupRepository,
     IBrandSettingsRepository brandSettingsRepository) : IModifierGroupService
 {
+    private string? _cachedPrimaryLanguage;
+
+    private async Task<string> GetPrimaryLanguageAsync(CancellationToken ct)
+    {
+        if (_cachedPrimaryLanguage is null)
+        {
+            var settings = await brandSettingsRepository.GetAsync(ct);
+            _cachedPrimaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        }
+        return _cachedPrimaryLanguage;
+    }
+
     public async Task<ModifierGroupResponse> CreateModifierGroupAsync(
         CreateModifierGroupRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -44,8 +55,7 @@ public sealed class ModifierGroupService(
         UpdateModifierGroupRequest request,
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         TranslationResolver.EnsurePrimaryLanguagePresent(
             request.Translations,
@@ -95,8 +105,7 @@ public sealed class ModifierGroupService(
     public async Task<IReadOnlyList<ModifierGroupListItemResponse>> GetModifierGroupsAsync(
         CancellationToken cancellationToken = default)
     {
-        var settings = await brandSettingsRepository.GetAsync(cancellationToken);
-        var primaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
 
         var groups = await modifierGroupRepository.GetAllAsync(cancellationToken);
         return groups.Select(g => MapToListItem(g, primaryLanguage)).ToList().AsReadOnly();

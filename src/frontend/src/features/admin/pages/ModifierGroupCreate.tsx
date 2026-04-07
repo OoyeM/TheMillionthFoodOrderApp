@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCreateModifierGroup } from '../hooks/useModifierGroups';
@@ -62,6 +62,15 @@ export function ModifierGroupCreate() {
   });
   const [modifiers, setModifiers] = useState<ModifierFormState[]>([emptyModifier()]);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Sync active tab when brand settings load (useState ignores updates to its initializer)
+  const tabSynced = useRef(false);
+  useEffect(() => {
+    if (brandSettings && !tabSynced.current) {
+      setActiveTab(extractPrimaryLocale(brandSettings.defaultLanguage));
+      tabSynced.current = true;
+    }
+  }, [brandSettings]);
 
   function updateGroupTranslation(locale: SupportedLocale, value: string) {
     setGroupTranslations((prev) => ({
