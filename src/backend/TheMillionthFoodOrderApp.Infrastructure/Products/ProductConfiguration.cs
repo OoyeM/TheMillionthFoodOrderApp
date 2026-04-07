@@ -57,11 +57,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.Allergens)
             .HasField("_allergens")
-            .HasColumnName("Allergens");
+            .HasColumnName("Allergens")
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(p => p.DietaryTags)
             .HasField("_dietaryTags")
-            .HasColumnName("DietaryTags");
+            .HasColumnName("DietaryTags")
+            .HasColumnType("nvarchar(max)");
 
         builder.HasMany(p => p.Translations)
             .WithOne()

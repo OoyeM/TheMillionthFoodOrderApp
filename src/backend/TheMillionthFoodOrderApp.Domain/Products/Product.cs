@@ -72,9 +72,18 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         }
 
         if (allergens is not null)
-            product._allergens.AddRange(allergens.Distinct());
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            product._allergens.AddRange(allergenList);
+        }
+
         if (dietaryTags is not null)
-            product._dietaryTags.AddRange(dietaryTags.Distinct());
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            product._dietaryTags.AddRange(dietaryTagList);
+        }
 
         product.AddDomainEvent(new ProductCreatedEvent(product.Id));
 
@@ -108,11 +117,19 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
 
         _allergens.Clear();
         if (allergens is not null)
-            _allergens.AddRange(allergens.Distinct());
+        {
+            var allergenList = allergens.Distinct().ToList();
+            ValidateAllergens(allergenList);
+            _allergens.AddRange(allergenList);
+        }
 
         _dietaryTags.Clear();
         if (dietaryTags is not null)
-            _dietaryTags.AddRange(dietaryTags.Distinct());
+        {
+            var dietaryTagList = dietaryTags.Distinct().ToList();
+            ValidateDietaryTags(dietaryTagList);
+            _dietaryTags.AddRange(dietaryTagList);
+        }
     }
 
     /// <summary>
@@ -157,5 +174,25 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
         DeletedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new ProductDeletedEvent(Id));
+    }
+
+    // ── Validation helpers ───────────────────────────────────────────────────
+
+    private static void ValidateAllergens(IEnumerable<Allergen> allergens)
+    {
+        foreach (var allergen in allergens)
+        {
+            if (!Enum.IsDefined(allergen))
+                throw new ArgumentException($"Invalid allergen value: {(int)allergen}.", nameof(allergens));
+        }
+    }
+
+    private static void ValidateDietaryTags(IEnumerable<DietaryTag> dietaryTags)
+    {
+        foreach (var tag in dietaryTags)
+        {
+            if (!Enum.IsDefined(tag))
+                throw new ArgumentException($"Invalid dietary tag value: {(int)tag}.", nameof(dietaryTags));
+        }
     }
 }

@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using TheMillionthFoodOrderApp.Application.Products;
+using TheMillionthFoodOrderApp.Domain.Products;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Products;
 
@@ -50,8 +51,8 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductApiRe
             .When(x => x.ImageUrl is not null);
 
         RuleForEach(x => x.Allergens)
-            .InclusiveBetween(0, 13)
-            .WithMessage("Invalid allergen value. Must be between 0 and 13.")
+            .Must(v => Enum.IsDefined(typeof(Allergen), v))
+            .WithMessage("Invalid allergen value.")
             .When(x => x.Allergens is not null);
 
         RuleFor(x => x.Allergens)
@@ -60,8 +61,8 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductApiRe
             .WithMessage("Duplicate allergen values are not allowed.");
 
         RuleForEach(x => x.DietaryTags)
-            .InclusiveBetween(0, 3)
-            .WithMessage("Invalid dietary tag value. Must be between 0 and 3.")
+            .Must(v => Enum.IsDefined(typeof(DietaryTag), v))
+            .WithMessage("Invalid dietary tag value.")
             .When(x => x.DietaryTags is not null);
 
         RuleFor(x => x.DietaryTags)
