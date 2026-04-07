@@ -198,6 +198,8 @@ public sealed class Product : AggregateRoot<Guid>, IAuditable, ISoftDeletable
             if (!Enum.IsDefined(tag))
                 throw new ArgumentException($"Invalid dietary tag value: {(int)tag}.", nameof(dietaryTags));
         }
+    }
+
     /// <summary>
     /// Factory method — creates a combo product bundling two or more existing simple products.
     /// </summary>

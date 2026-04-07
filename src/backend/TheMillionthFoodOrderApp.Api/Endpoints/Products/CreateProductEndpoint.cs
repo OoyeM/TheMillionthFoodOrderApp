@@ -91,14 +91,16 @@ public sealed class CreateProductEndpoint(IProductService productService)
 
     public override async Task HandleAsync(CreateProductApiRequest req, CancellationToken ct)
     {
-        var appRequest = new CreateProductRequest(
-            req.BasePrice,
-            req.ImageUrl,
-            req.Translations
-                .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
-                .ToList().AsReadOnly(),
-            req.Allergens?.AsReadOnly(),
-            req.DietaryTags?.AsReadOnly());
+        try
+        {
+            var appRequest = new CreateProductRequest(
+                req.BasePrice,
+                req.ImageUrl,
+                req.Translations
+                    .Select(t => new TranslationRequest(t.LanguageCode, t.Name, t.Description))
+                    .ToList().AsReadOnly(),
+                req.Allergens?.AsReadOnly(),
+                req.DietaryTags?.AsReadOnly());
 
             var response = await productService.CreateProductAsync(appRequest, ct);
 
