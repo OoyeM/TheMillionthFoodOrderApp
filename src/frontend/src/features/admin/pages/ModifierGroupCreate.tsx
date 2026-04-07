@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCreateModifierGroup } from '../hooks/useModifierGroups';
+import { useBrandSettings } from '../hooks/useBrandSettings';
+import { extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -35,7 +37,7 @@ function emptyModifier(): ModifierFormState {
 type GroupTranslationsMap = Record<SupportedLocale, ModifierTranslationState>;
 
 interface FormErrors {
-  nlName?: string;
+  primaryName?: string;
   modifiers?: string;
 }
 
@@ -49,8 +51,10 @@ export function ModifierGroupCreate() {
   const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const resolvedBrandSlug = brandSlug ?? '';
   const createModifierGroup = useCreateModifierGroup(resolvedBrandSlug);
+  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
+  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
-  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
+  const [activeTab, setActiveTab] = useState<SupportedLocale>(primaryLocale);
   const [groupTranslations, setGroupTranslations] = useState<GroupTranslationsMap>({
     nl: { name: '' },
     fr: { name: '' },
@@ -58,6 +62,15 @@ export function ModifierGroupCreate() {
   });
   const [modifiers, setModifiers] = useState<ModifierFormState[]>([emptyModifier()]);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Sync active tab when brand settings load (useState ignores updates to its initializer)
+  const tabSynced = useRef(false);
+  useEffect(() => {
+    if (brandSettings && !tabSynced.current) {
+      setActiveTab(extractPrimaryLocale(brandSettings.defaultLanguage));
+      tabSynced.current = true;
+    }
+  }, [brandSettings]);
 
   function updateGroupTranslation(locale: SupportedLocale, value: string) {
     setGroupTranslations((prev) => ({
@@ -96,8 +109,8 @@ export function ModifierGroupCreate() {
 
   function validate(): FormErrors {
     const next: FormErrors = {};
-    if (groupTranslations.nl.name.trim().length === 0) {
-      next.nlName = 'Dutch (NL) name is required.';
+    if (groupTranslations[primaryLocale].name.trim().length === 0) {
+      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
     }
     return next;
   }
@@ -159,6 +172,7 @@ export function ModifierGroupCreate() {
         </p>
         <TabBar
           activeTab={activeTab}
+          primaryLocale={primaryLocale}
           onTabChange={setActiveTab}
           languages={LANGUAGES}
         />
@@ -169,10 +183,10 @@ export function ModifierGroupCreate() {
             type="text"
             value={groupTranslations[activeTab].name}
             onChange={(e) => updateGroupTranslation(activeTab, e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
+            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Group name in ${activeTab.toUpperCase()}`}
           />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
+          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
         </div>
 
         {/* Modifiers section */}
@@ -216,6 +230,7 @@ export function ModifierGroupCreate() {
               index={index}
               modifier={modifier}
               activeTab={activeTab}
+              primaryLocale={primaryLocale}
               onUpdateTranslation={updateModifierTranslation}
               onUpdatePrice={updateModifierPrice}
               onRemove={removeModifier}
@@ -267,6 +282,7 @@ interface ModifierFormRowProps {
   index: number;
   modifier: ModifierFormState;
   activeTab: SupportedLocale;
+  primaryLocale: SupportedLocale;
   onUpdateTranslation: (index: number, locale: SupportedLocale, value: string) => void;
   onUpdatePrice: (index: number, value: string) => void;
   onRemove: (index: number) => void;
@@ -277,6 +293,7 @@ function ModifierFormRow({
   index,
   modifier,
   activeTab,
+  primaryLocale,
   onUpdateTranslation,
   onUpdatePrice,
   onRemove,
@@ -325,7 +342,7 @@ function ModifierFormRow({
       <div style={{ marginBottom: '0.5rem' }}>
         <label style={labelStyle} htmlFor={`modifier-${index}-name-${activeTab}`}>
           {t('admin.modifierGroups.modifierName')} ({activeTab.toUpperCase()})
-          {activeTab === 'nl' && ' *'}
+          {activeTab === primaryLocale && ' *'}
         </label>
         <input
           id={`modifier-${index}-name-${activeTab}`}
@@ -366,11 +383,12 @@ function ModifierFormRow({
 
 interface TabBarProps {
   activeTab: SupportedLocale;
+  primaryLocale: SupportedLocale;
   onTabChange: (tab: SupportedLocale) => void;
   languages: { code: SupportedLocale; label: string }[];
 }
 
-function TabBar({ activeTab, onTabChange, languages }: TabBarProps) {
+function TabBar({ activeTab, primaryLocale, onTabChange, languages }: TabBarProps) {
   return (
     <div
       style={{
@@ -396,7 +414,7 @@ function TabBar({ activeTab, onTabChange, languages }: TabBarProps) {
           }}
         >
           {l.label}
-          {l.code === 'nl' && ' *'}
+          {l.code === primaryLocale && ' *'}
         </button>
       ))}
     </div>

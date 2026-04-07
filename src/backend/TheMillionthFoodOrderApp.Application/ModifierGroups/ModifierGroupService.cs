@@ -1,13 +1,37 @@
+using TheMillionthFoodOrderApp.Application.Common;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 
 namespace TheMillionthFoodOrderApp.Application.ModifierGroups;
 
-public sealed class ModifierGroupService(IModifierGroupRepository modifierGroupRepository) : IModifierGroupService
+public sealed class ModifierGroupService(
+    IModifierGroupRepository modifierGroupRepository,
+    IBrandSettingsRepository brandSettingsRepository) : IModifierGroupService
 {
+    private string? _cachedPrimaryLanguage;
+
+    private async Task<string> GetPrimaryLanguageAsync(CancellationToken ct)
+    {
+        if (_cachedPrimaryLanguage is null)
+        {
+            var settings = await brandSettingsRepository.GetAsync(ct);
+            _cachedPrimaryLanguage = settings?.DefaultLanguage ?? "nl-BE";
+        }
+        return _cachedPrimaryLanguage;
+    }
+
     public async Task<ModifierGroupResponse> CreateModifierGroupAsync(
         CreateModifierGroupRequest request,
         CancellationToken cancellationToken = default)
     {
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "modifier group");
+
         var groupTranslations = request.Translations
             .Select(t => (t.LanguageCode, t.Name));
 
@@ -31,6 +55,14 @@ public sealed class ModifierGroupService(IModifierGroupRepository modifierGroupR
         UpdateModifierGroupRequest request,
         CancellationToken cancellationToken = default)
     {
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
+
+        TranslationResolver.EnsurePrimaryLanguagePresent(
+            request.Translations,
+            t => t.LanguageCode,
+            primaryLanguage,
+            "modifier group");
+
         var groupTranslations = request.Translations
             .Select(t => (t.LanguageCode, t.Name));
 
@@ -73,8 +105,10 @@ public sealed class ModifierGroupService(IModifierGroupRepository modifierGroupR
     public async Task<IReadOnlyList<ModifierGroupListItemResponse>> GetModifierGroupsAsync(
         CancellationToken cancellationToken = default)
     {
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
+
         var groups = await modifierGroupRepository.GetAllAsync(cancellationToken);
-        return groups.Select(MapToListItem).ToList().AsReadOnly();
+        return groups.Select(g => MapToListItem(g, primaryLanguage)).ToList().AsReadOnly();
     }
 
     public async Task<IReadOnlyList<ProductModifierGroupResponse>> GetProductModifierGroupsAsync(
@@ -120,10 +154,14 @@ public sealed class ModifierGroupService(IModifierGroupRepository modifierGroupR
             group.CreatedAt,
             group.UpdatedAt);
 
-    private static ModifierGroupListItemResponse MapToListItem(ModifierGroup group) =>
+    private static ModifierGroupListItemResponse MapToListItem(ModifierGroup group, string primaryLanguage) =>
         new(
             group.Id,
-            group.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
+            TranslationResolver.ResolveName(
+                group.Translations,
+                t => t.LanguageCode,
+                t => t.Name,
+                primaryLanguage),
             group.Modifiers.Count,
             group.CreatedAt);
 }

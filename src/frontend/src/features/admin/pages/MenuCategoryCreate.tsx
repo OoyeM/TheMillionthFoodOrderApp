@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateMenuCategory } from '../hooks/useMenuCategories';
+import { useBrandSettings } from '../hooks/useBrandSettings';
+import { extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -27,7 +29,7 @@ const emptyTranslations: TranslationsMap = {
 
 interface FormErrors {
   sortOrder?: string;
-  nlName?: string;
+  primaryName?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -39,14 +41,25 @@ export function MenuCategoryCreate() {
   const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const resolvedBrandSlug = brandSlug ?? '';
   const createCategory = useCreateMenuCategory(resolvedBrandSlug);
+  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
+  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
-  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
+  const [activeTab, setActiveTab] = useState<SupportedLocale>(primaryLocale);
   const [translations, setTranslations] = useState<TranslationsMap>({
     ...emptyTranslations,
   });
   const [sortOrder, setSortOrder] = useState('0');
   const [imageUrl, setImageUrl] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Sync active tab when brand settings load (useState ignores updates to its initializer)
+  const tabSynced = useRef(false);
+  useEffect(() => {
+    if (brandSettings && !tabSynced.current) {
+      setActiveTab(extractPrimaryLocale(brandSettings.defaultLanguage));
+      tabSynced.current = true;
+    }
+  }, [brandSettings]);
 
   function updateTranslation(locale: SupportedLocale, value: string) {
     setTranslations((prev) => ({
@@ -61,8 +74,8 @@ export function MenuCategoryCreate() {
     if (!sortOrder.trim() || isNaN(order) || order < 0) {
       next.sortOrder = 'Sort order must be a non-negative integer.';
     }
-    if (translations.nl.name.trim().length === 0) {
-      next.nlName = 'Dutch (NL) name is required.';
+    if (translations[primaryLocale].name.trim().length === 0) {
+      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
     }
     return next;
   }
@@ -186,7 +199,7 @@ export function MenuCategoryCreate() {
               }}
             >
               {l.label}
-              {l.code === 'nl' && ' *'}
+              {l.code === primaryLocale && ' *'}
             </button>
           ))}
         </div>
@@ -194,17 +207,17 @@ export function MenuCategoryCreate() {
         {/* Active tab content */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
+            Name {activeTab === primaryLocale && <RequiredMark />}
           </label>
           <input
             id={`name-${activeTab}`}
             type="text"
             value={translations[activeTab].name}
             onChange={(e) => updateTranslation(activeTab, e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
+            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Category name in ${activeTab.toUpperCase()}`}
           />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
+          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
         </div>
 
         {/* API error */}

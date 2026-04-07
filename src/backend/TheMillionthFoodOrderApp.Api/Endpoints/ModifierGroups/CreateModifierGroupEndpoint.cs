@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.ModifierGroups;
@@ -86,21 +87,29 @@ public sealed class CreateModifierGroupEndpoint(IModifierGroupService modifierGr
 
     public override async Task HandleAsync(CreateModifierGroupApiRequest req, CancellationToken ct)
     {
-        var appRequest = new CreateModifierGroupRequest(
-            req.Translations
-                .Select(t => new GroupTranslationRequest(t.LanguageCode, t.Name))
-                .ToList().AsReadOnly(),
-            req.Modifiers
-                .Select(m => new ModifierRequest(
-                    m.PriceAdjustment,
-                    m.SortOrder,
-                    m.Translations
-                        .Select(t => new ModifierTranslationRequest(t.LanguageCode, t.Name))
-                        .ToList().AsReadOnly()))
-                .ToList().AsReadOnly());
+        try
+        {
+            var appRequest = new CreateModifierGroupRequest(
+                req.Translations
+                    .Select(t => new GroupTranslationRequest(t.LanguageCode, t.Name))
+                    .ToList().AsReadOnly(),
+                req.Modifiers
+                    .Select(m => new ModifierRequest(
+                        m.PriceAdjustment,
+                        m.SortOrder,
+                        m.Translations
+                            .Select(t => new ModifierTranslationRequest(t.LanguageCode, t.Name))
+                            .ToList().AsReadOnly()))
+                    .ToList().AsReadOnly());
 
-        var response = await modifierGroupService.CreateModifierGroupAsync(appRequest, ct);
+            var response = await modifierGroupService.CreateModifierGroupAsync(appRequest, ct);
 
-        await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+            await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
     }
 }

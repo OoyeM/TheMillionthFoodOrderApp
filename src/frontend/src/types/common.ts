@@ -4,6 +4,18 @@
  */
 export type SupportedLocale = 'nl' | 'fr' | 'de';
 
+/** Supported two-letter locale codes for runtime validation. */
+const SUPPORTED_LOCALES: ReadonlySet<string> = new Set<string>(['nl', 'fr', 'de']);
+
+/**
+ * Extracts the two-letter locale from a BCP-47 language tag (e.g. "nl-BE" → "nl").
+ * Falls back to 'nl' if the tag is missing or not a supported locale.
+ */
+export function extractPrimaryLocale(bcp47Tag: string | undefined): SupportedLocale {
+  const code = bcp47Tag?.split('-')[0]?.toLowerCase();
+  return code && SUPPORTED_LOCALES.has(code) ? (code as SupportedLocale) : 'nl';
+}
+
 /**
  * A string value that has been translated into all supported locales.
  */

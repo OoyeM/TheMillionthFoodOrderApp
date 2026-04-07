@@ -8,6 +8,8 @@ import {
   useCategoryProducts,
   useReorderCategoryProducts,
 } from '../hooks/useMenuCategories';
+import { useBrandSettings } from '../hooks/useBrandSettings';
+import { extractPrimaryLocale } from '../../../types/common';
 import type { ProductListItem, SupportedLocale } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -34,7 +36,7 @@ const emptyTranslations: TranslationsMap = {
 
 interface FormErrors {
   sortOrder?: string;
-  nlName?: string;
+  primaryName?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +54,8 @@ export function MenuCategoryEdit() {
 
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedCategoryId = categoryId ?? '';
+  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
+  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
   const {
     data: category,
@@ -146,8 +150,8 @@ export function MenuCategoryEdit() {
     if (!sortOrder.trim() || isNaN(order) || order < 0) {
       next.sortOrder = 'Sort order must be a non-negative integer.';
     }
-    if (translations.nl.name.trim().length === 0) {
-      next.nlName = 'Dutch (NL) name is required.';
+    if (translations[primaryLocale].name.trim().length === 0) {
+      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
     }
     return next;
   }
@@ -327,7 +331,7 @@ export function MenuCategoryEdit() {
               }}
             >
               {l.label}
-              {l.code === 'nl' && ' *'}
+              {l.code === primaryLocale && ' *'}
             </button>
           ))}
         </div>
@@ -335,17 +339,17 @@ export function MenuCategoryEdit() {
         {/* Active tab content */}
         <div style={{ marginBottom: '0.5rem' }}>
           <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
+            Name {activeTab === primaryLocale && <RequiredMark />}
           </label>
           <input
             id={`name-${activeTab}`}
             type="text"
             value={translations[activeTab].name}
             onChange={(e) => updateTranslation(activeTab, e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
+            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Category name in ${activeTab.toUpperCase()}`}
           />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
+          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
         </div>
 
         {/* Metadata */}

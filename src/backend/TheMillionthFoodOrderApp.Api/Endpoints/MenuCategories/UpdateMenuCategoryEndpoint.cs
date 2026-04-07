@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.MenuCategories;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.MenuCategories;
@@ -86,6 +87,11 @@ public sealed class UpdateMenuCategoryEndpoint(IMenuCategoryService menuCategory
         catch (KeyNotFoundException)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
     }
 }

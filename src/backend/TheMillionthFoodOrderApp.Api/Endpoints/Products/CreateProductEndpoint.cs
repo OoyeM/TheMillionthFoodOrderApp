@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Domain.Products;
 
@@ -99,8 +100,14 @@ public sealed class CreateProductEndpoint(IProductService productService)
             req.Allergens?.AsReadOnly(),
             req.DietaryTags?.AsReadOnly());
 
-        var response = await productService.CreateProductAsync(appRequest, ct);
+            var response = await productService.CreateProductAsync(appRequest, ct);
 
-        await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+            await HttpContext.Response.SendAsync(response, statusCode: 201, cancellation: ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var failures = new List<ValidationFailure> { new("translations", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
     }
 }
