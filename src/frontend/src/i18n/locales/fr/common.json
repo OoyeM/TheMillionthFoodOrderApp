@@ -100,6 +100,30 @@
         "saveOrderError": "Échec de l'enregistrement de l'ordre. Veuillez réessayer."
       }
     },
+    "comboProducts": {
+      "create": "Cr\u00e9er un produit combo",
+      "edit": "Modifier le produit combo",
+      "delete": "Supprimer le combo",
+      "bundlePrice": "Prix du lot",
+      "translations": "Traductions",
+      "componentProducts": "Produits composants",
+      "componentProductsHint": "S\u00e9lectionnez au moins deux produits qui font partie de ce combo.",
+      "remove": "Supprimer",
+      "createButton": "Cr\u00e9er le combo",
+      "saveChanges": "Enregistrer les modifications",
+      "allProductsSelected": "Tous les produits disponibles sont s\u00e9lectionn\u00e9s.",
+      "creating": "Cr\u00e9ation…",
+      "saving": "Enregistrement…",
+      "deleting": "Suppression…",
+      "confirmDelete": "Supprimer \"{{name}}\" ? Ce combo sera masqu\u00e9 pour les clients.",
+      "noSimpleProducts": "Aucun produit simple disponible. Cr\u00e9ez d'abord des produits.",
+      "selectModifierGroup": "-- S\u00e9lectionner un groupe de modificateurs --",
+      "errors": {
+        "priceRequired": "Le prix du lot doit \u00eatre sup\u00e9rieur \u00e0 z\u00e9ro.",
+        "nlNameRequired": "Le nom n\u00e9erlandais (NL) est obligatoire.",
+        "minComponents": "Un produit combo doit contenir au moins deux produits."
+      }
+    },
     "modifierGroups": {
       "title": "Groupes de modificateurs",
       "create": "Créer un groupe de modificateurs",

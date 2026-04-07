@@ -117,10 +117,25 @@ export type DietaryTag = (typeof DietaryTag)[keyof typeof DietaryTag];
 export const DIETARY_TAG_KEYS = Object.keys(DietaryTag) as (keyof typeof DietaryTag)[];
 
 /**
+ * Product type discriminator: simple or combo.
+ */
+export type ProductType = 'Simple' | 'Combo';
+
+/**
+ * A component product within a combo, including display name and sort order.
+ */
+export interface ComboItemResponse {
+  componentProductId: string;
+  name: string;
+  sortOrder: number;
+}
+
+/**
  * Full product entity as returned by the brand-scoped API.
  */
 export interface Product {
   id: string;
+  productType: ProductType;
   basePrice: Money;
   imageUrl: string | null;
   menuCategoryId: string | null;
@@ -128,6 +143,7 @@ export interface Product {
   translations: ProductTranslation[];
   allergens: number[];
   dietaryTags: number[];
+  comboItems: ComboItemResponse[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -137,6 +153,7 @@ export interface Product {
  */
 export interface ProductListItem {
   id: string;
+  productType: ProductType;
   name: string;
   basePrice: Money;
   imageUrl: string | null;

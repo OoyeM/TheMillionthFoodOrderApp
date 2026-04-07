@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 {
     [DbContext(typeof(BrandDbContext))]
-    partial class BrandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407094314_AddComboProducts")]
+    partial class AddComboProducts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -283,21 +286,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.PrimitiveCollection<string>("Allergens")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Allergens");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.PrimitiveCollection<string>("DietaryTags")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("DietaryTags");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(2048)
