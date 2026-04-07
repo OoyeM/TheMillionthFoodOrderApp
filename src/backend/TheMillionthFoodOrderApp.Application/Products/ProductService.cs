@@ -224,13 +224,12 @@ public sealed class ProductService(
     private static ProductListItemResponse MapToListItem(Product product, string primaryLanguage) =>
         new(
             product.Id,
+            product.ProductType.ToString(),
             TranslationResolver.ResolveName(
                 product.Translations,
                 t => t.LanguageCode,
                 t => t.Name,
                 primaryLanguage),
-            product.ProductType.ToString(),
-            product.Translations.FirstOrDefault()?.Name ?? "(unnamed)",
             new MoneyResponse(product.BasePrice.Amount, product.BasePrice.Currency),
             product.ImageUrl,
             product.MenuCategoryId,
