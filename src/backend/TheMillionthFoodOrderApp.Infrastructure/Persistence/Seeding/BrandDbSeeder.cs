@@ -4,6 +4,7 @@ using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
+using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using BrandSettingsDomain = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings;
@@ -29,6 +30,7 @@ public sealed class BrandDbSeeder(
         await SeedProductsAsync(context, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         await SeedModifierGroupsAsync(context, cancellationToken);
+        await SeedOrderLifecycleConfigsAsync(context, cancellationToken);
     }
 
     private async Task SeedBrandSettingsAsync(
@@ -259,5 +261,30 @@ public sealed class BrandDbSeeder(
                 "Seed: Linked modifier group 'Maat/Taille/Groesse' to product '{ProductId}'.",
                 firstProduct.Id);
         }
+    }
+
+    private async Task SeedOrderLifecycleConfigsAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var shops = await context.Shops.ToListAsync(cancellationToken);
+
+        foreach (var shop in shops)
+        {
+            var exists = await context.OrderLifecycleConfigs
+                .AnyAsync(c => c.ShopId == shop.Id, cancellationToken);
+
+            if (exists)
+            {
+                logger.LogDebug("Seed: OrderLifecycleConfig for shop '{Slug}' already exists — skipping.", shop.Slug);
+                continue;
+            }
+
+            var config = OrderLifecycleConfig.CreateDefault(shop.Id);
+            await context.OrderLifecycleConfigs.AddAsync(config, cancellationToken);
+            logger.LogInformation("Seed: Created default OrderLifecycleConfig for shop '{Slug}'.", shop.Slug);
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

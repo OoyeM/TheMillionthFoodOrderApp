@@ -212,6 +212,32 @@
         "closed": "Gesloten",
         "manageHours": "Openingstijden beheren",
         "noBlocks": "Geen openingstijden ingesteld — winkel verschijnt als gesloten"
+      },
+      "orderLifecycle": {
+        "title": "Bestelstatus-levenscyclus",
+        "statuses": "Statussen",
+        "transitions": "Overgangen",
+        "statusName": "Statusnaam",
+        "terminal": "Eindstatus",
+        "color": "Kleur",
+        "addStatus": "Status toevoegen",
+        "addTransition": "Overgang toevoegen",
+        "remove": "Verwijderen",
+        "save": "Levenscyclus opslaan",
+        "saving": "Opslaan…",
+        "saved": "Levenscyclus opgeslagen",
+        "resetToDefault": "Standaard herstellen",
+        "resetConfirmTitle": "Standaard herstellen?",
+        "resetConfirmMessage": "Dit vervangt de huidige configuratie door de standaard levenscyclus. Deze actie kan niet ongedaan worden gemaakt.",
+        "confirmReset": "Ja, herstellen",
+        "cancel": "Annuleren",
+        "minTwoStatuses": "Minimaal twee statussen zijn vereist.",
+        "needTerminal": "Minstens één status moet een eindstatus zijn.",
+        "nameRequired": "Alle statussen moeten een naam hebben.",
+        "loading": "Laden…",
+        "loadError": "Kon de bestelstatus-levenscyclus niet laden.",
+        "saveError": "Opslaan mislukt. Probeer het opnieuw.",
+        "manageLifecycle": "Bestelstatus-levenscyclus beheren"
       }
     }
   }

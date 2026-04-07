@@ -212,6 +212,32 @@
         "closed": "Geschlossen",
         "manageHours": "Öffnungszeiten verwalten",
         "noBlocks": "Keine Öffnungszeiten festgelegt — Geschäft erscheint als geschlossen"
+      },
+      "orderLifecycle": {
+        "title": "Bestellstatus-Lebenszyklus",
+        "statuses": "Status",
+        "transitions": "Übergänge",
+        "statusName": "Statusname",
+        "terminal": "Endstatus",
+        "color": "Farbe",
+        "addStatus": "Status hinzufügen",
+        "addTransition": "Übergang hinzufügen",
+        "remove": "Entfernen",
+        "save": "Lebenszyklus speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Lebenszyklus gespeichert",
+        "resetToDefault": "Standard wiederherstellen",
+        "resetConfirmTitle": "Standard wiederherstellen?",
+        "resetConfirmMessage": "Dies ersetzt die aktuelle Konfiguration durch den Standard-Lebenszyklus. Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmReset": "Ja, wiederherstellen",
+        "cancel": "Abbrechen",
+        "minTwoStatuses": "Mindestens zwei Status sind erforderlich.",
+        "needTerminal": "Mindestens ein Status muss ein Endstatus sein.",
+        "nameRequired": "Alle Status müssen einen Namen haben.",
+        "loading": "Wird geladen…",
+        "loadError": "Der Bestellstatus-Lebenszyklus konnte nicht geladen werden.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+        "manageLifecycle": "Bestellstatus-Lebenszyklus verwalten"
       }
     }
   }
