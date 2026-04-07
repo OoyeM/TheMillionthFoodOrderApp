@@ -43,8 +43,6 @@ public sealed class OrderLifecycleService(
             config = OrderLifecycleConfig.CreateDefault(shopId);
             await repository.AddAsync(config, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
-            // Re-fetch to get a clean tracked entity
-            config = (await repository.GetByShopIdAsync(shopId, cancellationToken))!;
         }
 
         // Build domain entities from the request

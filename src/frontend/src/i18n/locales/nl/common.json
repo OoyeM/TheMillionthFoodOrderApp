@@ -164,6 +164,9 @@
         "minTwoStatuses": "Minimaal twee statussen zijn vereist.",
         "needTerminal": "Minstens één status moet een eindstatus zijn.",
         "nameRequired": "Alle statussen moeten een naam hebben.",
+        "loading": "Laden…",
+        "loadError": "Kon de bestelstatus-levenscyclus niet laden.",
+        "saveError": "Opslaan mislukt. Probeer het opnieuw.",
         "manageLifecycle": "Bestelstatus-levenscyclus beheren"
       }
     }

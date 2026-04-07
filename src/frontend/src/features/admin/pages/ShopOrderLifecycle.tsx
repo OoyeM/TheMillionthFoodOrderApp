@@ -256,7 +256,7 @@ export function ShopOrderLifecycle() {
   if (lifecycle.isLoading) {
     return (
       <p style={{ padding: '1.5rem', color: '#6b7280' }}>
-        {t('admin.shops.orderLifecycle.loading', 'Loading...')}
+        {t('admin.shops.orderLifecycle.loading')}
       </p>
     );
   }
@@ -264,7 +264,7 @@ export function ShopOrderLifecycle() {
   if (lifecycle.isError) {
     return (
       <p style={{ padding: '1.5rem', color: '#dc2626' }}>
-        {t('admin.shops.orderLifecycle.loadError', 'Failed to load order lifecycle.')}
+        {t('admin.shops.orderLifecycle.loadError')}
       </p>
     );
   }

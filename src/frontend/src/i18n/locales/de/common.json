@@ -164,6 +164,9 @@
         "minTwoStatuses": "Mindestens zwei Status sind erforderlich.",
         "needTerminal": "Mindestens ein Status muss ein Endstatus sein.",
         "nameRequired": "Alle Status müssen einen Namen haben.",
+        "loading": "Wird geladen…",
+        "loadError": "Der Bestellstatus-Lebenszyklus konnte nicht geladen werden.",
+        "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "manageLifecycle": "Bestellstatus-Lebenszyklus verwalten"
       }
     }

@@ -164,6 +164,9 @@
         "minTwoStatuses": "Au moins deux statuts sont requis.",
         "needTerminal": "Au moins un statut doit être un statut final.",
         "nameRequired": "Tous les statuts doivent avoir un nom.",
+        "loading": "Chargement…",
+        "loadError": "Impossible de charger le cycle de vie des commandes.",
+        "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
         "manageLifecycle": "Gérer le cycle de vie des commandes"
       }
     }
