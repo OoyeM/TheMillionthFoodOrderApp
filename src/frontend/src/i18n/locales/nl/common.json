@@ -44,7 +44,29 @@
       "imageUrl": "Afbeelding URL",
       "noProducts": "Nog geen producten. Maak het eerste product aan.",
       "allergens": "Allergenen",
-      "dietaryTags": "Dieetlabels"
+      "dietaryTags": "Dieetlabels",
+      "translations": "Vertalingen",
+      "optional": "(optioneel)",
+      "cancel": "Annuleren",
+      "creating": "Aanmaken…",
+      "saving": "Opslaan…",
+      "saveChanges": "Wijzigingen opslaan",
+      "deleting": "Verwijderen…",
+      "loadingProduct": "Product laden…",
+      "loadError": "Product laden mislukt:",
+      "notFound": "Product niet gevonden.",
+      "backToList": "Terug naar lijst",
+      "createError": "Product aanmaken mislukt. Probeer opnieuw.",
+      "updateError": "Wijzigingen opslaan mislukt. Probeer opnieuw.",
+      "createdAt": "Aangemaakt",
+      "updatedAt": "Laatst bijgewerkt",
+      "namePlaceholder": "Productnaam in {{lang}}",
+      "descriptionPlaceholder": "Productbeschrijving in {{lang}}",
+      "pricePlaceholder": "bijv. 3,50",
+      "validation": {
+        "basePriceRequired": "Basisprijs moet groter dan nul zijn.",
+        "nlNameRequired": "Nederlandse (NL) naam is verplicht."
+      }
     },
     "staffAuth": {
       "title": "Personeelsauthenticatie",

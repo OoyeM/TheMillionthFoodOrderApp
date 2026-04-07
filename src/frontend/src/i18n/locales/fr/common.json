@@ -44,7 +44,29 @@
       "imageUrl": "URL de l'image",
       "noProducts": "Aucun produit. Créez le premier.",
       "allergens": "Allergènes",
-      "dietaryTags": "Régimes alimentaires"
+      "dietaryTags": "Régimes alimentaires",
+      "translations": "Traductions",
+      "optional": "(optionnel)",
+      "cancel": "Annuler",
+      "creating": "Création…",
+      "saving": "Enregistrement…",
+      "saveChanges": "Enregistrer les modifications",
+      "deleting": "Suppression…",
+      "loadingProduct": "Chargement du produit…",
+      "loadError": "Échec du chargement du produit :",
+      "notFound": "Produit introuvable.",
+      "backToList": "Retour à la liste",
+      "createError": "Échec de la création du produit. Veuillez réessayer.",
+      "updateError": "Échec de l'enregistrement. Veuillez réessayer.",
+      "createdAt": "Créé",
+      "updatedAt": "Dernière modification",
+      "namePlaceholder": "Nom du produit en {{lang}}",
+      "descriptionPlaceholder": "Description du produit en {{lang}}",
+      "pricePlaceholder": "p.ex. 3,50",
+      "validation": {
+        "basePriceRequired": "Le prix de base doit être supérieur à zéro.",
+        "nlNameRequired": "Le nom néerlandais (NL) est obligatoire."
+      }
     },
     "staffAuth": {
       "title": "Authentification du personnel",

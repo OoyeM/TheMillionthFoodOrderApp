@@ -143,10 +143,10 @@ export function ProductEdit() {
     const next: FormErrors = {};
     const price = parseFloat(basePrice);
     if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = 'Base price must be greater than zero.';
+      next.basePrice = t('admin.products.validation.basePriceRequired');
     }
     if (translations.nl.name.trim().length === 0) {
-      next.nlName = 'Dutch (NL) name is required.';
+      next.nlName = t('admin.products.validation.nlNameRequired');
     }
     return next;
   }
@@ -186,7 +186,7 @@ export function ProductEdit() {
 
   function handleDelete() {
     const name = translations.nl.name || '(unnamed)';
-    if (window.confirm(`Delete "${name}"? This product will be hidden from the storefront.`)) {
+    if (window.confirm(t('admin.products.confirmDelete', { name }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
           navigate(`/${brandSlug}/${lang}/admin/products`);
@@ -265,7 +265,7 @@ export function ProductEdit() {
   if (isLoading) {
     return (
       <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Loading product...</p>
+        <p style={{ color: '#6b7280' }}>{t('admin.products.loadingProduct')}</p>
       </main>
     );
   }
@@ -274,11 +274,11 @@ export function ProductEdit() {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
-          Failed to load product:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          {t('admin.products.loadError')}{' '}
+          {error instanceof Error ? error.message : t('error')}
         </p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
+          {t('admin.products.backToList')}
         </button>
       </main>
     );
@@ -287,9 +287,9 @@ export function ProductEdit() {
   if (product === undefined) {
     return (
       <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Product not found.</p>
+        <p style={{ color: '#6b7280' }}>{t('admin.products.notFound')}</p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
+          {t('admin.products.backToList')}
         </button>
       </main>
     );
@@ -302,14 +302,14 @@ export function ProductEdit() {
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-        Edit Product
+        {t('admin.products.edit')}
       </h1>
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
-            Base Price (EUR) <RequiredMark />
+            {t('admin.products.basePrice')} (EUR) <RequiredMark />
           </label>
           <input
             id="basePrice"
@@ -319,7 +319,7 @@ export function ProductEdit() {
             value={basePrice}
             onChange={(e) => setBasePrice(e.target.value)}
             style={inputStyle(!!errors.basePrice)}
-            placeholder="e.g. 3.50"
+            placeholder={t('admin.products.pricePlaceholder')}
           />
           {errors.basePrice && <FieldError message={errors.basePrice} />}
         </div>
@@ -327,7 +327,8 @@ export function ProductEdit() {
         {/* Image URL */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={labelStyle} htmlFor="imageUrl">
-            Image URL <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+            {t('admin.products.imageUrl')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
           </label>
           <input
             id="imageUrl"
@@ -413,7 +414,7 @@ export function ProductEdit() {
 
         {/* Translation Tabs */}
         <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-          Translations <RequiredMark />
+          {t('admin.products.translations')} <RequiredMark />
         </p>
         <div
           style={{
@@ -447,7 +448,7 @@ export function ProductEdit() {
         {/* Active tab content */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
+            {t('admin.products.name')} {activeTab === 'nl' && <RequiredMark />}
           </label>
           <input
             id={`name-${activeTab}`}
@@ -455,14 +456,15 @@ export function ProductEdit() {
             value={translations[activeTab].name}
             onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
             style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
-            placeholder={`Product name in ${activeTab.toUpperCase()}`}
+            placeholder={t('admin.products.namePlaceholder', { lang: activeTab.toUpperCase() })}
           />
           {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
         </div>
 
         <div style={{ marginBottom: '0.5rem' }}>
           <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+            {t('admin.products.description')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
           </label>
           <textarea
             id={`desc-${activeTab}`}
@@ -470,14 +472,14 @@ export function ProductEdit() {
             onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
             rows={3}
             style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={`Product description in ${activeTab.toUpperCase()}`}
+            placeholder={t('admin.products.descriptionPlaceholder', { lang: activeTab.toUpperCase() })}
           />
         </div>
 
         {/* Metadata */}
         <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          Created: {new Date(product.createdAt).toLocaleString()} &mdash; Last updated:{' '}
-          {new Date(product.updatedAt).toLocaleString()}
+          {t('admin.products.createdAt')}: {new Date(product.createdAt).toLocaleString()} &mdash;{' '}
+          {t('admin.products.updatedAt')}: {new Date(product.updatedAt).toLocaleString()}
         </p>
 
         {/* API error */}
@@ -485,7 +487,7 @@ export function ProductEdit() {
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
             {updateProduct.error instanceof Error
               ? updateProduct.error.message
-              : 'Failed to save changes. Please try again.'}
+              : t('admin.products.updateError')}
           </p>
         )}
 
@@ -504,10 +506,10 @@ export function ProductEdit() {
               opacity: updateProduct.isPending ? 0.6 : 1,
             }}
           >
-            {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
+            {updateProduct.isPending ? t('admin.products.saving') : t('admin.products.saveChanges')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            Cancel
+            {t('admin.products.cancel')}
           </button>
           <button
             type="button"
@@ -524,7 +526,7 @@ export function ProductEdit() {
               marginLeft: 'auto',
             }}
           >
-            {deleteProduct.isPending ? 'Deleting...' : 'Delete Product'}
+            {deleteProduct.isPending ? t('admin.products.deleting') : t('admin.products.delete')}
           </button>
         </div>
       </form>
