@@ -13,7 +13,13 @@ public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxC
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task AddAsync(Domain.TaxConfiguration.TaxConfiguration configuration, CancellationToken cancellationToken = default)
-        => await dbContext.TaxConfigurations.AddAsync(configuration, cancellationToken);
+    {
+        var exists = await dbContext.TaxConfigurations.AnyAsync(cancellationToken);
+        if (exists)
+            throw new InvalidOperationException("A TaxConfiguration already exists for this brand. Use UpdateRates instead.");
+
+        await dbContext.TaxConfigurations.AddAsync(configuration, cancellationToken);
+    }
 
     public Task RemoveAsync(Domain.TaxConfiguration.TaxConfiguration configuration, CancellationToken cancellationToken = default)
     {

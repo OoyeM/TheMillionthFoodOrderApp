@@ -19,7 +19,7 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
 
         if (config is null)
         {
-            config = Domain.TaxConfiguration.TaxConfiguration.CreateBelgianDefault();
+            config = Domain.TaxConfiguration.TaxConfiguration.Create();
             await repository.AddAsync(config, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
         }

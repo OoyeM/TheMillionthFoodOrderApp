@@ -20,7 +20,7 @@ export function TaxConfiguration() {
   const resolvedSlug = brandSlug ?? '';
   const { t } = useTranslation('common');
 
-  const { data: taxConfig, isLoading, isError } = useTaxConfiguration(resolvedSlug);
+  const { data: taxConfig, isLoading, isError, error } = useTaxConfiguration(resolvedSlug);
   const updateMutation = useUpdateTaxConfiguration(resolvedSlug);
 
   // ── Form state ────────────────────────────────────────────────────────────
@@ -72,9 +72,9 @@ export function TaxConfiguration() {
 
   function computeBreakdown(grossAmount: number, mode: ConsumptionMode) {
     const rate = rates[mode] / 100;
-    // gross = net * (1 + rate)  →  net = gross / (1 + rate)
-    const netAmount = grossAmount / (1 + rate);
-    const vatAmount = grossAmount - netAmount;
+    // Mirror backend TaxCalculator: round net to 2dp first, then vat = gross - net
+    const netAmount = Math.round((grossAmount / (1 + rate)) * 100) / 100;
+    const vatAmount = Math.round((grossAmount - netAmount) * 100) / 100;
     return { netAmount, vatAmount, grossAmount };
   }
 
@@ -93,9 +93,16 @@ export function TaxConfiguration() {
   }
 
   if (isError) {
+    // 404 means no config has been seeded yet; other errors are genuine failures
+    const is404 = error instanceof Error && 'response' in error &&
+      (error as Error & { response?: { status?: number } }).response?.status === 404;
     return (
       <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>{t('admin.taxConfiguration.notConfigured')}</p>
+        <p style={{ color: '#dc2626' }}>
+          {is404
+            ? t('admin.taxConfiguration.notConfigured')
+            : t('admin.taxConfiguration.loadError')}
+        </p>
       </main>
     );
   }

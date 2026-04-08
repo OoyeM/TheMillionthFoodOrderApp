@@ -259,7 +259,8 @@
       "netAmount": "Net (hors TVA)",
       "vatAmount": "Montant TVA",
       "loading": "Chargement…",
-      "notConfigured": "Pas encore configuré. Enregistrez pour appliquer les valeurs belges par défaut."
+      "notConfigured": "Pas encore configuré. Enregistrez pour appliquer les valeurs belges par défaut.",
+      "loadError": "Impossible de charger la configuration TVA."
     }
   }
 }

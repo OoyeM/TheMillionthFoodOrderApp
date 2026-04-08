@@ -13,19 +13,29 @@ public sealed class TaxConfiguration : AggregateRoot<Guid>, IAuditable
     // Required by EF Core
     private TaxConfiguration() { }
 
-    public static TaxConfiguration CreateBelgianDefault()
+    /// <summary>
+    /// Creates an empty TaxConfiguration shell. Use <see cref="UpdateRates"/> to populate rates.
+    /// </summary>
+    public static TaxConfiguration Create()
     {
         var now = DateTimeOffset.UtcNow;
-        var config = new TaxConfiguration
+        return new TaxConfiguration
         {
             Id = Guid.CreateVersion7(),
             CreatedAt = now,
             UpdatedAt = now,
         };
+    }
 
+    /// <summary>
+    /// Creates a TaxConfiguration pre-populated with Belgian defaults (Takeaway 6%, EatIn 21%).
+    /// Used by the database seeder.
+    /// </summary>
+    public static TaxConfiguration CreateBelgianDefault()
+    {
+        var config = Create();
         config._vatRates.Add(VatRate.Create(config.Id, ConsumptionMode.Takeaway, 6m));
         config._vatRates.Add(VatRate.Create(config.Id, ConsumptionMode.EatIn, 21m));
-
         return config;
     }
 

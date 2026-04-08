@@ -259,7 +259,8 @@
       "netAmount": "Netto (exkl. MwSt.)",
       "vatAmount": "MwSt.-Betrag",
       "loading": "Laden…",
-      "notConfigured": "Noch nicht konfiguriert. Speichern Sie, um die belgischen Standardwerte festzulegen."
+      "notConfigured": "Noch nicht konfiguriert. Speichern Sie, um die belgischen Standardwerte festzulegen.",
+      "loadError": "MwSt.-Konfiguration konnte nicht geladen werden."
     }
   }
 }

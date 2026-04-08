@@ -259,7 +259,8 @@
       "netAmount": "Netto (excl. BTW)",
       "vatAmount": "BTW-bedrag",
       "loading": "Laden…",
-      "notConfigured": "Nog niet geconfigureerd. Sla op om Belgische standaardwaarden in te stellen."
+      "notConfigured": "Nog niet geconfigureerd. Sla op om Belgische standaardwaarden in te stellen.",
+      "loadError": "BTW-configuratie kon niet worden geladen."
     }
   }
 }
