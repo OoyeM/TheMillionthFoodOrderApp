@@ -1,4 +1,6 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using TheMillionthFoodOrderApp.Domain.Orders;
 using Wolverine;
 
@@ -19,7 +21,7 @@ public sealed record SimulateOrderStatusChangeResponse(Guid OrderId, string Mess
 /// via Wolverine so the SignalR infrastructure can be tested end-to-end
 /// before the Order aggregate is implemented (US-FP-016).
 /// </summary>
-public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus)
+public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus, IWebHostEnvironment env)
     : Endpoint<SimulateOrderStatusChangeRequest, SimulateOrderStatusChangeResponse>
 {
     public override void Configure()
@@ -37,6 +39,12 @@ public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus)
 
     public override async Task HandleAsync(SimulateOrderStatusChangeRequest req, CancellationToken ct)
     {
+        if (!env.IsDevelopment())
+        {
+            await HttpContext.Response.SendNotFoundAsync(ct);
+            return;
+        }
+
         var orderId = req.OrderId ?? Guid.CreateVersion7();
 
         var @event = new OrderStatusChangedEvent(

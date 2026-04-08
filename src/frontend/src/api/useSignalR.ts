@@ -95,14 +95,15 @@ export function useSignalR(options: UseSignalROptions = {}) {
     }
 
     return () => {
-      // Leave groups on unmount but don't stop the shared connection
+      // Leave groups on unmount but don't stop the shared connection.
+      // Catch errors since the connection may be closing simultaneously.
       const current = groupsRef.current;
       if (conn.state === HubConnectionState.Connected) {
         if (current.shopGroup && shopGroup) {
-          void conn.invoke('LeaveShopGroup', shopGroup.brandSlug, shopGroup.shopId);
+          conn.invoke('LeaveShopGroup', shopGroup.brandSlug, shopGroup.shopId).catch(() => {});
         }
         if (current.orderGroup && orderId) {
-          void conn.invoke('LeaveOrderGroup', orderId);
+          conn.invoke('LeaveOrderGroup', orderId).catch(() => {});
         }
       }
       groupsRef.current = {};
