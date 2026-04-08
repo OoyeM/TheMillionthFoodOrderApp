@@ -28,3 +28,18 @@ export function getOrderHubConnection(): HubConnection {
 
   return connection;
 }
+
+/**
+ * Resets the singleton connection. Used by tests and HMR cleanup.
+ */
+export function resetOrderHubConnection(): void {
+  connection = null;
+}
+
+// Clean up the connection on Vite HMR to prevent duplicate connections in dev.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    void connection?.stop();
+    connection = null;
+  });
+}

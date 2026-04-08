@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Shouldly;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -62,10 +63,10 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
                 options => options.HttpMessageHandlerFactory = _ => fixture.Factory.Server.CreateHandler())
             .Build();
 
-        OrderStatusUpdateDto? receivedUpdate = null;
+        OrderStatusUpdatePayload? receivedUpdate = null;
         var receivedSignal = new TaskCompletionSource<bool>();
 
-        hubConnection.On<OrderStatusUpdateDto>("OrderStatusChanged", update =>
+        hubConnection.On<OrderStatusUpdatePayload>("OrderStatusChanged", update =>
         {
             receivedUpdate = update;
             receivedSignal.TrySetResult(true);
@@ -117,8 +118,8 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
                 options => options.HttpMessageHandlerFactory = _ => fixture.Factory.Server.CreateHandler())
             .Build();
 
-        var receivedAny = false;
-        hubConnection.On<OrderStatusUpdateDto>("OrderStatusChanged", _ => receivedAny = true);
+        var unexpectedSignal = new TaskCompletionSource<bool>();
+        hubConnection.On<OrderStatusUpdatePayload>("OrderStatusChanged", _ => unexpectedSignal.TrySetResult(true));
 
         await hubConnection.StartAsync();
 
@@ -136,9 +137,9 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         await httpClient.PostAsJsonAsync(SimulateUrl(IntegrationTestBase.AlphaSlug), simulateRequest);
 
-        // Wait briefly and assert no event was received
-        await Task.Delay(1000);
-        receivedAny.ShouldBeFalse("Client in a different shop group should not receive the event");
+        // Assert — signal should NOT arrive within 500ms
+        var completed = await Task.WhenAny(unexpectedSignal.Task, Task.Delay(500));
+        completed.ShouldNotBe(unexpectedSignal.Task, "Client in a different shop group should not receive the event");
 
         await hubConnection.DisposeAsync();
     }
@@ -157,10 +158,10 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
                 options => options.HttpMessageHandlerFactory = _ => fixture.Factory.Server.CreateHandler())
             .Build();
 
-        OrderStatusUpdateDto? receivedUpdate = null;
+        OrderStatusUpdatePayload? receivedUpdate = null;
         var receivedSignal = new TaskCompletionSource<bool>();
 
-        hubConnection.On<OrderStatusUpdateDto>("OrderStatusChanged", update =>
+        hubConnection.On<OrderStatusUpdatePayload>("OrderStatusChanged", update =>
         {
             receivedUpdate = update;
             receivedSignal.TrySetResult(true);
@@ -191,14 +192,4 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         await hubConnection.DisposeAsync();
     }
-
-    /// <summary>DTO matching the anonymous payload shape sent by SignalROrderNotificationService.</summary>
-    private sealed record OrderStatusUpdateDto(
-        Guid OrderId,
-        Guid ShopId,
-        string BrandSlug,
-        string PreviousStatus,
-        string NewStatus,
-        string? CustomerName,
-        DateTimeOffset Timestamp);
 }

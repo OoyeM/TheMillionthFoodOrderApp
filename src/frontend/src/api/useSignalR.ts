@@ -88,7 +88,10 @@ export function useSignalR(options: UseSignalROptions = {}) {
           setStatus('connected');
           void joinGroups(conn);
         })
-        .catch(() => setStatus('disconnected'));
+        .catch((err) => {
+          console.error('[SignalR] Connection failed:', err);
+          setStatus('disconnected');
+        });
     } else {
       updateStatus(conn);
       void joinGroups(conn);

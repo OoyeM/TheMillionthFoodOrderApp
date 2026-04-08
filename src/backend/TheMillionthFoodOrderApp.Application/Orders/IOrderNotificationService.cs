@@ -17,5 +17,20 @@ public interface IOrderNotificationService
         string previousStatus,
         string newStatus,
         string? customerName,
+        DateTimeOffset occurredOn,
         CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Canonical payload shape for order status change notifications sent via SignalR.
+/// Shared between the notification service, integration tests, and used as
+/// the contract for the TypeScript frontend type.
+/// </summary>
+public sealed record OrderStatusUpdatePayload(
+    Guid OrderId,
+    Guid ShopId,
+    string BrandSlug,
+    string PreviousStatus,
+    string NewStatus,
+    string? CustomerName,
+    DateTimeOffset Timestamp);

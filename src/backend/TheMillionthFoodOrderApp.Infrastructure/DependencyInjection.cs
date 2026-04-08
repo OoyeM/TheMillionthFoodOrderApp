@@ -75,8 +75,9 @@ public static class DependencyInjection
         // implementation without changing Application or API layers.
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
-        // Real-time notifications — SignalR implementation
-        services.AddScoped<IOrderNotificationService, SignalROrderNotificationService>();
+        // Real-time notifications — SignalR implementation.
+        // Singleton: depends only on IHubContext<OrderHub> (singleton) and ILogger (singleton).
+        services.AddSingleton<IOrderNotificationService, SignalROrderNotificationService>();
 
         return services;
     }

@@ -17,6 +17,8 @@ public sealed class OrderHub : Hub
 {
     /// <summary>
     /// Join the group for a specific shop. Called by kitchen display and POS clients.
+    /// TODO: Add role-based authorization (e.g. require staff role for the brand) once
+    /// auth is wired to the hub (US-FP-039). Currently [AllowAnonymous] for dev.
     /// </summary>
     public async Task JoinShopGroup(string brandSlug, string shopId)
     {
@@ -35,6 +37,8 @@ public sealed class OrderHub : Hub
 
     /// <summary>
     /// Join the group for a specific order. Called by customer tracking pages.
+    /// TODO: Validate the caller owns or has access to the order once the Order
+    /// aggregate exists (US-FP-016).
     /// </summary>
     public async Task JoinOrderGroup(string orderId)
     {

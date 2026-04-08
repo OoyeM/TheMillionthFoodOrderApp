@@ -20,6 +20,10 @@ public sealed record SimulateOrderStatusChangeResponse(Guid OrderId, string Mess
 /// Development-only endpoint that publishes a simulated OrderStatusChangedEvent
 /// via Wolverine so the SignalR infrastructure can be tested end-to-end
 /// before the Order aggregate is implemented (US-FP-016).
+///
+/// Note: this endpoint remains in the production route table but returns 404
+/// outside Development. FastEndpoints does not support conditional registration,
+/// so the runtime guard is the simplest approach.
 /// </summary>
 public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus, IWebHostEnvironment env)
     : Endpoint<SimulateOrderStatusChangeRequest, SimulateOrderStatusChangeResponse>

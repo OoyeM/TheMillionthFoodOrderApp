@@ -19,18 +19,17 @@ public sealed class SignalROrderNotificationService(
         string previousStatus,
         string newStatus,
         string? customerName,
+        DateTimeOffset occurredOn,
         CancellationToken cancellationToken = default)
     {
-        var payload = new
-        {
-            OrderId = orderId,
-            ShopId = shopId,
-            BrandSlug = brandSlug,
-            PreviousStatus = previousStatus,
-            NewStatus = newStatus,
-            CustomerName = customerName,
-            Timestamp = DateTimeOffset.UtcNow,
-        };
+        var payload = new OrderStatusUpdatePayload(
+            orderId,
+            shopId,
+            brandSlug,
+            previousStatus,
+            newStatus,
+            customerName,
+            occurredOn);
 
         // Send to shop group (kitchen display, POS, floor staff)
         var shopGroup = $"shop:{brandSlug}:{shopId}";

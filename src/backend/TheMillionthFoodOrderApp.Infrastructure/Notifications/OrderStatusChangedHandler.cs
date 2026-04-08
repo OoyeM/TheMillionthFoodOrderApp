@@ -21,6 +21,7 @@ public sealed class OrderStatusChangedHandler(IOrderNotificationService notifica
             @event.PreviousStatus,
             @event.NewStatus,
             @event.CustomerName,
+            @event.OccurredOn,
             cancellationToken);
     }
 }
