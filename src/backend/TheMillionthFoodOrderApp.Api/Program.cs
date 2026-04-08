@@ -80,6 +80,7 @@ builder.Host.UseWolverine(opts =>
 builder.Services.AddHealthChecks()
     .AddCheck<BrandDatabaseHealthCheck>("brand-databases");
 
+builder.Services.AddSignalR();
 builder.Services.AddFastEndpoints();
 builder.Services.SwaggerDocument(o =>
 {
@@ -137,6 +138,9 @@ app.UseMiddleware<BrandContextMiddleware>();
 
 app.UseFastEndpoints();
 app.UseSwaggerGen();
+
+// SignalR hub for real-time order updates (US-FP-068)
+app.MapHub<TheMillionthFoodOrderApp.Infrastructure.Notifications.OrderHub>("/api/hubs/orders");
 
 app.Run();
 
