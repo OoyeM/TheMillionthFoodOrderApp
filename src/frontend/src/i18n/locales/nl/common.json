@@ -239,6 +239,25 @@
         "saveError": "Opslaan mislukt. Probeer het opnieuw.",
         "manageLifecycle": "Bestelstatus-levenscyclus beheren"
       }
+    },
+    "taxConfiguration": {
+      "title": "BTW-configuratie",
+      "description": "Configureer BTW-tarieven per consumptiemodus. Belgische wetgeving: 6% meenemen, 21% ter plaatse.",
+      "consumptionModes": {
+        "Takeaway": "Meenemen (afhaling & levering)",
+        "EatIn": "Ter plaatse (balie & QR/tafel)"
+      },
+      "ratePercentage": "BTW-tarief (%)",
+      "save": "Opslaan",
+      "saving": "Opslaan…",
+      "saved": "BTW-configuratie opgeslagen",
+      "saveError": "Opslaan mislukt. Probeer opnieuw.",
+      "exampleCalculation": "Voorbeeldberekening",
+      "grossAmount": "Bedrag (incl. BTW)",
+      "netAmount": "Netto (excl. BTW)",
+      "vatAmount": "BTW-bedrag",
+      "loading": "Laden…",
+      "notConfigured": "Nog niet geconfigureerd. Sla op om Belgische standaardwaarden in te stellen."
     }
   }
 }

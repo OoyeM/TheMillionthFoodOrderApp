@@ -239,6 +239,25 @@
         "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
         "manageLifecycle": "Gérer le cycle de vie des commandes"
       }
+    },
+    "taxConfiguration": {
+      "title": "Configuration TVA",
+      "description": "Configurez les taux de TVA par mode de consommation. Loi belge : 6% à emporter, 21% sur place.",
+      "consumptionModes": {
+        "Takeaway": "À emporter (retrait & livraison)",
+        "EatIn": "Sur place (comptoir & QR/table)"
+      },
+      "ratePercentage": "Taux de TVA (%)",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Configuration TVA enregistrée",
+      "saveError": "Échec de l'enregistrement. Réessayez.",
+      "exampleCalculation": "Exemple de calcul",
+      "grossAmount": "Montant (TVA incluse)",
+      "netAmount": "Net (hors TVA)",
+      "vatAmount": "Montant TVA",
+      "loading": "Chargement…",
+      "notConfigured": "Pas encore configuré. Enregistrez pour appliquer les valeurs belges par défaut."
     }
   }
 }

@@ -7,6 +7,7 @@ using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
+using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 using BrandSettingsDomain = TheMillionthFoodOrderApp.Domain.BrandSettings.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
@@ -31,6 +32,7 @@ public sealed class BrandDbSeeder(
         await context.SaveChangesAsync(cancellationToken);
         await SeedModifierGroupsAsync(context, cancellationToken);
         await SeedOrderLifecycleConfigsAsync(context, cancellationToken);
+        await SeedTaxConfigurationAsync(context, cancellationToken);
     }
 
     private async Task SeedBrandSettingsAsync(
@@ -286,5 +288,22 @@ public sealed class BrandDbSeeder(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedTaxConfigurationAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var exists = await context.TaxConfigurations.AnyAsync(cancellationToken);
+        if (exists)
+        {
+            logger.LogDebug("Seed: TaxConfiguration already exists — skipping.");
+            return;
+        }
+
+        var config = Domain.TaxConfiguration.TaxConfiguration.CreateBelgianDefault();
+        await context.TaxConfigurations.AddAsync(config, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Seed: Created TaxConfiguration with Belgian defaults (Takeaway: 6%, EatIn: 21%).");
     }
 }

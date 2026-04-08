@@ -9,6 +9,7 @@ using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
+using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
 using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
@@ -17,6 +18,7 @@ using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 using TheMillionthFoodOrderApp.Infrastructure.OrderLifecycle;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
+using TheMillionthFoodOrderApp.Infrastructure.TaxConfiguration;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Seeding;
@@ -62,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IMenuCategoryRepository, MenuCategoryRepository>();
         services.AddScoped<IModifierGroupRepository, ModifierGroupRepository>();
         services.AddScoped<IOrderLifecycleConfigRepository, OrderLifecycleConfigRepository>();
+        services.AddScoped<ITaxConfigurationRepository, TaxConfigurationRepository>();
 
         // Seeders (scoped — they depend on scoped DbContext)
         services.AddScoped<PlatformDbSeeder>();
