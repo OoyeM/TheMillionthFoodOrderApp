@@ -3,7 +3,10 @@
   "loading": "Laden…",
   "error": "Er is iets misgegaan",
   "storefront": {
-    "description": "Bekijk ons menu en plaats uw bestelling."
+    "description": "Bekijk ons menu en plaats uw bestelling.",
+    "languageSelector": {
+      "ariaLabel": "Taal selecteren"
+    }
   },
   "pos": {
     "description": "Kassasysteem voor in de winkel."

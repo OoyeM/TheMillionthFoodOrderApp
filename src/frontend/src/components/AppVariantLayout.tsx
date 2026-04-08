@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useParams } from 'react-router-dom';
 import type { AppVariant } from './useAppVariant';
+import { LanguageSelector } from '@features/storefront/components/LanguageSelector';
 
 interface Props {
   variant: AppVariant;
@@ -30,6 +31,8 @@ export function AppVariantLayout({ variant }: Props) {
         }}
       >
         <span style={{ fontWeight: 600 }}>{VARIANT_LABELS[variant]}</span>
+
+        {variant === 'storefront' && <LanguageSelector />}
 
         {variant === 'admin' && brandSlug && lang && (
           <nav style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
