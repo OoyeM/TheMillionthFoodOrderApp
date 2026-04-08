@@ -9,12 +9,14 @@ using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
 using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
 using TheMillionthFoodOrderApp.Infrastructure.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
+using TheMillionthFoodOrderApp.Infrastructure.Notifications;
 using TheMillionthFoodOrderApp.Infrastructure.OrderLifecycle;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
@@ -72,6 +74,9 @@ public static class DependencyInjection
         // uploads path. In production, replace this registration with an Azure Blob Storage
         // implementation without changing Application or API layers.
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // Real-time notifications — SignalR implementation
+        services.AddScoped<IOrderNotificationService, SignalROrderNotificationService>();
 
         return services;
     }

@@ -36,6 +36,7 @@ export default defineConfig(() => ({
       '/api': {
         target: 'http://localhost:5261',
         changeOrigin: true,
+        ws: true,
       },
       '/bff': {
         target: 'http://localhost:5261',
