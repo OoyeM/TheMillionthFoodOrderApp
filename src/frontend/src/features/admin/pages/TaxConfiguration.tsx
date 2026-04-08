@@ -29,7 +29,6 @@ export function TaxConfiguration() {
     EatIn: BELGIAN_VAT_DEFAULTS.EatIn,
   });
   const [formInitialized, setFormInitialized] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Example calculation state
   const [calcGrossAmount, setCalcGrossAmount] = useState('10.00');
@@ -47,39 +46,26 @@ export function TaxConfiguration() {
     }
   }, [taxConfig, formInitialized]);
 
-  // Auto-dismiss success message
-  useEffect(() => {
-    if (!successMessage) return;
-    const timer = setTimeout(() => setSuccessMessage(''), 3000);
-    return () => clearTimeout(timer);
-  }, [successMessage]);
-
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   function handleRateChange(mode: ConsumptionMode, value: string) {
-    const parsed = parseFloat(value);
-    if (!isNaN(parsed)) {
-      setRates((prev) => ({ ...prev, [mode]: parsed }));
-    } else if (value === '' || value === '.') {
+    if (value === '' || value === '.') {
       setRates((prev) => ({ ...prev, [mode]: 0 }));
+      return;
     }
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 0 || num > 100) return;
+    setRates((prev) => ({ ...prev, [mode]: num }));
   }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    updateMutation.mutate(
-      {
-        vatRates: CONSUMPTION_MODES.map((mode) => ({
-          consumptionMode: mode,
-          ratePercentage: rates[mode],
-        })),
-      },
-      {
-        onSuccess: () => {
-          setSuccessMessage(t('admin.taxConfiguration.saved'));
-        },
-      },
-    );
+    updateMutation.mutate({
+      vatRates: CONSUMPTION_MODES.map((mode) => ({
+        consumptionMode: mode,
+        ratePercentage: rates[mode],
+      })),
+    });
   }
 
   // ── Client-side VAT breakdown calculation ────────────────────────────────
@@ -126,16 +112,9 @@ export function TaxConfiguration() {
       </p>
 
       {/* Success / error messages */}
-      {successMessage && (
-        <p
-          style={{
-            color: '#16a34a',
-            marginBottom: '1rem',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-          }}
-        >
-          {successMessage}
+      {updateMutation.isSuccess && (
+        <p style={{ color: '#059669', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          {t('admin.taxConfiguration.saved')}
         </p>
       )}
 
@@ -222,7 +201,7 @@ export function TaxConfiguration() {
               {t('admin.taxConfiguration.grossAmount')}
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>€</span>
+              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('admin.taxConfiguration.currencySymbol')}</span>
               <input
                 id="calc-gross"
                 type="number"
@@ -238,9 +217,7 @@ export function TaxConfiguration() {
           {/* Consumption mode selector */}
           <div>
             <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-              <legend style={labelStyle}>
-                {/* Mode selection — no separate label needed, options are self-explanatory */}
-              </legend>
+              <legend style={labelStyle}>{t('admin.taxConfiguration.consumptionMode')}</legend>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem' }}>
                 {CONSUMPTION_MODES.map((mode) => (
                   <label
@@ -309,6 +286,7 @@ interface BreakdownRowProps {
 }
 
 function BreakdownRow({ label, amount, isBold = false }: BreakdownRowProps) {
+  const { t } = useTranslation('common');
   return (
     <div
       style={{
@@ -338,7 +316,7 @@ function BreakdownRow({ label, amount, isBold = false }: BreakdownRowProps) {
           color: isBold ? '#111827' : '#374151',
         }}
       >
-        € {amount.toFixed(2)}
+        {t('admin.taxConfiguration.currencySymbol')} {amount.toFixed(2)}
       </span>
     </div>
   );

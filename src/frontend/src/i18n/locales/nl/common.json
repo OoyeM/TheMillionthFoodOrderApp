@@ -243,11 +243,13 @@
     "taxConfiguration": {
       "title": "BTW-configuratie",
       "description": "Configureer BTW-tarieven per consumptiemodus. Belgische wetgeving: 6% meenemen, 21% ter plaatse.",
+      "consumptionMode": "Consumptiemodus",
       "consumptionModes": {
         "Takeaway": "Meenemen (afhaling & levering)",
         "EatIn": "Ter plaatse (balie & QR/tafel)"
       },
       "ratePercentage": "BTW-tarief (%)",
+      "currencySymbol": "€",
       "save": "Opslaan",
       "saving": "Opslaan…",
       "saved": "BTW-configuratie opgeslagen",

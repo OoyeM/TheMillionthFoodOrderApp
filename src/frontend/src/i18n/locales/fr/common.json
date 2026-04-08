@@ -243,11 +243,13 @@
     "taxConfiguration": {
       "title": "Configuration TVA",
       "description": "Configurez les taux de TVA par mode de consommation. Loi belge : 6% à emporter, 21% sur place.",
+      "consumptionMode": "Mode de consommation",
       "consumptionModes": {
         "Takeaway": "À emporter (retrait & livraison)",
         "EatIn": "Sur place (comptoir & QR/table)"
       },
       "ratePercentage": "Taux de TVA (%)",
+      "currencySymbol": "€",
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "saved": "Configuration TVA enregistrée",

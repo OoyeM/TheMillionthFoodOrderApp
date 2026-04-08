@@ -204,6 +204,47 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task UpdateTaxConfiguration_PreservesCreatedAtAndBumpsUpdatedAt()
+    {
+        // Arrange — create initial config
+        var client = CreateClient();
+        var slug = IntegrationTestBase.BetaSlug;
+
+        var initialRequest = new
+        {
+            VatRates = new[]
+            {
+                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
+                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
+            }
+        };
+
+        var createResponse = await client.PutAsJsonAsync(TaxConfigUrl(slug), initialRequest);
+        createResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var created = await createResponse.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
+        created.ShouldNotBeNull();
+
+        // Act — update rates
+        var updateRequest = new
+        {
+            VatRates = new[]
+            {
+                new { ConsumptionMode = "Takeaway", RatePercentage = 8m },
+                new { ConsumptionMode = "EatIn",    RatePercentage = 23m },
+            }
+        };
+
+        var updateResponse = await client.PutAsJsonAsync(TaxConfigUrl(slug), updateRequest);
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var updated = await updateResponse.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
+        updated.ShouldNotBeNull();
+
+        // Assert — CreatedAt unchanged, UpdatedAt bumped
+        updated.CreatedAt.ShouldBe(created.CreatedAt);
+        updated.UpdatedAt.ShouldBeGreaterThanOrEqualTo(created.UpdatedAt);
+    }
+
     // ── POST tax-configuration/calculate ────────────────────────────────────
 
     [Fact]

@@ -21,11 +21,12 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
         {
             config = Domain.TaxConfiguration.TaxConfiguration.CreateBelgianDefault();
             await repository.AddAsync(config, cancellationToken);
+            await repository.SaveChangesAsync(cancellationToken);
         }
 
         var rates = request.VatRates
             .Select(r => (
-                Mode: Enum.Parse<ConsumptionMode>(r.ConsumptionMode),
+                ConsumptionMode: ParseConsumptionMode(r.ConsumptionMode),
                 RatePercentage: r.RatePercentage))
             .ToList();
 
@@ -44,7 +45,7 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
         if (config is null)
             throw new KeyNotFoundException("No tax configuration has been set up.");
 
-        var mode = Enum.Parse<ConsumptionMode>(request.ConsumptionMode);
+        var mode = ParseConsumptionMode(request.ConsumptionMode);
         var rate = config.GetRateForMode(mode);
         var breakdown = TaxCalculator.CalculateFromGross(request.GrossAmount, rate);
 
@@ -63,4 +64,12 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
                 .ToList(),
             config.CreatedAt,
             config.UpdatedAt);
+
+    private static ConsumptionMode ParseConsumptionMode(string value)
+    {
+        if (!Enum.TryParse<ConsumptionMode>(value, out var mode) || !Enum.IsDefined(mode))
+            throw new ArgumentException(
+                $"Invalid consumption mode: '{value}'. Valid values: {string.Join(", ", Enum.GetNames<ConsumptionMode>())}.");
+        return mode;
+    }
 }

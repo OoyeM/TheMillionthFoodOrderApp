@@ -11,6 +11,12 @@ public sealed class TaxBreakdown : ValueObject
 
     public TaxBreakdown(decimal netAmount, decimal vatAmount, decimal grossAmount, decimal vatRatePercentage)
     {
+        if (netAmount < 0) throw new ArgumentException("Net amount cannot be negative.", nameof(netAmount));
+        if (vatAmount < 0) throw new ArgumentException("VAT amount cannot be negative.", nameof(vatAmount));
+        if (grossAmount < 0) throw new ArgumentException("Gross amount cannot be negative.", nameof(grossAmount));
+        if (vatRatePercentage < 0 || vatRatePercentage > 100)
+            throw new ArgumentOutOfRangeException(nameof(vatRatePercentage), "VAT rate percentage must be between 0 and 100.");
+
         NetAmount = netAmount;
         VatAmount = vatAmount;
         GrossAmount = grossAmount;

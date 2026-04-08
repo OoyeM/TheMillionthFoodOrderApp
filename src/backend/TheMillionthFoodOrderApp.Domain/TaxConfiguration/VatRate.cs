@@ -13,6 +13,8 @@ public sealed class VatRate : Entity<Guid>
 
     public static VatRate Create(Guid taxConfigurationId, ConsumptionMode mode, decimal ratePercentage)
     {
+        if (taxConfigurationId == Guid.Empty)
+            throw new ArgumentException("TaxConfigurationId cannot be empty.", nameof(taxConfigurationId));
         if (ratePercentage < 0 || ratePercentage > 100)
             throw new ArgumentOutOfRangeException(nameof(ratePercentage), "Rate percentage must be between 0 and 100.");
 
