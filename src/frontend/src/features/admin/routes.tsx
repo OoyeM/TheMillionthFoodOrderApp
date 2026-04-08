@@ -74,6 +74,10 @@ const LazyBrandTheming = lazy(() =>
   import('./pages/BrandTheming').then((m) => ({ default: m.BrandTheming })),
 );
 
+const LazyTaxConfiguration = lazy(() =>
+  import('./pages/TaxConfiguration').then((m) => ({ default: m.TaxConfiguration })),
+);
+
 const LazyModifierGroupList = lazy(() =>
   import('./pages/ModifierGroupList').then((m) => ({ default: m.ModifierGroupList })),
 );
@@ -321,6 +325,15 @@ export const adminRoutes: RouteObject[] = [
     element: (
       <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
         <LazyBrandTheming />
+      </Suspense>
+    ),
+  },
+  // Tax configuration (brand-level)
+  {
+    path: 'tax-configuration',
+    element: (
+      <Suspense fallback={<p style={{ padding: '1.5rem', color: '#6b7280' }}>Loading…</p>}>
+        <LazyTaxConfiguration />
       </Suspense>
     ),
   },

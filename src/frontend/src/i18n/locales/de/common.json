@@ -239,6 +239,28 @@
         "saveError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
         "manageLifecycle": "Bestellstatus-Lebenszyklus verwalten"
       }
+    },
+    "taxConfiguration": {
+      "title": "MwSt.-Konfiguration",
+      "description": "Konfigurieren Sie die MwSt.-Sätze pro Verbrauchsmodus. Belgisches Recht: 6% zum Mitnehmen, 21% vor Ort.",
+      "consumptionMode": "Verbrauchsmodus",
+      "consumptionModes": {
+        "Takeaway": "Zum Mitnehmen (Abholung & Lieferung)",
+        "EatIn": "Vor Ort (Theke & QR/Tisch)"
+      },
+      "ratePercentage": "MwSt.-Satz (%)",
+      "currencySymbol": "€",
+      "save": "Speichern",
+      "saving": "Speichern…",
+      "saved": "MwSt.-Konfiguration gespeichert",
+      "saveError": "Speichern fehlgeschlagen. Versuchen Sie es erneut.",
+      "exampleCalculation": "Beispielberechnung",
+      "grossAmount": "Betrag (inkl. MwSt.)",
+      "netAmount": "Netto (exkl. MwSt.)",
+      "vatAmount": "MwSt.-Betrag",
+      "loading": "Laden…",
+      "notConfigured": "Noch nicht konfiguriert. Speichern Sie, um die belgischen Standardwerte festzulegen.",
+      "loadError": "MwSt.-Konfiguration konnte nicht geladen werden."
     }
   }
 }

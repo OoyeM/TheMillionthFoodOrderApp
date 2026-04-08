@@ -479,3 +479,32 @@ export interface ConfigureOrderLifecycleRequest {
   statuses: OrderStatusRequest[];
   transitions: OrderStatusTransitionRequest[];
 }
+
+// ── Tax Configuration ──────────────────────────────────────────────────────
+
+export type ConsumptionMode = 'Takeaway' | 'EatIn';
+
+export const CONSUMPTION_MODES: readonly ConsumptionMode[] = ['Takeaway', 'EatIn'] as const;
+
+export interface VatRateResponse {
+  consumptionMode: ConsumptionMode;
+  ratePercentage: number;
+}
+
+export interface TaxConfigurationResponse {
+  id: string;
+  vatRates: VatRateResponse[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateTaxConfigurationRequest {
+  vatRates: VatRateResponse[];
+}
+
+export interface TaxBreakdownResponse {
+  netAmount: number;
+  vatAmount: number;
+  grossAmount: number;
+  vatRatePercentage: number;
+}
