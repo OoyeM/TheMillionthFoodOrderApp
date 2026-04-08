@@ -1,7 +1,6 @@
 {
   "realm": "themillionfoodorderapp",
   "enabled": true,
-  "_comment_ssl": "DEV ONLY — production realms MUST use 'external' or 'all'",
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
@@ -25,7 +24,6 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "_comment_secret": "DEV ONLY — rotate before any non-local deployment",
       "secret": "dev-secret-do-not-use-in-production",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
@@ -46,7 +44,6 @@
         "email",
         "roles"
       ],
-      "_comment_fullScope": "Production: set to false and assign explicit client scopes",
       "fullScopeAllowed": true
     }
   ],
