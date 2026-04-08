@@ -3,7 +3,10 @@
   "loading": "Wird geladen…",
   "error": "Ein Fehler ist aufgetreten",
   "storefront": {
-    "description": "Sehen Sie unsere Speisekarte und geben Sie Ihre Bestellung auf."
+    "description": "Sehen Sie unsere Speisekarte und geben Sie Ihre Bestellung auf.",
+    "languageSelector": {
+      "ariaLabel": "Sprache wählen"
+    }
   },
   "pos": {
     "description": "Kassensystem für den Laden."
