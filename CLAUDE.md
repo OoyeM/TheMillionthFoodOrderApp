@@ -42,6 +42,16 @@ Mock auth is enabled by default in dev — no external services needed. Visit `/
 - Orders: online + in-store channels, configurable lifecycle per shop
 - Belgian market: VAT (6% takeaway / 21% eat-in), languages (NL, FR, DE)
 
+## Planning & User Stories
+
+The [dependency tree](docs/dependency-tree.md) is the **source of truth** for what to build next. It tracks all 70 user stories (US-FP-001 through US-FP-070) across 5 layers with dependency chains and completion status. Always consult it when:
+- Deciding which story to work on next (pick stories whose dependencies are all ✅)
+- Understanding what a story unlocks downstream
+- Planning parallel work across worktrees (4-worktree strategy documented there)
+
+Full user stories: `docs/extract-prd/user-stories/frietjes-platform.md`
+PRD: `docs/extract-prd/new-app/frietjes-platform.md`
+
 ## Repository
 
 https://github.com/OoyeM/TheMillionthFoodOrderApp.git
