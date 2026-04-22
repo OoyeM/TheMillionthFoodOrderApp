@@ -10,9 +10,11 @@ public sealed record GetProductRequest(
 public sealed class GetProductEndpoint(IProductService productService)
     : Endpoint<GetProductRequest, ProductResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/products/{id}";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/products/{id}");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

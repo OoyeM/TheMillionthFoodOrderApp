@@ -76,9 +76,11 @@ public sealed class CreateProductRequestValidator : Validator<CreateProductApiRe
 public sealed class CreateProductEndpoint(IProductService productService)
     : Endpoint<CreateProductApiRequest, ProductResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/products";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/products");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

@@ -11,9 +11,11 @@ public sealed record DeleteProductRequest(
 public sealed class DeleteProductEndpoint(IProductService productService)
     : Endpoint<DeleteProductRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/products/{id}";
+
     public override void Configure()
     {
-        Delete("/api/brands/{brandSlug}/products/{id}");
+        Delete(Route);
         AllowAnonymous();
         Summary(s =>
         {
