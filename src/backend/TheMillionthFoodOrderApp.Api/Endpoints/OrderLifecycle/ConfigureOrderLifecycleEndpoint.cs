@@ -75,9 +75,11 @@ public sealed class ConfigureOrderLifecycleValidator : Validator<ConfigureOrderL
 public sealed class ConfigureOrderLifecycleEndpoint(IOrderLifecycleService service)
     : Endpoint<ConfigureOrderLifecycleApiRequest, OrderLifecycleResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle");
+        Put(Route);
         // TODO: Require ShopManager role when auth is implemented (US-FP-039)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<ConfigureOrderLifecycleApiRequest>>();

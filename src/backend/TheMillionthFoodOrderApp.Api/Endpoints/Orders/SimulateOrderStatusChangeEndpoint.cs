@@ -28,9 +28,11 @@ public sealed record SimulateOrderStatusChangeResponse(Guid OrderId, string Mess
 public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus, IWebHostEnvironment env)
     : Endpoint<SimulateOrderStatusChangeRequest, SimulateOrderStatusChangeResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/orders/simulate-status-change";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/orders/simulate-status-change");
+        Post(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<SimulateOrderStatusChangeRequest>>();
         Tags("development");
