@@ -1,5 +1,39 @@
 # Frontend — CLAUDE.md
 
+## Architecture Diagrams
+
+```mermaid
+graph TB
+    subgraph Apps["Three Apps — One Codebase"]
+        SF[Storefront<br/>Customer PWA]
+        AD[Admin Panel<br/>Brand CMS]
+        POS[POS<br/>In-Store Touch]
+    end
+
+    subgraph Core["Shared Core"]
+        Shell[AppShell<br/>Brand + Lang routing]
+        Auth[Auth Module<br/>Mock / BFF providers]
+        API[API Clients<br/>16 modules]
+        TQ[TanStack Query<br/>Hooks per feature]
+        I18N[i18n<br/>NL / FR / DE]
+        SIG[SignalR Client<br/>useOrderUpdates]
+    end
+
+    subgraph Backend["Backend (via BFF proxy)"]
+        BFF["/api/* → BFF :5261"]
+    end
+
+    SF & AD & POS --> Shell
+    Shell --> Auth & API
+    API --> TQ
+    API --> SIG
+    TQ & SIG --> BFF
+
+    style Apps fill:#dbe4ff,stroke:#4a9eed
+    style Core fill:#f0fdf4,stroke:#22c55e
+    style Backend fill:#e5dbff,stroke:#8b5cf6
+```
+
 ## Tech Stack
 
 - React + TypeScript, Vite, pnpm
@@ -13,11 +47,31 @@
 - URL structure: `/{brand}/{lang}/...` — brand and language resolved by AppShell
 - Admin panel: `/{brand}/{lang}/admin/brands` for brand management
 - Feature-based folder structure: `src/features/{storefront,pos,admin}/`
+- Shared components in `src/components/` — AppShell, AppVariantLayout, ErrorBoundary, SuspenseWrapper
 - API client modules in `src/api/` — axios with Vite proxy to BFF (`/api/*` and `/bff/*` → `http://localhost:5261`)
 - Auth module in `src/auth/` — AuthContext, providers, route guards, session keepalive
 - TanStack Query hooks per feature in `src/features/*/hooks/`
+- SignalR client in `src/api/signalr.ts` with hooks: `useSignalR`, `useOrderUpdates`
 - Strict TypeScript — no `any`
-- i18n from day one: NL, FR, DE (react-i18next)
+- i18n from day one: NL, FR, DE (react-i18next) — locale files in `src/i18n/locales/{nl,fr,de}/`
+
+## Admin Panel Pages
+
+Brand CRUD (list/create/edit), brand theming, shop CRUD (list/create/edit), shop opening hours, shop order lifecycle, product CRUD (list/create/edit), combo product CRUD, modifier group CRUD, menu category CRUD (list/create/edit), platform admin list, staff list, tax configuration, dashboard
+
+## Type Definitions (`src/types/`)
+
+- `auth.ts` — `AuthUser`, `AuthState` interfaces
+- `common.ts` — shared domain types: `Brand`, `BrandSettings`, `BrandColors`, `BrandTypography`, `BrandTheme`, `ComboItemResponse`, `ConfigureOrderLifecycleRequest`, and all API request/response shapes
+
+## Storefront
+
+- Components: `LanguageSelector` (NL/FR/DE switcher with locale persistence), `ThemeProvider` (brand theming), `ShopStatusBadge`
+- Pages: Home
+
+## POS
+
+- Pages: Dashboard (placeholder)
 
 ## Authentication
 

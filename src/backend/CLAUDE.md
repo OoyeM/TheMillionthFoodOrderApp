@@ -1,5 +1,68 @@
 # Backend — CLAUDE.md
 
+## Architecture Diagrams
+
+```mermaid
+graph TB
+    subgraph API["API (port 5102)"]
+        FE[FastEndpoints<br/>42 routes]
+        APP[Application Layer<br/>12 services]
+        DOM[Domain Layer<br/>9 aggregates]
+        INF[Infrastructure<br/>EF Core + SignalR]
+    end
+
+    subgraph Data["Data Stores"]
+        PDB[(PlatformDb<br/>shared)]
+        BDB[(BrandDb<br/>per-brand)]
+    end
+
+    BFF[BFF :5261] -->|"YARP + Bearer"| FE
+    FE --> APP --> DOM
+    APP --> INF
+    INF --> PDB & BDB
+    INF -->|Wolverine| DOM
+
+    style API fill:#d3f9d8,stroke:#22c55e
+    style Data fill:#c3fae8,stroke:#06b6d4
+```
+
+```mermaid
+graph TB
+    subgraph Foundation["Foundation"]
+        Brand[Brand] --> Shop[Shop]
+        Brand --> PlatformUser
+        PlatformUser --> BrandUserRole
+    end
+
+    subgraph Products["Stream A: Products ✅"]
+        Product -->|has| ModifierGroup
+        Product -->|in| MenuCategory
+    end
+
+    subgraph Config["Stream C: Config"]
+        OrderLifecycleConfig
+        TaxConfiguration
+        BrandSettings
+    end
+
+    subgraph Ordering["Ordering Core (next)"]
+        Order["Order ⬜"]
+        OrderHub["SignalR Hub ✅"]
+    end
+
+    Brand -.-> Product
+    Shop -.-> OrderLifecycleConfig
+    Product -.-> Order
+    TaxConfiguration -.-> Order
+    OrderLifecycleConfig -.-> Order
+    Order -->|real-time| OrderHub
+
+    style Foundation fill:#dbe4ff,stroke:#4a9eed
+    style Products fill:#d3f9d8,stroke:#22c55e
+    style Config fill:#e5dbff,stroke:#8b5cf6
+    style Ordering fill:#fff3bf,stroke:#f59e0b
+```
+
 ## Tech Stack
 
 - .NET (C#), ASP.NET Web API, .NET Aspire
@@ -18,13 +81,15 @@
 ## Solution Structure
 
 ```
-TheMillionthFoodOrderApp.AppHost/        — .NET Aspire orchestrator (run this)
-TheMillionthFoodOrderApp.Api/            — FastEndpoints API host (http://localhost:5102, Swagger at /swagger)
-TheMillionthFoodOrderApp.Bff/            — Backend-for-frontend (auth/session, YARP proxy to API)
-TheMillionthFoodOrderApp.Application/    — Use cases, services, DTOs
-TheMillionthFoodOrderApp.Domain/         — DDD aggregates, entities, value objects, domain events
-TheMillionthFoodOrderApp.Infrastructure/ — EF Core (PlatformDbContext, BrandDbContext), repositories
-TheMillionthFoodOrderApp.ServiceDefaults/ — Aspire shared config (telemetry, health)
+TheMillionthFoodOrderApp.AppHost/            — .NET Aspire orchestrator (run this)
+TheMillionthFoodOrderApp.Api/                — FastEndpoints API host (http://localhost:5102, Swagger at /swagger)
+TheMillionthFoodOrderApp.Bff/                — Backend-for-frontend (auth/session, YARP proxy to API)
+TheMillionthFoodOrderApp.Application/        — Use cases, services, DTOs
+TheMillionthFoodOrderApp.Domain/             — DDD aggregates, entities, value objects, domain events
+TheMillionthFoodOrderApp.Infrastructure/     — EF Core (PlatformDbContext, BrandDbContext), repositories, SignalR
+TheMillionthFoodOrderApp.ServiceDefaults/    — Aspire shared config (telemetry, health)
+TheMillionthFoodOrderApp.Tests.Unit/         — xUnit unit tests (Shouldly assertions)
+TheMillionthFoodOrderApp.Tests.Integration/  — Integration tests (Testcontainers, real SQL Server)
 ```
 
 ## Local Development
@@ -72,12 +137,93 @@ This project uses **.NET Aspire** as the orchestrator. Aspire's `Add*` extension
 - `dotnet ef migrations add <Name> --project TheMillionthFoodOrderApp.Infrastructure --startup-project TheMillionthFoodOrderApp.Api --context PlatformDbContext --output-dir Persistence/Migrations/Platform` — add platform migration
 - `dotnet ef migrations add <Name> --project TheMillionthFoodOrderApp.Infrastructure --startup-project TheMillionthFoodOrderApp.Api --context BrandDbContext --output-dir Persistence/Migrations/Brand` — add brand migration
 
+## Domain Bounded Contexts
+
+```
+Domain/
+  Brands/              — Brand aggregate (name, slug, active status, StaffAuthMethod enum)
+  Shops/               — Shop aggregate, Address value object, OpeningHoursTimeBlock, ShopCreatedEvent
+  Products/            — Product aggregate (simple, modifier groups, combos), ProductTranslation, ComboItem
+  ModifierGroups/      — ModifierGroup aggregate, Modifier, ProductModifierGroup, translations
+  MenuCategories/      — MenuCategory aggregate, MenuCategoryTranslation
+  BrandSettings/       — BrandSettings aggregate, BrandColors/BrandTypography value objects, PresetFonts
+  Identity/            — PlatformUser aggregate, BrandUserRole entity, StaffRole enum
+  OrderLifecycle/      — OrderLifecycleConfig aggregate, OrderStatus, OrderStatusTransition
+  TaxConfiguration/    — TaxConfiguration aggregate, VatRate entity, TaxCalculator, TaxBreakdown value object
+  Orders/              — OrderStatusChangedEvent (domain event for SignalR)
+  Common/              — AggregateRoot, Entity, ValueObject base classes; Money VO; ConsumptionMode enum; IAuditable, ISoftDeletable interfaces
+```
+
+## Domain Aggregates & Marker Interfaces
+
+| Aggregate | IAuditable | ISoftDeletable |
+|-----------|:----------:|:--------------:|
+| Brand | ✅ | — |
+| Shop | ✅ | — |
+| Product | ✅ | ✅ |
+| ModifierGroup | ✅ | ✅ |
+| MenuCategory | ✅ | ✅ |
+| BrandSettings | ✅ | — |
+| PlatformUser | ✅ | — |
+| OrderLifecycleConfig | ✅ | — |
+| TaxConfiguration | ✅ | — |
+
+## Domain Enums
+
+- `Allergen` — 14 EU allergens (Products)
+- `DietaryTag` — dietary labels (Products)
+- `ProductType` — simple / combo (Products)
+- `StaffAuthMethod` — auth method per brand (Brands)
+- `StaffRole` — brand-admin, counter-staff, etc. (Identity)
+- `ConsumptionMode` — eat-in / takeaway (Common, used by VAT)
+- `BrandValidationResult` — middleware validation outcomes (Application/Multitenancy)
+
+## Application Layer Pattern
+
+Each bounded context follows `IXxxService` (interface in Application) → `XxxService` (implementation in Application). `IFileStorageService` → `LocalFileStorageService` lives in Infrastructure.
+
+## Infrastructure Conventions
+
+- **EF entity configurations:** One `IEntityTypeConfiguration<T>` per entity (e.g. `BrandConfiguration`, `MenuCategoryConfiguration`)
+- **AuditSaveChangesInterceptor** — auto-sets CreatedAt/UpdatedAt on entities implementing `IAuditable`
+- **DateTimeOffsetConvention** — ensures all DateTimeOffset properties use `datetimeoffset(7)` SQL type
+- **BrandDbSeeder** — seeds default data (e.g. Frietjes brand, sample products) in dev
+
 ## Domain Patterns
 
 - **Soft-delete:** Implement `ISoftDeletable` (IsDeleted + DeletedAt). Add a global query filter on `BrandDbContext`: `HasQueryFilter(e => !e.IsDeleted)`. Use `IgnoreQueryFilters()` only when historical data is needed.
 - **Translations:** Use a child entity (e.g. `ProductTranslation`) with composite unique index on `(ParentId, LanguageCode)`. Load eagerly with `Include()`. On update, clear the collection and re-add — avoids EF Core orphan tracking issues.
 - **Money:** `Money` value object (Amount + Currency), mapped as EF owned entity with explicit column names (`BasePrice_Amount`, `BasePrice_Currency`).
 - **Sort ordering:** Use an `int SortOrder` field. Reorder via a dedicated endpoint that accepts an ordered list of IDs and assigns 0..n-1 sequentially. Last-write-wins for MVP.
+- **Domain events:** Wolverine handles domain events in-memory (e.g. `ShopCreatedEvent` triggers brand DB provisioning, `OrderStatusChangedEvent` triggers SignalR notifications).
+
+## Real-Time Notifications
+
+- **SignalR** hub at `OrderHub` — pushes order status changes to connected clients
+- `IOrderNotificationService` abstraction in Application, `SignalROrderNotificationService` in Infrastructure
+- `OrderStatusChangedHandler` (Wolverine handler) bridges domain events to SignalR
+- Frontend connects via `@microsoft/signalr` client (`useSignalR`, `useOrderUpdates` hooks)
+
+## API Routes (42 endpoints)
+
+All brand-scoped routes are prefixed with `/brands/{brandSlug}/` and guarded by `BrandScopedPreProcessor`.
+
+| Resource | Routes |
+|----------|--------|
+| Brands | `GET/POST /brands`, `GET/PUT /brands/:id`, `POST .../activate`, `POST .../deactivate` |
+| Staff Auth | `PUT /brands/:slug/staff-auth` |
+| Shops | `GET/POST /brands/:slug/shops`, `GET/PUT /brands/:slug/shops/:id`, `POST .../activate`, `POST .../deactivate` |
+| Opening Hours | `GET/PUT /brands/:slug/shops/:shopId/opening-hours`, `GET .../status` |
+| Order Lifecycle | `GET/PUT /brands/:slug/shops/:shopId/order-lifecycle`, `POST .../reset` |
+| Staff | `GET/POST /brands/:slug/staff`, `GET /brands/:slug/shops/:shopId/staff`, `POST .../staff/:roleId/deactivate` |
+| Products | `GET/POST /brands/:slug/products`, `GET/PUT/DELETE /brands/:slug/products/:id` |
+| Combos | `POST /brands/:slug/combo-products`, `PUT /brands/:slug/combo-products/:id` |
+| Modifier Groups | `GET/POST /brands/:slug/modifier-groups`, `GET/PUT/DELETE .../modifier-groups/:id`, `GET /brands/:slug/products/:productId/modifier-groups` |
+| Menu Categories | `GET/POST /brands/:slug/menu-categories`, `GET/PUT/DELETE .../menu-categories/:id`, `PUT .../sort-order`, `POST .../assign-product`, `GET .../menu-categories/:catId/products`, `PUT .../products/order` |
+| Brand Settings | `GET/PUT /brands/:slug/settings`, `PUT .../settings/theming`, `POST .../settings/logo`, `GET /brands/:slug/theme` |
+| Tax Config | `GET/PUT /brands/:slug/tax-configuration`, `POST .../calculate` |
+| Platform Admins | `GET/POST /platform-admins`, `POST /platform-admins/:id/deactivate` |
+| Orders (infra) | `POST /brands/:slug/orders/simulate-status-change` (dev-only) |
 
 ## Domain Constraints
 

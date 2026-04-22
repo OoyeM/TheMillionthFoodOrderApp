@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-03-15
+> Last updated: 2026-04-09
 
 ## Progress Legend
 
@@ -205,17 +205,17 @@ Once ordering works, these streams are **all independent**.
 ## Visual Summary
 
 ```
-L0: [069✅] → [061🚧] → [001🚧] → [070🚧] → [004✅] → [002]
+L0: [069✅] → [061✅] → [001✅] → [070✅] → [004✅] → [002✅]
 
-L1: [A: Products]   [B: Auth/Staff]   [C: Shop Config]   [D: Branding]     ← 4 parallel
+L1: [A: Products✅]  [B: Auth/Staff🚧]  [C: Shop Config🚧]  [D: Branding✅]  ← 4 parallel
          │                │                  │
-L2: [046 VAT] [068 Realtime] → [016 Ordering] → [058/017/018]              ← ordering core
-                                     │
-L3: [E: Kitchen] [F: Customer] [G: Shop Mgmt] [H: Loyalty] [I: Reports]    ← 5 parallel
+L2: [046✅ VAT] [068✅ Realtime] → [016 Ordering] → [058/017/018]             ← ordering core
+                                        │
+L3: [E: Kitchen] [F: Customer] [G: Shop Mgmt] [H: Loyalty] [I: Reports]      ← 5 parallel
          │            │
-L4: [J: Receipts] [K: Offline] [L: PWA] [M: Scheduling]                    ← 4 parallel
+L4: [J: Receipts] [K: Offline] [L: PWA] [M: Scheduling]                      ← 4 parallel
          │
-L5: [060 Dashboard] [045 Inventory] [038 Guest polish]                      ← polish
+L5: [060 Dashboard] [045 Inventory] [038 Guest polish]                        ← polish
 ```
 
 ## Worktree Strategy (4 worktrees)
