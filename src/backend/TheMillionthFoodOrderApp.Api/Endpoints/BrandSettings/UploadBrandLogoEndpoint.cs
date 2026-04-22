@@ -47,9 +47,11 @@ public sealed class UploadBrandLogoRequestValidator : Validator<UploadBrandLogoR
 public sealed class UploadBrandLogoEndpoint(IBrandSettingsService brandSettingsService)
     : Endpoint<UploadBrandLogoRequest, UploadBrandLogoResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/settings/logo";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/settings/logo");
+        Post(Route);
         AllowAnonymous();
         AllowFileUploads();
         PreProcessor<BrandScopedPreProcessor<UploadBrandLogoRequest>>();
