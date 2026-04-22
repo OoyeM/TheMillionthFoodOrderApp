@@ -6,9 +6,11 @@ namespace TheMillionthFoodOrderApp.Api.Endpoints.PlatformAdmins;
 public sealed class ListPlatformAdminsEndpoint(IPlatformAdminService platformAdminService)
     : EndpointWithoutRequest<IReadOnlyList<PlatformAdminResponse>>
 {
+    public const string Route = "/api/platform-admins";
+
     public override void Configure()
     {
-        Get("/api/platform-admins");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {
