@@ -25,9 +25,11 @@ public sealed class InvitePlatformAdminRequestValidator : Validator<InvitePlatfo
 public sealed class InvitePlatformAdminEndpoint(IPlatformAdminService platformAdminService)
     : Endpoint<InvitePlatformAdminRequest, PlatformAdminResponse>
 {
+    public const string Route = "/api/platform-admins";
+
     public override void Configure()
     {
-        Post("/api/platform-admins");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

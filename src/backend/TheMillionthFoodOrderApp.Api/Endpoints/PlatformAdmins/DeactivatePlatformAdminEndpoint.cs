@@ -9,9 +9,11 @@ public sealed record DeactivatePlatformAdminRequest([property: RouteParam] Guid 
 public sealed class DeactivatePlatformAdminEndpoint(IPlatformAdminService platformAdminService)
     : Endpoint<DeactivatePlatformAdminRequest>
 {
+    public const string Route = "/api/platform-admins/{id}/deactivate";
+
     public override void Configure()
     {
-        Post("/api/platform-admins/{id}/deactivate");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {
