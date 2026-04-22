@@ -10,9 +10,11 @@ public sealed record DeleteModifierGroupRequest(
 public sealed class DeleteModifierGroupEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<DeleteModifierGroupRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/modifier-groups/{id}";
+
     public override void Configure()
     {
-        Delete("/api/brands/{brandSlug}/modifier-groups/{id}");
+        Delete(Route);
         AllowAnonymous();
         Summary(s =>
         {

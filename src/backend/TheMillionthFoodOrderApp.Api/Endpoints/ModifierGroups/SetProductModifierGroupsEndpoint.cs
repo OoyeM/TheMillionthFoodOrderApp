@@ -40,9 +40,11 @@ public sealed class SetProductModifierGroupsRequestValidator : Validator<SetProd
 public sealed class SetProductModifierGroupsEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<SetProductModifierGroupsApiRequest, IReadOnlyList<ProductModifierGroupResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/products/{productId}/modifier-groups";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/products/{productId}/modifier-groups");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {

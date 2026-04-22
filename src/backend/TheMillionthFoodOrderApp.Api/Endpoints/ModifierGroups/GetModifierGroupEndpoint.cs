@@ -10,9 +10,11 @@ public sealed record GetModifierGroupRequest(
 public sealed class GetModifierGroupEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<GetModifierGroupRequest, ModifierGroupResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/modifier-groups/{id}";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/modifier-groups/{id}");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

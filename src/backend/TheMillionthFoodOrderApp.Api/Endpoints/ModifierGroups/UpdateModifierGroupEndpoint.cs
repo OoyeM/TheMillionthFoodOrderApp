@@ -67,9 +67,11 @@ public sealed class UpdateModifierGroupRequestValidator : Validator<UpdateModifi
 public sealed class UpdateModifierGroupEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<UpdateModifierGroupApiRequest, ModifierGroupResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/modifier-groups/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/modifier-groups/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {
