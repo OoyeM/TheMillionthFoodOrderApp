@@ -65,9 +65,11 @@ public sealed class UpdateComboProductRequestValidator : Validator<UpdateComboPr
 public sealed class UpdateComboProductEndpoint(IProductService productService)
     : Endpoint<UpdateComboProductApiRequest, ProductResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/combo-products/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/combo-products/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {
