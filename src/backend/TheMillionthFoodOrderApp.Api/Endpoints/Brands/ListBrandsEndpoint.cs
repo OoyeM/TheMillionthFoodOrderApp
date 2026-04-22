@@ -6,9 +6,11 @@ namespace TheMillionthFoodOrderApp.Api.Endpoints.Brands;
 public sealed class ListBrandsEndpoint(IBrandService brandService)
     : EndpointWithoutRequest<IReadOnlyList<BrandResponse>>
 {
+    public const string Route = "/api/brands";
+
     public override void Configure()
     {
-        Get("/api/brands");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

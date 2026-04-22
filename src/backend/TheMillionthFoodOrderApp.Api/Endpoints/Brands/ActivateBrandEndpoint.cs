@@ -8,9 +8,11 @@ public sealed record ActivateBrandRequest([property: RouteParam] Guid Id);
 public sealed class ActivateBrandEndpoint(IBrandService brandService)
     : Endpoint<ActivateBrandRequest>
 {
+    public const string Route = "/api/brands/{id}/activate";
+
     public override void Configure()
     {
-        Post("/api/brands/{id}/activate");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

@@ -8,9 +8,11 @@ public sealed record DeactivateBrandRequest([property: RouteParam] Guid Id);
 public sealed class DeactivateBrandEndpoint(IBrandService brandService)
     : Endpoint<DeactivateBrandRequest>
 {
+    public const string Route = "/api/brands/{id}/deactivate";
+
     public override void Configure()
     {
-        Post("/api/brands/{id}/deactivate");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

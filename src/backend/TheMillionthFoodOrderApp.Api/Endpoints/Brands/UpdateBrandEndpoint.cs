@@ -35,9 +35,11 @@ public sealed class UpdateBrandRequestValidator : Validator<UpdateBrandRequest>
 public sealed class UpdateBrandEndpoint(IBrandService brandService)
     : Endpoint<UpdateBrandRequest, BrandResponse>
 {
+    public const string Route = "/api/brands/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {

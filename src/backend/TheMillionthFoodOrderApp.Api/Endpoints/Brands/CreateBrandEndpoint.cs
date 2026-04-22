@@ -39,9 +39,11 @@ public sealed class CreateBrandRequestValidator : Validator<CreateBrandRequest>
 public sealed class CreateBrandEndpoint(IBrandService brandService)
     : Endpoint<CreateBrandRequest, BrandResponse>
 {
+    public const string Route = "/api/brands";
+
     public override void Configure()
     {
-        Post("/api/brands");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {
