@@ -10,9 +10,11 @@ public sealed record ResetOrderLifecycleRequest(
 public sealed class ResetOrderLifecycleEndpoint(IOrderLifecycleService service)
     : Endpoint<ResetOrderLifecycleRequest, OrderLifecycleResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle/reset";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle/reset");
+        Post(Route);
         // TODO: Require ShopManager role when auth is implemented (US-FP-039)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<ResetOrderLifecycleRequest>>();

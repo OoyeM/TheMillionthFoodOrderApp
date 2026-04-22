@@ -10,9 +10,11 @@ public sealed record GetOrderLifecycleRequest(
 public sealed class GetOrderLifecycleEndpoint(IOrderLifecycleService service)
     : Endpoint<GetOrderLifecycleRequest, OrderLifecycleResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops/{shopId}/order-lifecycle");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetOrderLifecycleRequest>>();
         Summary(s =>
