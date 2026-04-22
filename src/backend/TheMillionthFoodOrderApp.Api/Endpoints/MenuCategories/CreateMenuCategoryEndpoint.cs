@@ -53,9 +53,11 @@ public sealed class CreateMenuCategoryRequestValidator : Validator<CreateMenuCat
 public sealed class CreateMenuCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<CreateMenuCategoryApiRequest, MenuCategoryResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/menu-categories");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

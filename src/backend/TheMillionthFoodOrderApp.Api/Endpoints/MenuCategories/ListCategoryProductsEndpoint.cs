@@ -21,9 +21,11 @@ public sealed class ListCategoryProductsRequestValidator : Validator<ListCategor
 public sealed class ListCategoryProductsEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<ListCategoryProductsRequest, IReadOnlyList<ProductListItemResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/{id}/products";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/menu-categories/{id}/products");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

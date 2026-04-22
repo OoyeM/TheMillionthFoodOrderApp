@@ -8,9 +8,11 @@ public sealed record ListMenuCategoriesRequest([property: RouteParam] string Bra
 public sealed class ListMenuCategoriesEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<ListMenuCategoriesRequest, IReadOnlyList<MenuCategoryListItemResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/menu-categories");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

@@ -55,9 +55,11 @@ public sealed class UpdateMenuCategoryRequestValidator : Validator<UpdateMenuCat
 public sealed class UpdateMenuCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<UpdateMenuCategoryApiRequest, MenuCategoryResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/menu-categories/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {
