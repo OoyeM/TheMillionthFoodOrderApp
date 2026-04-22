@@ -8,9 +8,11 @@ public sealed record ListShopsRequest([property: RouteParam] string BrandSlug);
 public sealed class ListShopsEndpoint(IShopService shopService)
     : Endpoint<ListShopsRequest, IReadOnlyList<ShopResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {

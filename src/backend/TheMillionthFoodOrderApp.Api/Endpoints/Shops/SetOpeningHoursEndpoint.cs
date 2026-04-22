@@ -82,9 +82,11 @@ public sealed class SetOpeningHoursRequestValidator : Validator<SetOpeningHoursR
 public sealed class SetOpeningHoursEndpoint(IOpeningHoursService openingHoursService)
     : Endpoint<SetOpeningHoursRequest, OpeningHoursResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}/opening-hours";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/shops/{id}/opening-hours");
+        Put(Route);
         // TODO: Require ShopManager role when auth is implemented (US-FP-039)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<SetOpeningHoursRequest>>();

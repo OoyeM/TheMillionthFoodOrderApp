@@ -59,9 +59,11 @@ public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
 public sealed class UpdateShopEndpoint(IShopService shopService)
     : Endpoint<UpdateShopRequest, ShopResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/shops/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {

@@ -10,9 +10,11 @@ public sealed record ActivateShopRequest(
 public sealed class ActivateShopEndpoint(IShopService shopService)
     : Endpoint<ActivateShopRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}/activate";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/shops/{id}/activate");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

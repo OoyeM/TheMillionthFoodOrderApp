@@ -70,9 +70,11 @@ public sealed class CreateShopRequestValidator : Validator<CreateShopRequest>
 public sealed class CreateShopEndpoint(IShopService shopService)
     : Endpoint<CreateShopRequest, ShopResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/shops");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {
