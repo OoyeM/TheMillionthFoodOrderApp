@@ -10,9 +10,11 @@ public sealed record DeactivateShopRequest(
 public sealed class DeactivateShopEndpoint(IShopService shopService)
     : Endpoint<DeactivateShopRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}/deactivate";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/shops/{id}/deactivate");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

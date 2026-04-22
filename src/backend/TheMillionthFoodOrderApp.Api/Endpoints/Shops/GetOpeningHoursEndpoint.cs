@@ -10,9 +10,11 @@ public sealed record GetOpeningHoursRequest(
 public sealed class GetOpeningHoursEndpoint(IOpeningHoursService openingHoursService)
     : Endpoint<GetOpeningHoursRequest, OpeningHoursResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}/opening-hours";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops/{id}/opening-hours");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetOpeningHoursRequest>>();
         Summary(s =>

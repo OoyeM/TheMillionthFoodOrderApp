@@ -10,9 +10,11 @@ public sealed record GetShopStatusRequest(
 public sealed class GetShopStatusEndpoint(IOpeningHoursService openingHoursService)
     : Endpoint<GetShopStatusRequest, ShopStatusResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}/status";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops/{id}/status");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetShopStatusRequest>>();
         Summary(s =>

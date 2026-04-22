@@ -10,9 +10,11 @@ public sealed record GetShopRequest(
 public sealed class GetShopEndpoint(IShopService shopService)
     : Endpoint<GetShopRequest, ShopResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{id}";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops/{id}");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {
