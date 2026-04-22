@@ -78,9 +78,11 @@ public sealed class UpdateProductRequestValidator : Validator<UpdateProductApiRe
 public sealed class UpdateProductEndpoint(IProductService productService)
     : Endpoint<UpdateProductApiRequest, ProductResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/products/{id}";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/products/{id}");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {
