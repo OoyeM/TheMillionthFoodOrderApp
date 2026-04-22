@@ -183,3 +183,7 @@ app.MapReverseProxy(proxyPipeline =>
 app.MapDefaultEndpoints();
 
 app.Run();
+
+// Exposes the auto-generated Program class so WebApplicationFactory<Program> can reference it.
+// Zero runtime behavior impact — only enables test projects to reference this entry point.
+public partial class Program { }
