@@ -43,9 +43,11 @@ public sealed class InviteBrandStaffRequestValidator : Validator<InviteBrandStaf
 public sealed class InviteBrandStaffEndpoint(IBrandStaffService brandStaffService)
     : Endpoint<InviteBrandStaffRequest, StaffMemberResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/staff";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/staff");
+        Post(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<InviteBrandStaffRequest>>();
         Summary(s =>
