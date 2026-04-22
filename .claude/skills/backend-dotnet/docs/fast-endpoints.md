@@ -6,37 +6,52 @@ API endpoint framework — one class per endpoint, replaces controllers and Medi
 ## Patterns
 
 ### Endpoint Structure
-One class per endpoint. Request/response records + validator + endpoint class in the same file (or split for large validators).
+One class per endpoint. Keep the request record, endpoint class, and validator in the same file, in this order: **request first, endpoint second, validator last** (or split into separate files for large validators).
 
 ```csharp
-public sealed record GetThingRequest([property: RouteParam] string Slug);
+public sealed record UpdateThingRequest(
+    [property: RouteParam] string Slug,
+    string Name,
+    string Currency);
 
-public sealed class GetThingEndpoint(IThingService service)
-    : Endpoint<GetThingRequest, ThingResponse>
+public sealed class UpdateThingEndpoint(IThingService service)
+    : Endpoint<UpdateThingRequest, ThingResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/things/{slug}";
+
     public override void Configure()
     {
-        Get("/api/things/{slug}");
+        Put(Route);
         AllowAnonymous(); // or Roles("Admin"), Policies("BrandAccess"), etc.
-        PreProcessor<BrandScopedPreProcessor<GetThingRequest>>(); // for brand-scoped routes
+        PreProcessor<BrandScopedPreProcessor<UpdateThingRequest>>(); // for brand-scoped routes
         Summary(s =>
         {
-            s.Summary = "Get a thing";
-            s.Description = "Returns the thing for the given slug.";
-            s.Response<ThingResponse>(200, "Thing found.");
+            s.Summary = "Update a thing";
+            s.Description = "Updates the thing for the given slug.";
+            s.Response<ThingResponse>(200, "Thing updated.");
+            s.Response(400, "Validation error.");
             s.Response(404, "Thing not found.");
         });
     }
 
-    public override async Task HandleAsync(GetThingRequest req, CancellationToken ct)
+    public override async Task HandleAsync(UpdateThingRequest req, CancellationToken ct)
     {
-        var result = await service.GetAsync(req.Slug, ct);
+        var result = await service.UpdateAsync(req, ct);
         if (result is null)
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
             return;
         }
         await HttpContext.Response.SendAsync(result, statusCode: 200, cancellation: ct);
+    }
+}
+
+public sealed class UpdateThingValidator : Validator<UpdateThingRequest>
+{
+    public UpdateThingValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Currency).Length(3); // ISO 4217
     }
 }
 ```

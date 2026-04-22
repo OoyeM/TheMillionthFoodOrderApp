@@ -26,6 +26,51 @@ Backend starts API (http://localhost:5102), BFF (http://localhost:5261), SQL Ser
 
 Mock auth is enabled by default in dev — no external services needed. Visit `/bff/login?mock=brand-admin@frietjes` to sign in with a test persona. Set `Authentication:UseMockAuth=false` to use Keycloak.
 
+## System Architecture
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend Layer (port 5173)"]
+        SF[Storefront<br/>Customer PWA]
+        AD[Admin Panel<br/>Brand CMS]
+        POS[POS<br/>In-Store]
+    end
+
+    subgraph BFF["BFF Layer (port 5261)"]
+        AUTH[BFF .NET<br/>OIDC + Sessions]
+        YARP[YARP Proxy<br/>+ Bearer Token]
+    end
+
+    subgraph API["API Layer (port 5102)"]
+        FE[FastEndpoints<br/>42 routes]
+        APP[Application<br/>12 services]
+        DOM[Domain<br/>9 aggregates]
+    end
+
+    subgraph Infra["Infrastructure"]
+        PDB[(PlatformDb<br/>shared)]
+        BDB[(BrandDb<br/>per-brand)]
+        KC[Keycloak<br/>OIDC]
+    end
+
+    ASPIRE([.NET Aspire Orchestrator])
+
+    SF & AD & POS -->|"/api/* + /bff/*"| AUTH
+    AUTH --> YARP
+    YARP -->|"Bearer tokens"| FE
+    FE --> APP --> DOM
+    APP --> PDB & BDB
+    AUTH -.-> KC
+    ASPIRE -.->|manages| PDB & BDB & KC
+
+    style Frontend fill:#dbe4ff,stroke:#4a9eed
+    style BFF fill:#e5dbff,stroke:#8b5cf6
+    style API fill:#d3f9d8,stroke:#22c55e
+    style Infra fill:#f0fdf4,stroke:#22c55e
+```
+
+Domain bounded contexts and tech stack are detailed in the nested CLAUDE.md files (see backend and frontend).
+
 ## Key Architecture Decisions
 
 - **Database:** Azure SQL with database-per-brand isolation — one SQL Server instance, platform DB for shared data, brand DBs created dynamically at runtime
@@ -41,6 +86,16 @@ Mock auth is enabled by default in dev — no external services needed. Visit `/
 - Menu categories: brand-scoped, multilingual, ordered — products assigned to at most one category with configurable display order within each category
 - Orders: online + in-store channels, configurable lifecycle per shop
 - Belgian market: VAT (6% takeaway / 21% eat-in), languages (NL, FR, DE)
+
+## Planning & User Stories
+
+The [dependency tree](docs/dependency-tree.md) is the **source of truth** for what to build next. It tracks all 70 user stories (US-FP-001 through US-FP-070) across 5 layers with dependency chains and completion status. Always consult it when:
+- Deciding which story to work on next (pick stories whose dependencies are all ✅)
+- Understanding what a story unlocks downstream
+- Planning parallel work across worktrees (4-worktree strategy documented there)
+
+Full user stories: `docs/extract-prd/user-stories/frietjes-platform.md`
+PRD: `docs/extract-prd/new-app/frietjes-platform.md`
 
 ## Repository
 
