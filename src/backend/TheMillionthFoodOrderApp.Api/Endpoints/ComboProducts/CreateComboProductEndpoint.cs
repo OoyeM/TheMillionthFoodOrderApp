@@ -61,9 +61,11 @@ public sealed class CreateComboProductRequestValidator : Validator<CreateComboPr
 public sealed class CreateComboProductEndpoint(IProductService productService)
     : Endpoint<CreateComboProductApiRequest, ProductResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/combo-products";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/combo-products");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {
