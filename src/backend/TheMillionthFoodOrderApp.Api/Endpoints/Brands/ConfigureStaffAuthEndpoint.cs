@@ -24,9 +24,11 @@ public sealed class ConfigureStaffAuthRequestValidator : Validator<ConfigureStaf
 public sealed class ConfigureStaffAuthEndpoint(IBrandService brandService)
     : Endpoint<ConfigureStaffAuthRequest, BrandResponse>
 {
+    public const string Route = "/api/brands/{slug}/staff-auth";
+
     public override void Configure()
     {
-        Put("/api/brands/{slug}/staff-auth");
+        Put(Route);
         AllowAnonymous();
         Summary(s =>
         {

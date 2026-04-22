@@ -8,9 +8,11 @@ public sealed record GetBrandRequest([property: RouteParam] Guid Id);
 public sealed class GetBrandEndpoint(IBrandService brandService)
     : Endpoint<GetBrandRequest, BrandResponse>
 {
+    public const string Route = "/api/brands/{id}";
+
     public override void Configure()
     {
-        Get("/api/brands/{id}");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {
