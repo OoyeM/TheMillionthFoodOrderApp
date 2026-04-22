@@ -12,9 +12,11 @@ public sealed record GetBrandThemeRequest([property: RouteParam] string BrandSlu
 public sealed class GetBrandThemeEndpoint(IBrandSettingsService brandSettingsService)
     : Endpoint<GetBrandThemeRequest, BrandThemeResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/theme";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/theme");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetBrandThemeRequest>>();
         Summary(s =>

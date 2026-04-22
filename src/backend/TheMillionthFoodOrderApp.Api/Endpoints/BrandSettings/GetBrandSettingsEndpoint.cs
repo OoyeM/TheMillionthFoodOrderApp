@@ -8,9 +8,11 @@ public sealed record GetBrandSettingsRequest([property: RouteParam] string Brand
 public sealed class GetBrandSettingsEndpoint(IBrandSettingsService brandSettingsService)
     : Endpoint<GetBrandSettingsRequest, BrandSettingsResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/settings";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/settings");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetBrandSettingsRequest>>();
         Summary(s =>

@@ -31,9 +31,11 @@ public sealed class UpdateBrandSettingsRequestValidator : Validator<UpdateBrandS
 public sealed class UpdateBrandSettingsEndpoint(IBrandSettingsService brandSettingsService)
     : Endpoint<UpdateBrandSettingsRequest, BrandSettingsResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/settings";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/settings");
+        Put(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<UpdateBrandSettingsRequest>>();
         Summary(s =>

@@ -62,9 +62,11 @@ public sealed class UpdateBrandThemingRequestValidator : Validator<UpdateBrandTh
 public sealed class UpdateBrandThemingEndpoint(IBrandSettingsService brandSettingsService)
     : Endpoint<UpdateBrandThemingRequest, BrandSettingsResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/settings/theming";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/settings/theming");
+        Put(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<UpdateBrandThemingRequest>>();
         Summary(s =>
