@@ -72,9 +72,11 @@ public sealed class CreateModifierGroupRequestValidator : Validator<CreateModifi
 public sealed class CreateModifierGroupEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<CreateModifierGroupApiRequest, ModifierGroupResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/modifier-groups";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/modifier-groups");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

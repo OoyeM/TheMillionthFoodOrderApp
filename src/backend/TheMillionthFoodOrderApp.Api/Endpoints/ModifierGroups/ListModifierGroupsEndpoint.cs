@@ -8,9 +8,11 @@ public sealed record ListModifierGroupsRequest([property: RouteParam] string Bra
 public sealed class ListModifierGroupsEndpoint(IModifierGroupService modifierGroupService)
     : Endpoint<ListModifierGroupsRequest, IReadOnlyList<ModifierGroupListItemResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/modifier-groups";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/modifier-groups");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {
