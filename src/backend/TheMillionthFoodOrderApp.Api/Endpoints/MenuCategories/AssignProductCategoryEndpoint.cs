@@ -24,9 +24,11 @@ public sealed class AssignProductCategoryRequestValidator : Validator<AssignProd
 public sealed class AssignProductCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<AssignProductCategoryApiRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/assign-product";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/menu-categories/assign-product");
+        Post(Route);
         AllowAnonymous();
         Summary(s =>
         {

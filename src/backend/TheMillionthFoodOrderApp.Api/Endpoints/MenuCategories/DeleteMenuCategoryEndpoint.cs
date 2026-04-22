@@ -10,9 +10,11 @@ public sealed record DeleteMenuCategoryRequest(
 public sealed class DeleteMenuCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<DeleteMenuCategoryRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/{id}";
+
     public override void Configure()
     {
-        Delete("/api/brands/{brandSlug}/menu-categories/{id}");
+        Delete(Route);
         AllowAnonymous();
         Summary(s =>
         {

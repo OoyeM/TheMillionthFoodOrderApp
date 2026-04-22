@@ -24,9 +24,11 @@ public sealed class ReorderMenuCategoryRequestValidator : Validator<ReorderMenuC
 public sealed class ReorderMenuCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<ReorderMenuCategoryApiRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/{id}/sort-order";
+
     public override void Configure()
     {
-        Patch("/api/brands/{brandSlug}/menu-categories/{id}/sort-order");
+        Patch(Route);
         AllowAnonymous();
         Summary(s =>
         {

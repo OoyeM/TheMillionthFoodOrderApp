@@ -10,9 +10,11 @@ public sealed record GetMenuCategoryRequest(
 public sealed class GetMenuCategoryEndpoint(IMenuCategoryService menuCategoryService)
     : Endpoint<GetMenuCategoryRequest, MenuCategoryResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/menu-categories/{id}";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/menu-categories/{id}");
+        Get(Route);
         AllowAnonymous();
         Summary(s =>
         {
