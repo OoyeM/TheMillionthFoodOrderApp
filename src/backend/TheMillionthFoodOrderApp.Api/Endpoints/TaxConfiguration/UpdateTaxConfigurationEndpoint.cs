@@ -46,9 +46,11 @@ public sealed class UpdateTaxConfigurationValidator : Validator<UpdateTaxConfigu
 public sealed class UpdateTaxConfigurationEndpoint(ITaxConfigurationService service)
     : Endpoint<UpdateTaxConfigurationApiRequest, TaxConfigurationResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/tax-configuration";
+
     public override void Configure()
     {
-        Put("/api/brands/{brandSlug}/tax-configuration");
+        Put(Route);
         // TODO: Require BrandAdmin role when auth is implemented (US-FP-046)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<UpdateTaxConfigurationApiRequest>>();

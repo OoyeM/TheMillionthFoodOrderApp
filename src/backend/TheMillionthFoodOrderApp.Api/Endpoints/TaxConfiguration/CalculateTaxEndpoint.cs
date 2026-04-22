@@ -28,9 +28,11 @@ public sealed class CalculateTaxValidator : Validator<CalculateTaxApiRequest>
 public sealed class CalculateTaxEndpoint(ITaxConfigurationService service)
     : Endpoint<CalculateTaxApiRequest, TaxBreakdownDto>
 {
+    public const string Route = "/api/brands/{brandSlug}/tax-configuration/calculate";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/tax-configuration/calculate");
+        Post(Route);
         // TODO: Require appropriate role when auth is implemented (US-FP-046)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<CalculateTaxApiRequest>>();

@@ -8,9 +8,11 @@ public sealed record GetTaxConfigurationRequest([property: RouteParam] string Br
 public sealed class GetTaxConfigurationEndpoint(ITaxConfigurationService service)
     : Endpoint<GetTaxConfigurationRequest, TaxConfigurationResponse>
 {
+    public const string Route = "/api/brands/{brandSlug}/tax-configuration";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/tax-configuration");
+        Get(Route);
         // TODO: Require BrandAdmin role when auth is implemented (US-FP-046)
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<GetTaxConfigurationRequest>>();
