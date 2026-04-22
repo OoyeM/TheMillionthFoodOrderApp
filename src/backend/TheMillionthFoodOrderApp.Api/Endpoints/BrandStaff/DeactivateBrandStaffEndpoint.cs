@@ -11,9 +11,11 @@ public sealed record DeactivateBrandStaffRequest(
 public sealed class DeactivateBrandStaffEndpoint(IBrandStaffService brandStaffService)
     : Endpoint<DeactivateBrandStaffRequest>
 {
+    public const string Route = "/api/brands/{brandSlug}/staff/{roleId}/deactivate";
+
     public override void Configure()
     {
-        Post("/api/brands/{brandSlug}/staff/{roleId}/deactivate");
+        Post(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<DeactivateBrandStaffRequest>>();
         Summary(s =>

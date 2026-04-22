@@ -10,9 +10,11 @@ public sealed record ListShopStaffRequest(
 public sealed class ListShopStaffEndpoint(IBrandStaffService brandStaffService)
     : Endpoint<ListShopStaffRequest, IReadOnlyList<StaffMemberResponse>>
 {
+    public const string Route = "/api/brands/{brandSlug}/shops/{shopId}/staff";
+
     public override void Configure()
     {
-        Get("/api/brands/{brandSlug}/shops/{shopId}/staff");
+        Get(Route);
         AllowAnonymous();
         PreProcessor<BrandScopedPreProcessor<ListShopStaffRequest>>();
         Summary(s =>
