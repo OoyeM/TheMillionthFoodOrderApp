@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -11,8 +10,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.OrderLifecycle;
 /// Integration tests for order lifecycle CRUD operations.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -25,7 +24,7 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
     private static string ShopsUrl(string brandSlug) =>
         $"/api/brands/{brandSlug}/shops";
 
-    private static async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
+    private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
     {
         var uniqueSlug = $"shop-{Guid.NewGuid():N}";
         var request = new
@@ -45,16 +44,16 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
         };
 
         var response = await client.PostAsJsonAsync(ShopsUrl(brandSlug), request);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var shop = await response.Content.ReadFromJsonAsync<ShopResponse>();
-        shop.ShouldNotBeNull();
-        return shop.Id;
+        await Assert.That(shop).IsNotNull();
+        return shop!.Id;
     }
 
     // ── GET — lazy init ───────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetOrderLifecycle_NewShop_ReturnsDefault()
     {
         var client = CreateClient();
@@ -62,31 +61,31 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.GetAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OrderLifecycleResponse>();
-        result.ShouldNotBeNull();
-        result.ShopId.ShouldBe(shopId);
-        result.Statuses.Count.ShouldBe(6);
-        result.Transitions.Count.ShouldBe(5);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.ShopId).IsEqualTo(shopId);
+        await Assert.That(result.Statuses.Count).IsEqualTo(6);
+        await Assert.That(result.Transitions.Count).IsEqualTo(5);
 
         // Default statuses in order
-        result.Statuses[0].Name.ShouldBe("Placed");
-        result.Statuses[0].SystemKey.ShouldBe("placed");
-        result.Statuses[0].IsTerminal.ShouldBeFalse();
+        await Assert.That(result.Statuses[0].Name).IsEqualTo("Placed");
+        await Assert.That(result.Statuses[0].SystemKey).IsEqualTo("placed");
+        await Assert.That(result.Statuses[0].IsTerminal).IsFalse();
 
-        result.Statuses[4].Name.ShouldBe("Picked Up");
-        result.Statuses[4].SystemKey.ShouldBe("picked_up");
-        result.Statuses[4].IsTerminal.ShouldBeTrue();
+        await Assert.That(result.Statuses[4].Name).IsEqualTo("Picked Up");
+        await Assert.That(result.Statuses[4].SystemKey).IsEqualTo("picked_up");
+        await Assert.That(result.Statuses[4].IsTerminal).IsTrue();
 
-        result.Statuses[5].Name.ShouldBe("Delivered");
-        result.Statuses[5].SystemKey.ShouldBe("delivered");
-        result.Statuses[5].IsTerminal.ShouldBeTrue();
+        await Assert.That(result.Statuses[5].Name).IsEqualTo("Delivered");
+        await Assert.That(result.Statuses[5].SystemKey).IsEqualTo("delivered");
+        await Assert.That(result.Statuses[5].IsTerminal).IsTrue();
     }
 
     // ── PUT — valid config ────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_ValidMinimalConfig_Returns200()
     {
         var client = CreateClient();
@@ -107,19 +106,19 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OrderLifecycleResponse>();
-        result.ShouldNotBeNull();
-        result.Statuses.Count.ShouldBe(2);
-        result.Transitions.Count.ShouldBe(1);
-        result.Statuses[0].Name.ShouldBe("Placed");
-        result.Statuses[1].Name.ShouldBe("Done");
-        result.Statuses[1].IsTerminal.ShouldBeTrue();
-        result.Statuses[1].ColorHex.ShouldBe("#16a34a");
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Statuses.Count).IsEqualTo(2);
+        await Assert.That(result.Transitions.Count).IsEqualTo(1);
+        await Assert.That(result.Statuses[0].Name).IsEqualTo("Placed");
+        await Assert.That(result.Statuses[1].Name).IsEqualTo("Done");
+        await Assert.That(result.Statuses[1].IsTerminal).IsTrue();
+        await Assert.That(result.Statuses[1].ColorHex).IsEqualTo("#16a34a");
     }
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_ReplaceExisting_Returns200()
     {
         var client = CreateClient();
@@ -146,17 +145,17 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OrderLifecycleResponse>();
-        result.ShouldNotBeNull();
-        result.Statuses.Count.ShouldBe(3);
-        result.Transitions.Count.ShouldBe(2);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Statuses.Count).IsEqualTo(3);
+        await Assert.That(result.Transitions.Count).IsEqualTo(2);
     }
 
     // ── PUT — validation errors ──────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_LessThan2Statuses_Returns400()
     {
         var client = CreateClient();
@@ -173,10 +172,10 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_NoTerminalStatus_Returns400()
     {
         var client = CreateClient();
@@ -197,10 +196,10 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_DuplicateSortOrders_Returns400()
     {
         var client = CreateClient();
@@ -218,10 +217,10 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task ConfigureLifecycle_InvalidTransitionReference_Returns400()
     {
         var client = CreateClient();
@@ -242,12 +241,12 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.PutAsJsonAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── POST /reset ──────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ResetToDefault_Returns200WithDefaultStatuses()
     {
         var client = CreateClient();
@@ -271,18 +270,18 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
         // Reset to default
         var response = await client.PostAsync(ResetUrl(IntegrationTestBase.AlphaSlug, shopId), null);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OrderLifecycleResponse>();
-        result.ShouldNotBeNull();
-        result.Statuses.Count.ShouldBe(6); // Back to default 6 statuses
-        result.Transitions.Count.ShouldBe(5);
-        result.Statuses[0].Name.ShouldBe("Placed");
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Statuses.Count).IsEqualTo(6); // Back to default 6 statuses
+        await Assert.That(result.Transitions.Count).IsEqualTo(5);
+        await Assert.That(result.Statuses[0].Name).IsEqualTo("Placed");
     }
 
     // ── 404 cases ─────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetOrderLifecycle_NonExistentShop_Returns404()
     {
         var client = CreateClient();
@@ -290,10 +289,10 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.GetAsync(LifecycleUrl(IntegrationTestBase.AlphaSlug, nonExistentShopId));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task GetOrderLifecycle_NonExistentBrand_Returns404()
     {
         var client = CreateClient();
@@ -301,6 +300,6 @@ public sealed class OrderLifecycleCrudTests(IntegrationTestBase fixture)
 
         var response = await client.GetAsync(LifecycleUrl("non-existent-brand", shopId));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 }

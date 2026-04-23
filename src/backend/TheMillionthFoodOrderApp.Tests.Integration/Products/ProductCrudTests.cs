@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,8 +9,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Products;
 /// Integration tests for product CRUD operations.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ProductCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -42,7 +41,7 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_Returns201_WithTranslations()
     {
         var client = CreateClient();
@@ -51,19 +50,19 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
-        product.ShouldNotBeNull();
-        product.Id.ShouldNotBe(Guid.Empty);
-        product.BasePrice.Amount.ShouldBe(3.50m);
-        product.BasePrice.Currency.ShouldBe("EUR");
-        product.Translations.Count.ShouldBe(2);
-        product.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Frietje Speciaal");
-        product.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Frites Spécial");
+        await Assert.That(product).IsNotNull();
+        await Assert.That(product!.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(product.BasePrice.Amount).IsEqualTo(3.50m);
+        await Assert.That(product.BasePrice.Currency).IsEqualTo("EUR");
+        await Assert.That(product.Translations.Count).IsEqualTo(2);
+        await Assert.That(product.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Frietje Speciaal")).IsTrue();
+        await Assert.That(product.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Frites Spécial")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_WithoutTranslations_Returns400()
     {
         var client = CreateClient();
@@ -76,10 +75,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_WithNegativePrice_Returns400()
     {
         var client = CreateClient();
@@ -88,10 +87,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_WithZeroPrice_Returns400()
     {
         var client = CreateClient();
@@ -100,10 +99,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_WithInvalidLanguageCode_Returns400()
     {
         var client = CreateClient();
@@ -116,10 +115,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateProduct_WithDuplicateLanguageCodes_Returns400()
     {
         var client = CreateClient();
@@ -136,12 +135,12 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Get ───────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetProduct_Returns200_WithAllTranslations()
     {
         var client = CreateClient();
@@ -156,14 +155,14 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var getResponse = await client.GetAsync(
             ProductUrl(IntegrationTestBase.AlphaSlug, created!.Id));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var product = await getResponse.Content.ReadFromJsonAsync<ProductResponse>();
-        product.ShouldNotBeNull();
-        product.Id.ShouldBe(created.Id);
-        product.Translations.Count.ShouldBe(2);
+        await Assert.That(product).IsNotNull();
+        await Assert.That(product!.Id).IsEqualTo(created.Id);
+        await Assert.That(product.Translations.Count).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task GetProduct_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -171,12 +170,12 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             ProductUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── List ──────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ListProducts_ReturnsAll_ExcludesSoftDeleted()
     {
         var client = CreateClient();
@@ -196,17 +195,17 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
 
         // List should contain product2 but not product1
         var listResponse = await client.GetAsync(ProductsUrl(brand));
-        listResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(listResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var products = await listResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
-        products.ShouldContain(p => p.Id == product2!.Id);
-        products.ShouldNotContain(p => p.Id == product1.Id);
+        await Assert.That(products).IsNotNull();
+        await Assert.That(products!.Any(p => p.Id == product2!.Id)).IsTrue();
+        await Assert.That(products.Any(p => p.Id == product1.Id)).IsFalse();
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task UpdateProduct_Returns200_WithUpdatedData()
     {
         var client = CreateClient();
@@ -232,16 +231,16 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             ProductUrl(brand, created!.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var updated = await updateResponse.Content.ReadFromJsonAsync<ProductResponse>();
-        updated.ShouldNotBeNull();
-        updated.BasePrice.Amount.ShouldBe(4.50m);
-        updated.Translations.Count.ShouldBe(2);
-        updated.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Updated Name");
-        updated.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour");
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.BasePrice.Amount).IsEqualTo(4.50m);
+        await Assert.That(updated.Translations.Count).IsEqualTo(2);
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Updated Name")).IsTrue();
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateProduct_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -257,10 +256,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ProductUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()), updateRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateProduct_ShrinkTranslations_RemovesOldLanguage()
     {
         var client = CreateClient();
@@ -278,7 +277,7 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         };
         var createResponse = await client.PostAsJsonAsync(ProductsUrl(brand), createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
-        created!.Translations.Count.ShouldBe(2);
+        await Assert.That(created!.Translations.Count).IsEqualTo(2);
 
         // Update to NL only — FR should be removed
         var updateRequest = new
@@ -293,14 +292,14 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             ProductUrl(brand, created.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var updated = await updateResponse.Content.ReadFromJsonAsync<ProductResponse>();
-        updated!.Translations.Count.ShouldBe(1);
-        updated.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Eén Taal");
-        updated.Translations.ShouldNotContain(t => t.LanguageCode == "fr");
+        await Assert.That(updated!.Translations.Count).IsEqualTo(1);
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Eén Taal")).IsTrue();
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "fr")).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateProduct_WithDuplicateLanguageCodes_Returns400()
     {
         var client = CreateClient();
@@ -324,12 +323,12 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ProductUrl(brand, created!.Id), updateRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Delete (soft-delete) ──────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task DeleteProduct_Returns204_SoftDeletes()
     {
         var client = CreateClient();
@@ -342,14 +341,14 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
 
         // Delete
         var deleteResponse = await client.DeleteAsync(ProductUrl(brand, created!.Id));
-        deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(deleteResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // Get by id should return 404 (soft-deleted, filtered by global query filter)
         var getResponse = await client.GetAsync(ProductUrl(brand, created.Id));
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteProduct_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -357,10 +356,10 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
         var response = await client.DeleteAsync(
             ProductUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteProduct_AlreadyDeleted_Returns404()
     {
         var client = CreateClient();
@@ -374,6 +373,6 @@ public sealed class ProductCrudTests(IntegrationTestBase fixture)
 
         // Second delete should 404 (already filtered out)
         var secondDelete = await client.DeleteAsync(ProductUrl(brand, created.Id));
-        secondDelete.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(secondDelete.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 }

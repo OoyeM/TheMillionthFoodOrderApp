@@ -2,7 +2,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using Shouldly;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -13,8 +12,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Provisioning;
 /// Uses a real SQL Server via Testcontainers (shared container from <see cref="IntegrationTestBase"/>).
 /// The provisioner is instantiated directly with test-scoped configuration — it is not DI-registered.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class BrandDatabaseProvisionerTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     /// <summary>
     /// Builds an IConfiguration pointing the "platform" connection string at the test SQL container.
@@ -62,24 +61,24 @@ public sealed class BrandDatabaseProvisionerTests(IntegrationTestBase fixture)
 
     // ── Tests ─────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task Provisioner_CreatesBrandDatabase_WhenNotExists()
     {
         const string slug = "test-prov-create";
         var provisioner = BuildProvisioner();
 
         var existsBefore = await DatabaseExistsAsync(slug);
-        existsBefore.ShouldBeFalse();
+        await Assert.That(existsBefore).IsFalse();
 
         await provisioner.HandleAsync(
             new TheMillionthFoodOrderApp.Domain.Brands.BrandCreatedEvent(Guid.CreateVersion7(), "Test Prov Create", slug),
             CancellationToken.None);
 
         var existsAfter = await DatabaseExistsAsync(slug);
-        existsAfter.ShouldBeTrue();
+        await Assert.That(existsAfter).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Provisioner_AppliesMigrations_ToNewDatabase()
     {
         const string slug = "test-prov-migrations";
@@ -90,10 +89,10 @@ public sealed class BrandDatabaseProvisionerTests(IntegrationTestBase fixture)
             CancellationToken.None);
 
         var migrationCount = await GetAppliedMigrationCountAsync(slug);
-        migrationCount.ShouldBeGreaterThan(0);
+        await Assert.That(migrationCount).IsGreaterThan(0);
     }
 
-    [Fact]
+    [Test]
     public async Task Provisioner_IsIdempotent_WhenCalledTwice()
     {
         const string slug = "test-prov-idempotent";
@@ -105,17 +104,24 @@ public sealed class BrandDatabaseProvisionerTests(IntegrationTestBase fixture)
         await provisioner.HandleAsync(@event, CancellationToken.None);
 
         // Second call — should be a no-op, no exception thrown
-        var exception = await Record.ExceptionAsync(
-            () => provisioner.HandleAsync(@event, CancellationToken.None));
+        Exception? exception = null;
+        try
+        {
+            await provisioner.HandleAsync(@event, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
 
-        exception.ShouldBeNull();
+        await Assert.That(exception).IsNull();
 
         // Database should still be correctly provisioned
         var existsAfter = await DatabaseExistsAsync(slug);
-        existsAfter.ShouldBeTrue();
+        await Assert.That(existsAfter).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Provisioner_VerifiesDatabase_AfterProvisioning()
     {
         const string slug = "test-prov-verify";
@@ -126,29 +132,43 @@ public sealed class BrandDatabaseProvisionerTests(IntegrationTestBase fixture)
             CancellationToken.None);
 
         // Directly call VerifyDatabaseProvisionedAsync — it should not throw
-        var exception = await Record.ExceptionAsync(
-            () => provisioner.VerifyDatabaseProvisionedAsync(
+        Exception? exception = null;
+        try
+        {
+            await provisioner.VerifyDatabaseProvisionedAsync(
                 fixture.PlatformConnectionString,
                 fixture.GetBrandConnectionString(slug),
                 slug,
-                CancellationToken.None));
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
 
-        exception.ShouldBeNull();
+        await Assert.That(exception).IsNull();
     }
 
-    [Fact]
+    [Test]
     public async Task Provisioner_HandlesInvalidSlug_Gracefully()
     {
         var provisioner = BuildProvisioner();
 
         // Empty slug produces an empty database name after sanitization — ArgumentException expected
-        var exception = await Record.ExceptionAsync(
-            () => provisioner.HandleAsync(
+        Exception? exception = null;
+        try
+        {
+            await provisioner.HandleAsync(
                 new TheMillionthFoodOrderApp.Domain.Brands.BrandCreatedEvent(
                     Guid.CreateVersion7(), "Invalid Brand", string.Empty),
-                CancellationToken.None));
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
 
-        exception.ShouldNotBeNull();
-        exception.ShouldBeOfType<ArgumentException>();
+        await Assert.That(exception).IsNotNull();
+        await Assert.That(exception).IsTypeOf<ArgumentException>();
     }
 }

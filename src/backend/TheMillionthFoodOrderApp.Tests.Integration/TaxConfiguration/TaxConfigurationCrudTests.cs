@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.TaxConfiguration;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -13,8 +12,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.TaxConfiguration;
 /// NOTE: The BrandDbSeeder only runs in the Development environment, not in Testing.
 /// Tests that need a pre-existing config must first PUT one via the API.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -31,7 +30,7 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
     /// returns Takeaway=6 and EatIn=21.
     /// The BrandDbSeeder does not run in Testing, so we seed via PUT first.
     /// </summary>
-    [Fact]
+    [Test]
     public async Task GetTaxConfiguration_AfterSeeding_ReturnsBelgianDefaults()
     {
         // Arrange — seed Belgian defaults via PUT (upsert creates if missing)
@@ -47,28 +46,28 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         };
 
         var putResponse = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), seedRequest);
-        putResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(putResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         // Act
         var response = await client.GetAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var config = await response.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
-        config.ShouldNotBeNull();
-        config.VatRates.Count.ShouldBe(2);
+        await Assert.That(config).IsNotNull();
+        await Assert.That(config!.VatRates.Count).IsEqualTo(2);
 
         var takeaway = config.VatRates.FirstOrDefault(r => r.ConsumptionMode == "Takeaway");
-        takeaway.ShouldNotBeNull();
-        takeaway.RatePercentage.ShouldBe(6m);
+        await Assert.That(takeaway).IsNotNull();
+        await Assert.That(takeaway!.RatePercentage).IsEqualTo(6m);
 
         var eatIn = config.VatRates.FirstOrDefault(r => r.ConsumptionMode == "EatIn");
-        eatIn.ShouldNotBeNull();
-        eatIn.RatePercentage.ShouldBe(21m);
+        await Assert.That(eatIn).IsNotNull();
+        await Assert.That(eatIn!.RatePercentage).IsEqualTo(21m);
     }
 
-    [Fact]
+    [Test]
     public async Task GetTaxConfiguration_NonExistentBrand_Returns404()
     {
         // Arrange
@@ -78,12 +77,12 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(TaxConfigUrl("non-existent-brand"));
 
         // Assert — BrandContextMiddleware returns 404 for unknown brands
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── PUT tax-configuration ────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_ValidRates_Returns200AndUpdatedConfig()
     {
         // Arrange
@@ -102,22 +101,22 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.BetaSlug), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var config = await response.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
-        config.ShouldNotBeNull();
-        config.VatRates.Count.ShouldBe(2);
+        await Assert.That(config).IsNotNull();
+        await Assert.That(config!.VatRates.Count).IsEqualTo(2);
 
         var takeaway = config.VatRates.FirstOrDefault(r => r.ConsumptionMode == "Takeaway");
-        takeaway.ShouldNotBeNull();
-        takeaway.RatePercentage.ShouldBe(7m);
+        await Assert.That(takeaway).IsNotNull();
+        await Assert.That(takeaway!.RatePercentage).IsEqualTo(7m);
 
         var eatIn = config.VatRates.FirstOrDefault(r => r.ConsumptionMode == "EatIn");
-        eatIn.ShouldNotBeNull();
-        eatIn.RatePercentage.ShouldBe(22m);
+        await Assert.That(eatIn).IsNotNull();
+        await Assert.That(eatIn!.RatePercentage).IsEqualTo(22m);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_InvalidRate_Returns400()
     {
         // Arrange — rate > 100 violates FluentValidation rule
@@ -136,10 +135,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_MissingMode_Returns400()
     {
         // Arrange — only one consumption mode provided; domain requires exactly one entry per mode
@@ -157,10 +156,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), request);
 
         // Assert — UpdateRates throws ArgumentException; endpoint maps it to 400
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_InvalidModeName_Returns400()
     {
         // Arrange — "Invalid" is not a recognised ConsumptionMode
@@ -179,10 +178,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), request);
 
         // Assert — FluentValidation rejects unknown mode
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_DuplicateMode_Returns400()
     {
         // Arrange — two Takeaway entries violate the uniqueness rule
@@ -201,10 +200,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), request);
 
         // Assert — FluentValidation rejects duplicate modes
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateTaxConfiguration_PreservesCreatedAtAndBumpsUpdatedAt()
     {
         // Arrange — create initial config
@@ -221,9 +220,9 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         };
 
         var createResponse = await client.PutAsJsonAsync(TaxConfigUrl(slug), initialRequest);
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(createResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var created = await createResponse.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
-        created.ShouldNotBeNull();
+        await Assert.That(created).IsNotNull();
 
         // Act — update rates
         var updateRequest = new
@@ -236,18 +235,18 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         };
 
         var updateResponse = await client.PutAsJsonAsync(TaxConfigUrl(slug), updateRequest);
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var updated = await updateResponse.Content.ReadFromJsonAsync<TaxConfigurationResponse>();
-        updated.ShouldNotBeNull();
+        await Assert.That(updated).IsNotNull();
 
         // Assert — CreatedAt unchanged, UpdatedAt bumped
-        updated.CreatedAt.ShouldBe(created.CreatedAt);
-        updated.UpdatedAt.ShouldBeGreaterThanOrEqualTo(created.UpdatedAt);
+        await Assert.That(updated!.CreatedAt.ToUnixTimeSeconds()).IsEquivalentTo(created!.CreatedAt.ToUnixTimeSeconds());
+        await Assert.That(updated.UpdatedAt).IsGreaterThanOrEqualTo(created.UpdatedAt);
     }
 
     // ── POST tax-configuration/calculate ────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task CalculateTax_Takeaway_ReturnsCorrect6PercentBreakdown()
     {
         // Arrange — ensure a tax config with 6% Takeaway exists
@@ -275,17 +274,17 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         // net  = Round(3.50 / 1.06, 2, AwayFromZero) = 3.30
         // vat  = 3.50 - 3.30 = 0.20
         // gross = 3.50, rate = 6
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var breakdown = await response.Content.ReadFromJsonAsync<TaxBreakdownDto>();
-        breakdown.ShouldNotBeNull();
-        breakdown.GrossAmount.ShouldBe(3.50m);
-        breakdown.NetAmount.ShouldBe(3.30m);
-        breakdown.VatAmount.ShouldBe(0.20m);
-        breakdown.VatRatePercentage.ShouldBe(6m);
+        await Assert.That(breakdown).IsNotNull();
+        await Assert.That(breakdown!.GrossAmount).IsEqualTo(3.50m);
+        await Assert.That(breakdown.NetAmount).IsEqualTo(3.30m);
+        await Assert.That(breakdown.VatAmount).IsEqualTo(0.20m);
+        await Assert.That(breakdown.VatRatePercentage).IsEqualTo(6m);
     }
 
-    [Fact]
+    [Test]
     public async Task CalculateTax_EatIn_ReturnsCorrect21PercentBreakdown()
     {
         // Arrange — ensure a tax config with 21% EatIn exists
@@ -313,17 +312,17 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         // net  = Round(3.50 / 1.21, 2, AwayFromZero) = 2.89
         // vat  = 3.50 - 2.89 = 0.61
         // gross = 3.50, rate = 21
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var breakdown = await response.Content.ReadFromJsonAsync<TaxBreakdownDto>();
-        breakdown.ShouldNotBeNull();
-        breakdown.GrossAmount.ShouldBe(3.50m);
-        breakdown.NetAmount.ShouldBe(2.89m);
-        breakdown.VatAmount.ShouldBe(0.61m);
-        breakdown.VatRatePercentage.ShouldBe(21m);
+        await Assert.That(breakdown).IsNotNull();
+        await Assert.That(breakdown!.GrossAmount).IsEqualTo(3.50m);
+        await Assert.That(breakdown.NetAmount).IsEqualTo(2.89m);
+        await Assert.That(breakdown.VatAmount).IsEqualTo(0.61m);
+        await Assert.That(breakdown.VatRatePercentage).IsEqualTo(21m);
     }
 
-    [Fact]
+    [Test]
     public async Task CalculateTax_InvalidMode_Returns400()
     {
         // Arrange
@@ -339,6 +338,6 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(CalculateUrl(IntegrationTestBase.AlphaSlug), request);
 
         // Assert — FluentValidation rejects unknown mode
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 }

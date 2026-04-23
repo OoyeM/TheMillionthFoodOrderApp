@@ -1,83 +1,85 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.Products;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.Products;
 
 public sealed class MoneyTests
 {
-    [Fact]
-    public void Create_WithValidData_SetsProperly()
+    [Test]
+    public async Task Create_WithValidData_SetsProperly()
     {
         var money = new Money(3.50m, "EUR");
 
-        money.Amount.ShouldBe(3.50m);
-        money.Currency.ShouldBe("EUR");
+        await Assert.That(money.Amount).IsEqualTo(3.50m);
+        await Assert.That(money.Currency).IsEqualTo("EUR");
     }
 
-    [Fact]
-    public void Create_NormalizesToUpperCase()
+    [Test]
+    public async Task Create_NormalizesToUpperCase()
     {
         var money = new Money(1.00m, "eur");
 
-        money.Currency.ShouldBe("EUR");
+        await Assert.That(money.Currency).IsEqualTo("EUR");
     }
 
-    [Fact]
-    public void Create_WithZeroAmount_Succeeds()
+    [Test]
+    public async Task Create_WithZeroAmount_Succeeds()
     {
         var money = new Money(0m, "EUR");
 
-        money.Amount.ShouldBe(0m);
+        await Assert.That(money.Amount).IsEqualTo(0m);
     }
 
-    [Fact]
-    public void Create_WithNegativeAmount_ThrowsArgumentException()
+    [Test]
+    public async Task Create_WithNegativeAmount_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() => new Money(-1.00m, "EUR"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new Money(-1.00m, "EUR")));
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("EU")]
-    [InlineData("EURO")]
-    [InlineData("   ")]
-    public void Create_WithInvalidCurrency_ThrowsArgumentException(string currency)
+    [Arguments("")]
+    [Arguments("EU")]
+    [Arguments("EURO")]
+    [Arguments("   ")]
+    [Test]
+    public async Task Create_WithInvalidCurrency_ThrowsArgumentException(string currency)
     {
-        Should.Throw<ArgumentException>(() => new Money(1.00m, currency));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new Money(1.00m, currency)));
     }
 
-    [Fact]
-    public void Create_WithNullCurrency_ThrowsArgumentException()
+    [Test]
+    public async Task Create_WithNullCurrency_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() => new Money(1.00m, null!));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new Money(1.00m, null!)));
     }
 
-    [Fact]
-    public void Equality_SameValues_AreEqual()
+    [Test]
+    public async Task Equality_SameValues_AreEqual()
     {
         var a = new Money(3.50m, "EUR");
         var b = new Money(3.50m, "EUR");
 
-        a.ShouldBe(b);
-        (a == b).ShouldBeTrue();
+        await Assert.That(a).IsEqualTo(b);
+        await Assert.That(a == b).IsTrue();
     }
 
-    [Fact]
-    public void Equality_DifferentValues_AreNotEqual()
+    [Test]
+    public async Task Equality_DifferentValues_AreNotEqual()
     {
         var a = new Money(3.50m, "EUR");
         var b = new Money(5.00m, "EUR");
 
-        a.ShouldNotBe(b);
-        (a != b).ShouldBeTrue();
+        await Assert.That(a).IsNotEqualTo(b);
+        await Assert.That(a != b).IsTrue();
     }
 
-    [Fact]
-    public void Equality_DifferentCurrencies_AreNotEqual()
+    [Test]
+    public async Task Equality_DifferentCurrencies_AreNotEqual()
     {
         var a = new Money(3.50m, "EUR");
         var b = new Money(3.50m, "USD");
 
-        a.ShouldNotBe(b);
+        await Assert.That(a).IsNotEqualTo(b);
     }
 }

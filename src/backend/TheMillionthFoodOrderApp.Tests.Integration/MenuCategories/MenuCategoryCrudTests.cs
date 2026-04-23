@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.MenuCategories;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -11,8 +10,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.MenuCategories;
 /// Integration tests for menu category CRUD operations.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -63,7 +62,7 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task CreateCategory_Returns201_WithTranslations()
     {
         var client = CreateClient();
@@ -72,18 +71,18 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             CategoriesUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var category = await response.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        category.ShouldNotBeNull();
-        category.Id.ShouldNotBe(Guid.Empty);
-        category.SortOrder.ShouldBe(1);
-        category.Translations.Count.ShouldBe(2);
-        category.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Starters");
-        category.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Entrées");
+        await Assert.That(category).IsNotNull();
+        await Assert.That(category!.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(category.SortOrder).IsEqualTo(1);
+        await Assert.That(category.Translations.Count).IsEqualTo(2);
+        await Assert.That(category.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Starters")).IsTrue();
+        await Assert.That(category.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Entrées")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task CreateCategory_WithoutTranslations_Returns400()
     {
         var client = CreateClient();
@@ -96,10 +95,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             CategoriesUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateCategory_WithNegativeSortOrder_Returns400()
     {
         var client = CreateClient();
@@ -115,10 +114,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             CategoriesUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateCategory_WithInvalidLanguageCode_Returns400()
     {
         var client = CreateClient();
@@ -131,10 +130,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             CategoriesUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateCategory_WithDuplicateLanguageCodes_Returns400()
     {
         var client = CreateClient();
@@ -151,12 +150,12 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             CategoriesUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Get ───────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetCategory_Returns200_WithAllData()
     {
         var client = CreateClient();
@@ -171,17 +170,17 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var getResponse = await client.GetAsync(
             CategoryUrl(IntegrationTestBase.AlphaSlug, created!.Id));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var category = await getResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        category.ShouldNotBeNull();
-        category.Id.ShouldBe(created.Id);
-        category.SortOrder.ShouldBe(2);
-        category.Translations.Count.ShouldBe(2);
-        category.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Hoofdgerechten");
-        category.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Plats principaux");
+        await Assert.That(category).IsNotNull();
+        await Assert.That(category!.Id).IsEqualTo(created.Id);
+        await Assert.That(category.SortOrder).IsEqualTo(2);
+        await Assert.That(category.Translations.Count).IsEqualTo(2);
+        await Assert.That(category.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Hoofdgerechten")).IsTrue();
+        await Assert.That(category.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Plats principaux")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetCategory_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -189,12 +188,12 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             CategoryUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── List ──────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ListCategories_ReturnsOrderedBySortOrder()
     {
         var client = CreateClient();
@@ -215,25 +214,25 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         // List should be ordered by SortOrder ascending
         var listResponse = await client.GetAsync(CategoriesUrl(brand));
-        listResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(listResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var categories = await listResponse.Content.ReadFromJsonAsync<List<MenuCategoryListItemResponse>>();
-        categories.ShouldNotBeNull();
+        await Assert.That(categories).IsNotNull();
 
         // Verify all three are present
-        categories.ShouldContain(c => c.Id == categoryA!.Id);
-        categories.ShouldContain(c => c.Id == categoryB!.Id);
-        categories.ShouldContain(c => c.Id == categoryC!.Id);
+        await Assert.That(categories!.Any(c => c.Id == categoryA!.Id)).IsTrue();
+        await Assert.That(categories.Any(c => c.Id == categoryB!.Id)).IsTrue();
+        await Assert.That(categories.Any(c => c.Id == categoryC!.Id)).IsTrue();
 
         // Find their positions in the returned list and verify sort order
         var indexA = categories.FindIndex(c => c.Id == categoryA!.Id);
         var indexB = categories.FindIndex(c => c.Id == categoryB!.Id);
         var indexC = categories.FindIndex(c => c.Id == categoryC!.Id);
-        indexA.ShouldBeLessThan(indexB);
-        indexB.ShouldBeLessThan(indexC);
+        await Assert.That(indexA).IsLessThan(indexB);
+        await Assert.That(indexB).IsLessThan(indexC);
     }
 
-    [Fact]
+    [Test]
     public async Task ListCategories_ExcludesSoftDeleted()
     {
         var client = CreateClient();
@@ -253,17 +252,17 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         // List should contain category1 but not category2
         var listResponse = await client.GetAsync(CategoriesUrl(brand));
-        listResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(listResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var categories = await listResponse.Content.ReadFromJsonAsync<List<MenuCategoryListItemResponse>>();
-        categories.ShouldNotBeNull();
-        categories.ShouldContain(c => c.Id == category1!.Id);
-        categories.ShouldNotContain(c => c.Id == category2.Id);
+        await Assert.That(categories).IsNotNull();
+        await Assert.That(categories!.Any(c => c.Id == category1!.Id)).IsTrue();
+        await Assert.That(categories.Any(c => c.Id == category2.Id)).IsFalse();
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task UpdateCategory_Returns200_WithUpdatedData()
     {
         var client = CreateClient();
@@ -289,17 +288,17 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             CategoryUrl(brand, created!.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var updated = await updateResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        updated.ShouldNotBeNull();
-        updated.ImageUrl.ShouldBe("https://example.com/updated.jpg");
-        updated.SortOrder.ShouldBe(5);
-        updated.Translations.Count.ShouldBe(2);
-        updated.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Bijgewerkte Naam");
-        updated.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour");
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.ImageUrl).IsEqualTo("https://example.com/updated.jpg");
+        await Assert.That(updated.SortOrder).IsEqualTo(5);
+        await Assert.That(updated.Translations.Count).IsEqualTo(2);
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Bijgewerkte Naam")).IsTrue();
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateCategory_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -316,10 +315,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             CategoryUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()), updateRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateCategory_ShrinkTranslations_RemovesOldLanguage()
     {
         var client = CreateClient();
@@ -337,7 +336,7 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         };
         var createResponse = await client.PostAsJsonAsync(CategoriesUrl(brand), createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        created!.Translations.Count.ShouldBe(2);
+        await Assert.That(created!.Translations.Count).IsEqualTo(2);
 
         // Update to NL only — FR should be removed
         var updateRequest = new
@@ -352,16 +351,16 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             CategoryUrl(brand, created.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var updated = await updateResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        updated!.Translations.Count.ShouldBe(1);
-        updated.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Eén Taal");
-        updated.Translations.ShouldNotContain(t => t.LanguageCode == "fr");
+        await Assert.That(updated!.Translations.Count).IsEqualTo(1);
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Eén Taal")).IsTrue();
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "fr")).IsFalse();
     }
 
     // ── Delete (soft-delete) ──────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task DeleteCategory_Returns204_SoftDeletes()
     {
         var client = CreateClient();
@@ -374,14 +373,14 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         // Delete
         var deleteResponse = await client.DeleteAsync(CategoryUrl(brand, created!.Id));
-        deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(deleteResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // Get by id should return 404 (soft-deleted, filtered by global query filter)
         var getResponse = await client.GetAsync(CategoryUrl(brand, created.Id));
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteCategory_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -389,10 +388,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.DeleteAsync(
             CategoryUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteCategory_AlreadyDeleted_Returns404()
     {
         var client = CreateClient();
@@ -406,12 +405,12 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         // Second delete should 404 (already filtered out)
         var secondDelete = await client.DeleteAsync(CategoryUrl(brand, created.Id));
-        secondDelete.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(secondDelete.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── Reorder ───────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ReorderCategory_Returns204_UpdatesSortOrder()
     {
         var client = CreateClient();
@@ -421,22 +420,22 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var createResponse = await client.PostAsJsonAsync(
             CategoriesUrl(brand), MakeCreateRequest(nlName: "Herordenen Test", sortOrder: 1));
         var created = await createResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        created!.SortOrder.ShouldBe(1);
+        await Assert.That(created!.SortOrder).IsEqualTo(1);
 
         // Reorder to sort order 99
         var reorderRequest = new { SortOrder = 99 };
         var reorderResponse = await client.PatchAsJsonAsync(
             ReorderUrl(brand, created.Id), reorderRequest);
 
-        reorderResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(reorderResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // Verify the updated sort order via GET
         var getResponse = await client.GetAsync(CategoryUrl(brand, created.Id));
         var updated = await getResponse.Content.ReadFromJsonAsync<MenuCategoryResponse>();
-        updated!.SortOrder.ShouldBe(99);
+        await Assert.That(updated!.SortOrder).IsEqualTo(99);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderCategory_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -445,10 +444,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PatchAsJsonAsync(
             ReorderUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderCategory_WithNegativeSortOrder_Returns400()
     {
         var client = CreateClient();
@@ -463,12 +462,12 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
         var response = await client.PatchAsJsonAsync(
             ReorderUrl(brand, created!.Id), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── AssignProduct ─────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task AssignProductToCategory_Returns204()
     {
         var client = CreateClient();
@@ -493,10 +492,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         var assignResponse = await client.PostAsJsonAsync(AssignProductUrl(brand), assignRequest);
 
-        assignResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(assignResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
     }
 
-    [Fact]
+    [Test]
     public async Task AssignProductToCategory_NonExistentCategory_Returns404()
     {
         var client = CreateClient();
@@ -516,10 +515,10 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         var assignResponse = await client.PostAsJsonAsync(AssignProductUrl(brand), assignRequest);
 
-        assignResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(assignResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task AssignProductToCategory_NonExistentProduct_Returns404()
     {
         var client = CreateClient();
@@ -539,6 +538,6 @@ public sealed class MenuCategoryCrudTests(IntegrationTestBase fixture)
 
         var assignResponse = await client.PostAsJsonAsync(AssignProductUrl(brand), assignRequest);
 
-        assignResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(assignResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 }

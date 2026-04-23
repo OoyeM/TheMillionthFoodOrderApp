@@ -15,14 +15,7 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
         UpdateTaxConfigurationRequest request,
         CancellationToken cancellationToken = default)
     {
-        var config = await repository.GetAsync(cancellationToken);
-
-        if (config is null)
-        {
-            config = Domain.TaxConfiguration.TaxConfiguration.Create();
-            await repository.AddAsync(config, cancellationToken);
-            await repository.SaveChangesAsync(cancellationToken);
-        }
+        var existing = await repository.GetAsync(cancellationToken);
 
         var rates = request.VatRates
             .Select(r => (
@@ -30,11 +23,17 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
                 RatePercentage: r.RatePercentage))
             .ToList();
 
-        config.UpdateRates(rates);
+        if (existing is null)
+        {
+            var config = Domain.TaxConfiguration.TaxConfiguration.Create();
+            config.UpdateRates(rates);
+            await repository.AddAsync(config, cancellationToken);
+            await repository.SaveChangesAsync(cancellationToken);
+            return MapToResponse(config);
+        }
 
-        await repository.SaveChangesAsync(cancellationToken);
-
-        return MapToResponse(config);
+        var updated = await repository.ReplaceRatesAsync(existing.Id, c => c.UpdateRates(rates), cancellationToken);
+        return MapToResponse(updated);
     }
 
     public async Task<TaxBreakdownDto> CalculateAsync(

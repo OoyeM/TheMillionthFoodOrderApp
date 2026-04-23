@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.Products;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.Products;
@@ -12,58 +11,58 @@ public sealed class ProductSortOrderTests
 
     // ── Default SortOrderInCategory ───────────────────────────────────────────
 
-    [Fact]
-    public void Create_DefaultSortOrderInCategory_IsZero()
+    [Test]
+    public async Task Create_DefaultSortOrderInCategory_IsZero()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.SortOrderInCategory.ShouldBe(0);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Create_DefaultMenuCategoryId_IsNull()
+    [Test]
+    public async Task Create_DefaultMenuCategoryId_IsNull()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.MenuCategoryId.ShouldBeNull();
+        await Assert.That(product.MenuCategoryId).IsNull();
     }
 
     // ── ReorderInCategory ─────────────────────────────────────────────────────
 
-    [Fact]
-    public void ReorderInCategory_SetsSortOrderInCategory()
+    [Test]
+    public async Task ReorderInCategory_SetsSortOrderInCategory()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
         product.ReorderInCategory(5);
 
-        product.SortOrderInCategory.ShouldBe(5);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(5);
     }
 
-    [Fact]
-    public void ReorderInCategory_UpdatesUpdatedAt()
+    [Test]
+    public async Task ReorderInCategory_UpdatesUpdatedAt()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var originalUpdatedAt = product.UpdatedAt;
 
         product.ReorderInCategory(3);
 
-        product.UpdatedAt.ShouldBeGreaterThanOrEqualTo(originalUpdatedAt);
+        await Assert.That(product.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
     }
 
-    [Fact]
-    public void ReorderInCategory_ToZero_SetsSortOrderToZero()
+    [Test]
+    public async Task ReorderInCategory_ToZero_SetsSortOrderToZero()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         product.ReorderInCategory(10);
 
         product.ReorderInCategory(0);
 
-        product.SortOrderInCategory.ShouldBe(0);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ReorderInCategory_DoesNotChangeMenCategoryId()
+    [Test]
+    public async Task ReorderInCategory_DoesNotChangeMenCategoryId()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
@@ -71,35 +70,35 @@ public sealed class ProductSortOrderTests
 
         product.ReorderInCategory(99);
 
-        product.MenuCategoryId.ShouldBe(categoryId);
+        await Assert.That(product.MenuCategoryId).IsEqualTo(categoryId);
     }
 
     // ── AssignCategory ────────────────────────────────────────────────────────
 
-    [Fact]
-    public void AssignCategory_SetsMenuCategoryId()
+    [Test]
+    public async Task AssignCategory_SetsMenuCategoryId()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
 
         product.AssignCategory(categoryId, 0);
 
-        product.MenuCategoryId.ShouldBe(categoryId);
+        await Assert.That(product.MenuCategoryId).IsEqualTo(categoryId);
     }
 
-    [Fact]
-    public void AssignCategory_SetsSortOrderInCategory()
+    [Test]
+    public async Task AssignCategory_SetsSortOrderInCategory()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
 
         product.AssignCategory(categoryId, 7);
 
-        product.SortOrderInCategory.ShouldBe(7);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(7);
     }
 
-    [Fact]
-    public void AssignCategory_UpdatesUpdatedAt()
+    [Test]
+    public async Task AssignCategory_UpdatesUpdatedAt()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var originalUpdatedAt = product.UpdatedAt;
@@ -107,11 +106,11 @@ public sealed class ProductSortOrderTests
 
         product.AssignCategory(categoryId, 0);
 
-        product.UpdatedAt.ShouldBeGreaterThanOrEqualTo(originalUpdatedAt);
+        await Assert.That(product.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
     }
 
-    [Fact]
-    public void AssignCategory_ReplacesExistingCategoryAssignment()
+    [Test]
+    public async Task AssignCategory_ReplacesExistingCategoryAssignment()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var firstCategoryId = Guid.CreateVersion7();
@@ -120,14 +119,14 @@ public sealed class ProductSortOrderTests
 
         product.AssignCategory(secondCategoryId, 5);
 
-        product.MenuCategoryId.ShouldBe(secondCategoryId);
-        product.SortOrderInCategory.ShouldBe(5);
+        await Assert.That(product.MenuCategoryId).IsEqualTo(secondCategoryId);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(5);
     }
 
     // ── RemoveCategory ────────────────────────────────────────────────────────
 
-    [Fact]
-    public void RemoveCategory_ClearsMenuCategoryId()
+    [Test]
+    public async Task RemoveCategory_ClearsMenuCategoryId()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
@@ -135,11 +134,11 @@ public sealed class ProductSortOrderTests
 
         product.RemoveCategory();
 
-        product.MenuCategoryId.ShouldBeNull();
+        await Assert.That(product.MenuCategoryId).IsNull();
     }
 
-    [Fact]
-    public void RemoveCategory_ResetsSortOrderInCategoryToZero()
+    [Test]
+    public async Task RemoveCategory_ResetsSortOrderInCategoryToZero()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
@@ -147,11 +146,11 @@ public sealed class ProductSortOrderTests
 
         product.RemoveCategory();
 
-        product.SortOrderInCategory.ShouldBe(0);
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(0);
     }
 
-    [Fact]
-    public void RemoveCategory_UpdatesUpdatedAt()
+    [Test]
+    public async Task RemoveCategory_UpdatesUpdatedAt()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var categoryId = Guid.CreateVersion7();
@@ -160,11 +159,11 @@ public sealed class ProductSortOrderTests
 
         product.RemoveCategory();
 
-        product.UpdatedAt.ShouldBeGreaterThanOrEqualTo(updatedAtAfterAssign);
+        await Assert.That(product.UpdatedAt).IsGreaterThanOrEqualTo(updatedAtAfterAssign);
     }
 
-    [Fact]
-    public void RemoveCategory_WhenAlreadyUncategorised_ResetsSortOrderAndUpdatesTimestamp()
+    [Test]
+    public async Task RemoveCategory_WhenAlreadyUncategorised_ResetsSortOrderAndUpdatesTimestamp()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var beforeRemove = product.UpdatedAt;
@@ -173,8 +172,8 @@ public sealed class ProductSortOrderTests
         // but the method itself still updates UpdatedAt
         product.RemoveCategory();
 
-        product.MenuCategoryId.ShouldBeNull();
-        product.SortOrderInCategory.ShouldBe(0);
-        product.UpdatedAt.ShouldBeGreaterThanOrEqualTo(beforeRemove);
+        await Assert.That(product.MenuCategoryId).IsNull();
+        await Assert.That(product.SortOrderInCategory).IsEqualTo(0);
+        await Assert.That(product.UpdatedAt).IsGreaterThanOrEqualTo(beforeRemove);
     }
 }

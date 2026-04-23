@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.OrderLifecycle;
@@ -9,73 +8,73 @@ public sealed class OrderStatusTests
 
     // ── Create — happy path ───────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithAllFields_SetsPropertiesCorrectly()
+    [Test]
+    public async Task Create_WithAllFields_SetsPropertiesCorrectly()
     {
         var status = OrderStatus.Create(ConfigId, "Preparing", "preparing", 2, false, "#FF5733");
 
-        status.ShouldNotBeNull();
-        status.Id.ShouldNotBe(Guid.Empty);
-        status.OrderLifecycleConfigId.ShouldBe(ConfigId);
-        status.Name.ShouldBe("Preparing");
-        status.SystemKey.ShouldBe("preparing");
-        status.SortOrder.ShouldBe(2);
-        status.IsEnabled.ShouldBeTrue();
-        status.IsTerminal.ShouldBeFalse();
-        status.ColorHex.ShouldBe("#FF5733");
+        await Assert.That(status).IsNotNull();
+        await Assert.That(status.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(status.OrderLifecycleConfigId).IsEqualTo(ConfigId);
+        await Assert.That(status.Name).IsEqualTo("Preparing");
+        await Assert.That(status.SystemKey).IsEqualTo("preparing");
+        await Assert.That(status.SortOrder).IsEqualTo(2);
+        await Assert.That(status.IsEnabled).IsTrue();
+        await Assert.That(status.IsTerminal).IsFalse();
+        await Assert.That(status.ColorHex).IsEqualTo("#FF5733");
     }
 
-    [Fact]
-    public void Create_WithNullSystemKey_SetsSystemKeyToNull()
+    [Test]
+    public async Task Create_WithNullSystemKey_SetsSystemKeyToNull()
     {
         var status = OrderStatus.Create(ConfigId, "Custom Status", null, 0, false);
 
-        status.SystemKey.ShouldBeNull();
+        await Assert.That(status.SystemKey).IsNull();
     }
 
-    [Fact]
-    public void Create_WithNullColorHex_SetsColorHexToNull()
+    [Test]
+    public async Task Create_WithNullColorHex_SetsColorHexToNull()
     {
         var status = OrderStatus.Create(ConfigId, "Placed", "placed", 0, false);
 
-        status.ColorHex.ShouldBeNull();
+        await Assert.That(status.ColorHex).IsNull();
     }
 
-    [Fact]
-    public void Create_WithIsTerminalTrue_SetsIsTerminal()
+    [Test]
+    public async Task Create_WithIsTerminalTrue_SetsIsTerminal()
     {
         var status = OrderStatus.Create(ConfigId, "Delivered", "delivered", 5, true);
 
-        status.IsTerminal.ShouldBeTrue();
+        await Assert.That(status.IsTerminal).IsTrue();
     }
 
-    [Fact]
-    public void Create_AlwaysDefaultsIsEnabledToTrue()
+    [Test]
+    public async Task Create_AlwaysDefaultsIsEnabledToTrue()
     {
         var status = OrderStatus.Create(ConfigId, "Some Status", null, 0, false);
 
-        status.IsEnabled.ShouldBeTrue();
+        await Assert.That(status.IsEnabled).IsTrue();
     }
 
     // ── Create — UUIDv7 ───────────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_GeneratesUuidV7()
+    [Test]
+    public async Task Create_GeneratesUuidV7()
     {
         var status = OrderStatus.Create(ConfigId, "Placed", "placed", 0, false);
 
         // UUIDv7 has version nibble = 7 (bits 48-51)
         var version = (status.Id.ToByteArray()[7] >> 4) & 0x0F;
-        version.ShouldBe(7);
+        await Assert.That(version).IsEqualTo(7);
     }
 
     // ── Create — optional color hex stored as-is (no transformation) ──────────
 
-    [Fact]
-    public void Create_WithColorHex_StoresValueAsProvided()
+    [Test]
+    public async Task Create_WithColorHex_StoresValueAsProvided()
     {
         var status = OrderStatus.Create(ConfigId, "Ready", "ready", 3, false, "#00FF00");
 
-        status.ColorHex.ShouldBe("#00FF00");
+        await Assert.That(status.ColorHex).IsEqualTo("#00FF00");
     }
 }

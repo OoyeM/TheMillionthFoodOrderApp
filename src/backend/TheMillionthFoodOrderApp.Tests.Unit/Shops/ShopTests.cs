@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.Shops;
@@ -13,70 +12,70 @@ public sealed class ShopTests
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithValidData_ReturnsShop()
+    [Test]
+    public async Task Create_WithValidData_ReturnsShop()
     {
         var shop = CreateValidShop();
 
-        shop.ShouldNotBeNull();
-        shop.Id.ShouldNotBe(Guid.Empty);
-        shop.Name.ShouldBe("Frietjes Gent");
-        shop.Slug.ShouldBe("frietjes-gent");
-        shop.ContactEmail.ShouldBe("gent@frietjes.be");
-        shop.ContactPhone.ShouldBe("+32 9 123 45 67");
-        shop.IsActive.ShouldBeTrue();
+        await Assert.That(shop).IsNotNull();
+        await Assert.That(shop.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(shop.Name).IsEqualTo("Frietjes Gent");
+        await Assert.That(shop.Slug).IsEqualTo("frietjes-gent");
+        await Assert.That(shop.ContactEmail).IsEqualTo("gent@frietjes.be");
+        await Assert.That(shop.ContactPhone).IsEqualTo("+32 9 123 45 67");
+        await Assert.That(shop.IsActive).IsTrue();
     }
 
-    [Fact]
-    public void Create_DefaultTimeZoneId_IsEuropeBrussels()
+    [Test]
+    public async Task Create_DefaultTimeZoneId_IsEuropeBrussels()
     {
         var shop = CreateValidShop();
 
-        shop.TimeZoneId.ShouldBe("Europe/Brussels");
+        await Assert.That(shop.TimeZoneId).IsEqualTo("Europe/Brussels");
     }
 
-    [Fact]
-    public void Create_OpeningHours_IsEmpty()
+    [Test]
+    public async Task Create_OpeningHours_IsEmpty()
     {
         var shop = CreateValidShop();
 
-        shop.OpeningHours.Count.ShouldBe(0);
+        await Assert.That(shop.OpeningHours.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Create_RaisesShopCreatedEvent()
+    [Test]
+    public async Task Create_RaisesShopCreatedEvent()
     {
         var shop = CreateValidShop();
 
-        shop.DomainEvents.Count.ShouldBe(1);
-        shop.DomainEvents.ShouldContain(e => e is ShopCreatedEvent);
+        await Assert.That(shop.DomainEvents.Count).IsEqualTo(1);
+        await Assert.That(shop.DomainEvents).Contains(e => e is ShopCreatedEvent);
     }
 
-    [Fact]
-    public void Create_ShopCreatedEvent_ContainsCorrectData()
+    [Test]
+    public async Task Create_ShopCreatedEvent_ContainsCorrectData()
     {
         var shop = CreateValidShop();
 
         var evt = shop.DomainEvents.OfType<ShopCreatedEvent>().Single();
-        evt.ShopId.ShouldBe(shop.Id);
-        evt.Name.ShouldBe("Frietjes Gent");
-        evt.Slug.ShouldBe("frietjes-gent");
+        await Assert.That(evt.ShopId).IsEqualTo(shop.Id);
+        await Assert.That(evt.Name).IsEqualTo("Frietjes Gent");
+        await Assert.That(evt.Slug).IsEqualTo("frietjes-gent");
     }
 
-    [Fact]
-    public void Create_GeneratesUuidV7()
+    [Test]
+    public async Task Create_GeneratesUuidV7()
     {
         var shop = CreateValidShop();
 
         // UUIDv7 has version nibble = 7 (bits 48-51)
         var version = (shop.Id.ToByteArray()[7] >> 4) & 0x0F;
-        version.ShouldBe(7);
+        await Assert.That(version).IsEqualTo(7);
     }
 
     // ── UpdateMetadata ────────────────────────────────────────────────────────
 
-    [Fact]
-    public void UpdateMetadata_UpdatesMutableFields()
+    [Test]
+    public async Task UpdateMetadata_UpdatesMutableFields()
     {
         var shop = CreateValidShop();
         var newAddress = new Address("Korenmarkt", "2", "Gent", "9000");
@@ -84,61 +83,61 @@ public sealed class ShopTests
 
         shop.UpdateMetadata("Frietjes Gent Centrum", newAddress, "centrum@frietjes.be", "+32 9 999 99 99");
 
-        shop.Name.ShouldBe("Frietjes Gent Centrum");
-        shop.Address.ShouldBe(newAddress);
-        shop.ContactEmail.ShouldBe("centrum@frietjes.be");
-        shop.ContactPhone.ShouldBe("+32 9 999 99 99");
-        shop.UpdatedAt.ShouldBeGreaterThanOrEqualTo(originalCreatedAt);
+        await Assert.That(shop.Name).IsEqualTo("Frietjes Gent Centrum");
+        await Assert.That(shop.Address).IsEqualTo(newAddress);
+        await Assert.That(shop.ContactEmail).IsEqualTo("centrum@frietjes.be");
+        await Assert.That(shop.ContactPhone).IsEqualTo("+32 9 999 99 99");
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalCreatedAt);
     }
 
-    [Fact]
-    public void UpdateMetadata_DoesNotChangeSlug()
+    [Test]
+    public async Task UpdateMetadata_DoesNotChangeSlug()
     {
         var shop = CreateValidShop();
         var originalSlug = shop.Slug;
 
         shop.UpdateMetadata("Renamed Shop", ValidAddress, "other@frietjes.be", null);
 
-        shop.Slug.ShouldBe(originalSlug);
+        await Assert.That(shop.Slug).IsEqualTo(originalSlug);
     }
 
-    [Fact]
-    public void UpdateMetadata_WithNullPhone_ClearsPhone()
+    [Test]
+    public async Task UpdateMetadata_WithNullPhone_ClearsPhone()
     {
         var shop = CreateValidShop();
 
         shop.UpdateMetadata("Frietjes Gent", ValidAddress, "gent@frietjes.be", null);
 
-        shop.ContactPhone.ShouldBeNull();
+        await Assert.That(shop.ContactPhone).IsNull();
     }
 
     // ── Deactivate ────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Deactivate_ActiveShop_FlipsIsActiveToFalse()
+    [Test]
+    public async Task Deactivate_ActiveShop_FlipsIsActiveToFalse()
     {
         var shop = CreateValidShop();
         shop.ClearDomainEvents();
 
         shop.Deactivate();
 
-        shop.IsActive.ShouldBeFalse();
+        await Assert.That(shop.IsActive).IsFalse();
     }
 
-    [Fact]
-    public void Deactivate_ActiveShop_RaisesShopDeactivatedEvent()
+    [Test]
+    public async Task Deactivate_ActiveShop_RaisesShopDeactivatedEvent()
     {
         var shop = CreateValidShop();
         shop.ClearDomainEvents();
 
         shop.Deactivate();
 
-        shop.DomainEvents.Count.ShouldBe(1);
-        shop.DomainEvents.ShouldContain(e => e is ShopDeactivatedEvent);
+        await Assert.That(shop.DomainEvents.Count).IsEqualTo(1);
+        await Assert.That(shop.DomainEvents).Contains(e => e is ShopDeactivatedEvent);
     }
 
-    [Fact]
-    public void Deactivate_WhenAlreadyInactive_IsIdempotent()
+    [Test]
+    public async Task Deactivate_WhenAlreadyInactive_IsIdempotent()
     {
         var shop = CreateValidShop();
         shop.ClearDomainEvents();
@@ -148,26 +147,26 @@ public sealed class ShopTests
 
         shop.Deactivate();
 
-        shop.IsActive.ShouldBeFalse();
-        shop.DomainEvents.Count.ShouldBe(0);
+        await Assert.That(shop.IsActive).IsFalse();
+        await Assert.That(shop.DomainEvents.Count).IsEqualTo(0);
     }
 
     // ── Activate ──────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Activate_WhenAlreadyActive_IsIdempotent()
+    [Test]
+    public async Task Activate_WhenAlreadyActive_IsIdempotent()
     {
         var shop = CreateValidShop();
         shop.ClearDomainEvents();
 
         shop.Activate();
 
-        shop.IsActive.ShouldBeTrue();
-        shop.DomainEvents.Count.ShouldBe(0);
+        await Assert.That(shop.IsActive).IsTrue();
+        await Assert.That(shop.DomainEvents.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Activate_OnDeactivatedShop_FlipsIsActiveToTrue()
+    [Test]
+    public async Task Activate_OnDeactivatedShop_FlipsIsActiveToTrue()
     {
         var shop = CreateValidShop();
         shop.Deactivate();
@@ -175,13 +174,13 @@ public sealed class ShopTests
 
         shop.Activate();
 
-        shop.IsActive.ShouldBeTrue();
+        await Assert.That(shop.IsActive).IsTrue();
     }
 
     // ── SetOpeningHours ───────────────────────────────────────────────────────
 
-    [Fact]
-    public void SetOpeningHours_WithNonOverlappingBlocksSameDay_Succeeds()
+    [Test]
+    public async Task SetOpeningHours_WithNonOverlappingBlocksSameDay_Succeeds()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -194,11 +193,11 @@ public sealed class ShopTests
 
         shop.SetOpeningHours(blocks);
 
-        shop.OpeningHours.Count.ShouldBe(2);
+        await Assert.That(shop.OpeningHours.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void SetOpeningHours_WithOverlappingBlocksSameDay_ThrowsArgumentException()
+    [Test]
+    public async Task SetOpeningHours_WithOverlappingBlocksSameDay_ThrowsArgumentException()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -209,11 +208,15 @@ public sealed class ShopTests
             OpeningHoursTimeBlock.Create(shopId, DayOfWeek.Monday, new TimeOnly(12, 0), new TimeOnly(18, 0)),
         };
 
-        Should.Throw<ArgumentException>(() => shop.SetOpeningHours(blocks));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+        {
+            shop.SetOpeningHours(blocks);
+            return Task.CompletedTask;
+        });
     }
 
-    [Fact]
-    public void SetOpeningHours_ReplacesAllPreviousEntries()
+    [Test]
+    public async Task SetOpeningHours_ReplacesAllPreviousEntries()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -231,14 +234,14 @@ public sealed class ShopTests
         };
         shop.SetOpeningHours(secondSchedule);
 
-        shop.OpeningHours.Count.ShouldBe(1);
-        shop.OpeningHours.ShouldContain(b => b.DayOfWeek == DayOfWeek.Friday);
-        shop.OpeningHours.ShouldNotContain(b => b.DayOfWeek == DayOfWeek.Monday);
-        shop.OpeningHours.ShouldNotContain(b => b.DayOfWeek == DayOfWeek.Tuesday);
+        await Assert.That(shop.OpeningHours.Count).IsEqualTo(1);
+        await Assert.That(shop.OpeningHours).Contains(b => b.DayOfWeek == DayOfWeek.Friday);
+        await Assert.That(shop.OpeningHours).DoesNotContain(b => b.DayOfWeek == DayOfWeek.Monday);
+        await Assert.That(shop.OpeningHours).DoesNotContain(b => b.DayOfWeek == DayOfWeek.Tuesday);
     }
 
-    [Fact]
-    public void SetOpeningHours_WithEmptyList_ClearsAllHours()
+    [Test]
+    public async Task SetOpeningHours_WithEmptyList_ClearsAllHours()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -251,11 +254,11 @@ public sealed class ShopTests
 
         shop.SetOpeningHours(Array.Empty<OpeningHoursTimeBlock>());
 
-        shop.OpeningHours.Count.ShouldBe(0);
+        await Assert.That(shop.OpeningHours.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void SetOpeningHours_BlocksOnDifferentDays_NeverOverlap()
+    [Test]
+    public async Task SetOpeningHours_BlocksOnDifferentDays_NeverOverlap()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -269,13 +272,13 @@ public sealed class ShopTests
 
         shop.SetOpeningHours(blocks);
 
-        shop.OpeningHours.Count.ShouldBe(2);
+        await Assert.That(shop.OpeningHours.Count).IsEqualTo(2);
     }
 
     // ── IsOpenAt ──────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void IsOpenAt_DuringOpenBlock_ReturnsTrue()
+    [Test]
+    public async Task IsOpenAt_DuringOpenBlock_ReturnsTrue()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -290,11 +293,11 @@ public sealed class ShopTests
         // 2024-01-08 is a Monday; 11:00 UTC = 12:00 Brussels (CET = UTC+1)
         var openTime = new DateTimeOffset(2024, 1, 8, 11, 0, 0, TimeSpan.Zero);
 
-        shop.IsOpenAt(openTime).ShouldBeTrue();
+        await Assert.That(shop.IsOpenAt(openTime)).IsTrue();
     }
 
-    [Fact]
-    public void IsOpenAt_OutsideOpenBlock_ReturnsFalse()
+    [Test]
+    public async Task IsOpenAt_OutsideOpenBlock_ReturnsFalse()
     {
         var shop = CreateValidShop();
         var shopId = shop.Id;
@@ -309,16 +312,16 @@ public sealed class ShopTests
         // 2024-01-08 is a Monday; 19:00 Brussels (UTC+1 in January) = 18:00 UTC
         var closedTime = new DateTimeOffset(2024, 1, 8, 18, 0, 0, TimeSpan.Zero);
 
-        shop.IsOpenAt(closedTime).ShouldBeFalse();
+        await Assert.That(shop.IsOpenAt(closedTime)).IsFalse();
     }
 
-    [Fact]
-    public void IsOpenAt_WithNoHoursConfigured_ReturnsFalse()
+    [Test]
+    public async Task IsOpenAt_WithNoHoursConfigured_ReturnsFalse()
     {
         var shop = CreateValidShop();
 
         var anyTime = DateTimeOffset.UtcNow;
 
-        shop.IsOpenAt(anyTime).ShouldBeFalse();
+        await Assert.That(shop.IsOpenAt(anyTime)).IsFalse();
     }
 }

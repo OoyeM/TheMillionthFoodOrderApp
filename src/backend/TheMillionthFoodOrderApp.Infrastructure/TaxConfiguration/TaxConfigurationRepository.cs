@@ -27,6 +27,33 @@ public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxC
         return Task.CompletedTask;
     }
 
+    public async Task<Domain.TaxConfiguration.TaxConfiguration> ReplaceRatesAsync(
+        Guid configId,
+        Action<Domain.TaxConfiguration.TaxConfiguration> mutate,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.VatRates
+            .Where(v => v.TaxConfigurationId == configId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        // Clear tracker so FirstAsync returns a fresh instance without old VatRate snapshots.
+        dbContext.ChangeTracker.Clear();
+
+        var config = await dbContext.TaxConfigurations
+            .FirstAsync(c => c.Id == configId, cancellationToken);
+
+        mutate(config);
+
+        await dbContext.VatRates.AddRangeAsync(config.VatRates, cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return config;
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SaveChangesAsync(cancellationToken);
 }

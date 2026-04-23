@@ -1,5 +1,4 @@
 using System.Net;
-using Shouldly;
 using TheMillionthFoodOrderApp.Bff.Tests.Fixtures;
 
 namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
@@ -8,12 +7,12 @@ namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
 /// Integration tests for <c>GET /bff/login</c>.
 /// Covers mock auth flow only — Keycloak OIDC tests are skipped (see note below).
 /// </summary>
+[ClassDataSource<BffTestWebAppFactory>(Shared = SharedType.PerClass)]
 public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
-    : IClassFixture<BffTestWebAppFactory>
 {
     // ── Mock login — happy path ───────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task Login_WithValidMockPersona_Returns302Redirect()
     {
         // Arrange
@@ -23,10 +22,10 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync("/bff/login?mock=brand-admin@frietjes");
 
         // Assert — mock login signs the user in and redirects to returnUrl (defaults to "/")
-        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Redirect);
     }
 
-    [Fact]
+    [Test]
     public async Task Login_WithValidMockPersona_SetsBffSessionCookie()
     {
         // Arrange
@@ -37,10 +36,10 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
 
         // Assert — a bff_session cookie must be present in Set-Cookie
         var setCookie = response.Headers.GetValues("Set-Cookie");
-        setCookie.ShouldContain(cookie => cookie.StartsWith("bff_session=", StringComparison.OrdinalIgnoreCase));
+        await Assert.That(setCookie).Contains(cookie => cookie.StartsWith("bff_session=", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
+    [Test]
     public async Task Login_WithReturnUrl_RedirectsToReturnUrl()
     {
         // Arrange
@@ -50,11 +49,11 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync("/bff/login?mock=brand-admin@frietjes&returnUrl=/admin");
 
         // Assert — Location header points to /admin
-        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        response.Headers.Location?.ToString().ShouldBe("/admin");
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Redirect);
+        await Assert.That(response.Headers.Location?.ToString()).IsEqualTo("/admin");
     }
 
-    [Fact]
+    [Test]
     public async Task Login_WithDefaultReturnUrl_RedirectsToRoot()
     {
         // Arrange
@@ -64,16 +63,16 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync("/bff/login?mock=platform-admin");
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        response.Headers.Location?.ToString().ShouldBe("/");
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Redirect);
+        await Assert.That(response.Headers.Location?.ToString()).IsEqualTo("/");
     }
 
     // ── ReturnUrl validation ──────────────────────────────────────────────────
 
-    [Theory]
-    [InlineData("https://evil.example.com/steal")]
-    [InlineData("http://attacker.io")]
-    [InlineData("//attacker.io/path")]
+    [Test]
+    [Arguments("https://evil.example.com/steal")]
+    [Arguments("http://attacker.io")]
+    [Arguments("//attacker.io/path")]
     public async Task Login_WithExternalReturnUrl_FallsBackToRoot(string externalUrl)
     {
         // Arrange — ResolveReturnUrl in BffEndpoints rejects non-relative URLs
@@ -84,13 +83,13 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync($"/bff/login?mock=platform-admin&returnUrl={encoded}");
 
         // Assert — must redirect to "/" not the external URL
-        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        response.Headers.Location?.ToString().ShouldBe("/");
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Redirect);
+        await Assert.That(response.Headers.Location?.ToString()).IsEqualTo("/");
     }
 
     // ── Unknown persona ───────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task Login_WithUnknownMockPersona_Returns400()
     {
         // Arrange
@@ -100,12 +99,13 @@ public sealed class LoginEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync("/bff/login?mock=unknown-persona");
 
         // Assert — BffEndpoints returns BadRequest for unrecognised personas
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Keycloak OIDC path ────────────────────────────────────────────────────
 
-    [Fact(Skip = "Requires Docker/Keycloak — covered in Wave 2")]
+    [Test]
+    [Skip("Requires Docker/Keycloak — covered in Wave 2")]
     public Task Login_WithoutMockFlag_TriggersOidcChallenge()
     {
         // When Authentication:UseMockAuth=false the endpoint returns an OIDC

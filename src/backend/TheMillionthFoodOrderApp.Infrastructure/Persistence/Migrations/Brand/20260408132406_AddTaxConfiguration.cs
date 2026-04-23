@@ -11,9 +11,16 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_ComboItems_ComboProductId",
-                table: "ComboItems");
+            // Guard: this index only exists on databases created before AddComboProducts
+            // added compound indexes directly. Fresh databases never have it.
+            migrationBuilder.Sql("""
+                IF EXISTS (
+                    SELECT 1 FROM sys.indexes
+                    WHERE name = 'IX_ComboItems_ComboProductId'
+                      AND object_id = OBJECT_ID('ComboItems')
+                )
+                    DROP INDEX [IX_ComboItems_ComboProductId] ON [ComboItems];
+                """);
 
             migrationBuilder.CreateTable(
                 name: "TaxConfigurations",
@@ -49,17 +56,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ComboItems_ComboProductId_ComponentProductId",
-                table: "ComboItems",
-                columns: new[] { "ComboProductId", "ComponentProductId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ComboItems_ComboProductId_SortOrder",
-                table: "ComboItems",
-                columns: new[] { "ComboProductId", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_VatRates_TaxConfigurationId_ConsumptionMode",
                 table: "VatRates",
                 columns: new[] { "TaxConfigurationId", "ConsumptionMode" },
@@ -75,18 +71,6 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
             migrationBuilder.DropTable(
                 name: "TaxConfigurations");
 
-            migrationBuilder.DropIndex(
-                name: "IX_ComboItems_ComboProductId_ComponentProductId",
-                table: "ComboItems");
-
-            migrationBuilder.DropIndex(
-                name: "IX_ComboItems_ComboProductId_SortOrder",
-                table: "ComboItems");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ComboItems_ComboProductId",
-                table: "ComboItems",
-                column: "ComboProductId");
         }
     }
 }

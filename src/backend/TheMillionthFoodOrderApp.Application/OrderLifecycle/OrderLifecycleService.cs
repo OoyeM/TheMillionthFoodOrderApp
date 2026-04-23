@@ -36,36 +36,19 @@ public sealed class OrderLifecycleService(
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
 
-        var config = await repository.GetByShopIdAsync(shopId, cancellationToken);
+        var existing = await repository.GetByShopIdAsync(shopId, cancellationToken);
 
-        if (config is null)
+        if (existing is null)
         {
-            config = OrderLifecycleConfig.CreateDefault(shopId);
+            var config = OrderLifecycleConfig.CreateDefault(shopId);
+            ApplyRequest(config, request);
             await repository.AddAsync(config, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
+            return MapToResponse(config);
         }
 
-        // Build domain entities from the request
-        var statuses = request.Statuses
-            .Select(s => OrderStatus.Create(
-                config.Id, s.Name, s.SystemKey, s.SortOrder, s.IsTerminal, s.ColorHex))
-            .ToList();
-
-        // Build a sort-order → status-id lookup to resolve transitions
-        var sortOrderToId = statuses.ToDictionary(s => s.SortOrder, s => s.Id);
-
-        var transitions = request.Transitions
-            .Select(t => OrderStatusTransition.Create(
-                config.Id,
-                sortOrderToId[t.FromSortOrder],
-                sortOrderToId[t.ToSortOrder]))
-            .ToList();
-
-        config.ConfigureLifecycle(statuses, transitions);
-
-        await repository.SaveChangesAsync(cancellationToken);
-
-        return MapToResponse(config);
+        var updated = await repository.ReplaceAsync(existing.Id, c => ApplyRequest(c, request), cancellationToken);
+        return MapToResponse(updated);
     }
 
     public async Task<OrderLifecycleResponse> ResetToDefaultAsync(
@@ -91,6 +74,25 @@ public sealed class OrderLifecycleService(
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
+
+    private static void ApplyRequest(OrderLifecycleConfig config, ConfigureOrderLifecycleRequest request)
+    {
+        var statuses = request.Statuses
+            .Select(s => OrderStatus.Create(
+                config.Id, s.Name, s.SystemKey, s.SortOrder, s.IsTerminal, s.ColorHex))
+            .ToList();
+
+        var sortOrderToId = statuses.ToDictionary(s => s.SortOrder, s => s.Id);
+
+        var transitions = request.Transitions
+            .Select(t => OrderStatusTransition.Create(
+                config.Id,
+                sortOrderToId[t.FromSortOrder],
+                sortOrderToId[t.ToSortOrder]))
+            .ToList();
+
+        config.ConfigureLifecycle(statuses, transitions);
+    }
 
     private static OrderLifecycleResponse MapToResponse(OrderLifecycleConfig config) =>
         new(

@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.BrandSettings;
@@ -7,81 +6,81 @@ public sealed class BrandTypographyTests
 {
     // ── Constructor — happy path ───────────────────────────────────────────────
 
-    [Theory]
-    [MemberData(nameof(AllPresetFontPairs))]
-    public void Constructor_WithPresetFonts_SetsPropertiesCorrectly(string heading, string body)
+    [MethodDataSource(nameof(AllPresetFontPairs))]
+    [Test]
+    public async Task Constructor_WithPresetFonts_SetsPropertiesCorrectly(string heading, string body)
     {
         var typography = new BrandTypography(heading, body);
 
-        typography.HeadingFontFamily.ShouldBe(heading);
-        typography.BodyFontFamily.ShouldBe(body);
+        await Assert.That(typography.HeadingFontFamily).IsEqualTo(heading);
+        await Assert.That(typography.BodyFontFamily).IsEqualTo(body);
     }
 
-    public static IEnumerable<object[]> AllPresetFontPairs()
+    public static IEnumerable<(string, string)> AllPresetFontPairs()
     {
         // Use SystemDefault paired with each preset font to cover all approved fonts
         foreach (var font in PresetFonts.All)
-            yield return [font, PresetFonts.SystemDefault];
+            yield return (font, PresetFonts.SystemDefault);
     }
 
-    [Fact]
-    public void Constructor_WithSameFontForBothRoles_SetsPropertiesCorrectly()
+    [Test]
+    public async Task Constructor_WithSameFontForBothRoles_SetsPropertiesCorrectly()
     {
         var typography = new BrandTypography(PresetFonts.SystemDefault, PresetFonts.SystemDefault);
 
-        typography.HeadingFontFamily.ShouldBe(PresetFonts.SystemDefault);
-        typography.BodyFontFamily.ShouldBe(PresetFonts.SystemDefault);
+        await Assert.That(typography.HeadingFontFamily).IsEqualTo(PresetFonts.SystemDefault);
+        await Assert.That(typography.BodyFontFamily).IsEqualTo(PresetFonts.SystemDefault);
     }
 
     // ── Constructor — invalid fonts ───────────────────────────────────────────
 
-    [Fact]
-    public void Constructor_WithUnknownHeadingFont_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithUnknownHeadingFont_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandTypography("Comic Sans MS", PresetFonts.SystemDefault));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandTypography("Comic Sans MS", PresetFonts.SystemDefault)));
     }
 
-    [Fact]
-    public void Constructor_WithUnknownBodyFont_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithUnknownBodyFont_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandTypography(PresetFonts.SystemDefault, "Arial"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandTypography(PresetFonts.SystemDefault, "Arial")));
     }
 
-    [Fact]
-    public void Constructor_WithEmptyHeadingFont_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithEmptyHeadingFont_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandTypography("", PresetFonts.SystemDefault));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandTypography("", PresetFonts.SystemDefault)));
     }
 
-    [Fact]
-    public void Constructor_WithEmptyBodyFont_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithEmptyBodyFont_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandTypography(PresetFonts.SystemDefault, ""));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandTypography(PresetFonts.SystemDefault, "")));
     }
 
     // ── Equality ───────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Equality_WithIdenticalValues_AreEqual()
+    [Test]
+    public async Task Equality_WithIdenticalValues_AreEqual()
     {
         var a = new BrandTypography("Inter", "Roboto");
         var b = new BrandTypography("Inter", "Roboto");
 
-        a.ShouldBe(b);
-        (a == b).ShouldBeTrue();
+        await Assert.That(a).IsEqualTo(b);
+        await Assert.That(a == b).IsTrue();
     }
 
-    [Fact]
-    public void Equality_WithDifferentValues_AreNotEqual()
+    [Test]
+    public async Task Equality_WithDifferentValues_AreNotEqual()
     {
         var a = new BrandTypography("Inter", "Roboto");
         var b = new BrandTypography("Poppins", "Roboto");
 
-        a.ShouldNotBe(b);
-        (a == b).ShouldBeFalse();
+        await Assert.That(a).IsNotEqualTo(b);
+        await Assert.That(a == b).IsFalse();
     }
 }

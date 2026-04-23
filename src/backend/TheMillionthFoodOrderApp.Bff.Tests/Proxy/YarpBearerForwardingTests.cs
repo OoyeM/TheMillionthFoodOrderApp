@@ -19,7 +19,8 @@ namespace TheMillionthFoodOrderApp.Bff.Tests.Proxy;
 /// </summary>
 public sealed class YarpBearerForwardingTests
 {
-    [Fact(Skip = "Requires real OIDC token pipeline — covered in Wave 2")]
+    [Test]
+    [Skip("Requires real OIDC token pipeline — covered in Wave 2")]
     public Task BearerToken_IsForwardedToUpstreamApi_WhenSessionHasAccessToken()
     {
         // Implementation plan (Wave 2):
@@ -34,7 +35,8 @@ public sealed class YarpBearerForwardingTests
         return Task.CompletedTask;
     }
 
-    [Fact(Skip = "Requires real OIDC token pipeline — covered in Wave 2")]
+    [Test]
+    [Skip("Requires real OIDC token pipeline — covered in Wave 2")]
     public Task NoAccessToken_InSession_DoesNotForwardAuthorizationHeader()
     {
         // When the session cookie contains no access_token (mock auth path),

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using TheMillionthFoodOrderApp.Domain.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using TUnit.Core.Interfaces;
 
 namespace TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -11,10 +12,15 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 /// Base class for integration tests. Manages a shared SQL Server Testcontainer
 /// and creates isolated brand databases for each test brand (alpha, beta).
 ///
-/// One container is shared across all tests in the collection via <see cref="IClassFixture{T}"/>.
+/// One container is shared across all tests in the class via <see cref="ClassDataSource{T}"/>.
 /// </summary>
-public sealed class IntegrationTestBase : IAsyncLifetime
+public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
 {
+    // FastEndpoints 8.0.x mutates a static JsonSerializerOptions.TypeInfoResolverChain
+    // in UseFastEndpoints(). Concurrent WebApplicationFactory.StartServer() calls from
+    // parallel TUnit class fixtures corrupt the shared list — serialize them instead.
+    private static readonly SemaphoreSlim _serverStartLock = new(1, 1);
+
     private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
@@ -42,6 +48,16 @@ public sealed class IntegrationTestBase : IAsyncLifetime
 
         Factory = new IntegrationTestWebAppFactory(PlatformConnectionString);
 
+        await _serverStartLock.WaitAsync();
+        try
+        {
+            _ = Factory.Services; // triggers StartServer() once, serialized
+        }
+        finally
+        {
+            _serverStartLock.Release();
+        }
+
         // Apply platform DB migrations
         await using var scope = Factory.Services.CreateAsyncScope();
         var platformDb = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
@@ -56,7 +72,7 @@ public sealed class IntegrationTestBase : IAsyncLifetime
         await ProvisionBrandDatabaseAsync(GammaSlug);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await Factory.DisposeAsync();
         await _sqlContainer.DisposeAsync();

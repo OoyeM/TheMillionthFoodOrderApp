@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.OrderLifecycle;
@@ -9,29 +8,29 @@ public sealed class OrderStatusTransitionTests
 
     // ── Create — happy path ───────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithValidArgs_SetsPropertiesCorrectly()
+    [Test]
+    public async Task Create_WithValidArgs_SetsPropertiesCorrectly()
     {
         var fromId = Guid.NewGuid();
         var toId = Guid.NewGuid();
 
         var transition = OrderStatusTransition.Create(ConfigId, fromId, toId);
 
-        transition.ShouldNotBeNull();
-        transition.Id.ShouldNotBe(Guid.Empty);
-        transition.OrderLifecycleConfigId.ShouldBe(ConfigId);
-        transition.FromStatusId.ShouldBe(fromId);
-        transition.ToStatusId.ShouldBe(toId);
+        await Assert.That(transition).IsNotNull();
+        await Assert.That(transition.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(transition.OrderLifecycleConfigId).IsEqualTo(ConfigId);
+        await Assert.That(transition.FromStatusId).IsEqualTo(fromId);
+        await Assert.That(transition.ToStatusId).IsEqualTo(toId);
     }
 
-    [Fact]
-    public void Create_GeneratesUuidV7()
+    [Test]
+    public async Task Create_GeneratesUuidV7()
     {
         var transition = OrderStatusTransition.Create(ConfigId, Guid.NewGuid(), Guid.NewGuid());
 
         // UUIDv7 has version nibble = 7 (bits 48-51)
         var version = (transition.Id.ToByteArray()[7] >> 4) & 0x0F;
-        version.ShouldBe(7);
+        await Assert.That(version).IsEqualTo(7);
     }
 
     // ── Create — no self-transition guard in domain ───────────────────────────
@@ -40,14 +39,14 @@ public sealed class OrderStatusTransitionTests
     // (which ensures both sides are in the provided status list). A self-referencing
     // transition can be created — it would only be rejected if validated by the config.
 
-    [Fact]
-    public void Create_WithSameFromAndToId_DoesNotThrow()
+    [Test]
+    public async Task Create_WithSameFromAndToId_DoesNotThrow()
     {
         var sameId = Guid.NewGuid();
 
         var transition = OrderStatusTransition.Create(ConfigId, sameId, sameId);
 
-        transition.FromStatusId.ShouldBe(sameId);
-        transition.ToStatusId.ShouldBe(sameId);
+        await Assert.That(transition.FromStatusId).IsEqualTo(sameId);
+        await Assert.That(transition.ToStatusId).IsEqualTo(sameId);
     }
 }

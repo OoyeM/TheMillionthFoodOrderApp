@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,8 +9,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Shops;
 /// Integration tests for shop opening hours CRUD operations.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -25,7 +24,7 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
     /// Creates a test shop via the API and returns its id.
     /// Each call uses a unique slug to prevent conflicts across tests sharing the same brand database.
     /// </summary>
-    private static async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
+    private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
     {
         var uniqueSlug = $"shop-{Guid.NewGuid():N}";
         var request = new
@@ -45,16 +44,16 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
         };
 
         var response = await client.PostAsJsonAsync(ShopsUrl(brandSlug), request);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var shop = await response.Content.ReadFromJsonAsync<ShopResponse>();
-        shop.ShouldNotBeNull();
-        return shop.Id;
+        await Assert.That(shop).IsNotNull();
+        return shop!.Id;
     }
 
     // ── Set opening hours ──────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_SingleBlockPerDay_Returns200()
     {
         // Arrange
@@ -76,17 +75,17 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OpeningHoursResponse>();
-        result.ShouldNotBeNull();
-        result.TimeBlocks.Count.ShouldBe(3);
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "09:00" && b.CloseTime == "17:00");
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Tuesday && b.OpenTime == "09:00" && b.CloseTime == "17:00");
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Friday && b.OpenTime == "10:00" && b.CloseTime == "22:00");
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.TimeBlocks.Count).IsEqualTo(3);
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "09:00" && b.CloseTime == "17:00")).IsTrue();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Tuesday && b.OpenTime == "09:00" && b.CloseTime == "17:00")).IsTrue();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Friday && b.OpenTime == "10:00" && b.CloseTime == "22:00")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_MultipleBlocksPerDay_Returns200()
     {
         // Arrange
@@ -108,16 +107,16 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OpeningHoursResponse>();
-        result.ShouldNotBeNull();
-        result.TimeBlocks.Count.ShouldBe(2);
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "11:30" && b.CloseTime == "14:00");
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "17:00" && b.CloseTime == "21:30");
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.TimeBlocks.Count).IsEqualTo(2);
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "11:30" && b.CloseTime == "14:00")).IsTrue();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "17:00" && b.CloseTime == "21:30")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_ReplaceExistingSchedule_Returns200WithNewSchedule()
     {
         // Arrange
@@ -149,17 +148,17 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), replacement);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OpeningHoursResponse>();
-        result.ShouldNotBeNull();
-        result.TimeBlocks.Count.ShouldBe(1);
-        result.TimeBlocks.ShouldNotContain(b => b.DayOfWeek == DayOfWeek.Monday);
-        result.TimeBlocks.ShouldNotContain(b => b.DayOfWeek == DayOfWeek.Tuesday);
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Saturday && b.OpenTime == "10:00" && b.CloseTime == "20:00");
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.TimeBlocks.Count).IsEqualTo(1);
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday)).IsFalse();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Tuesday)).IsFalse();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Saturday && b.OpenTime == "10:00" && b.CloseTime == "20:00")).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_EmptyArray_ClearsAllHours_Returns200()
     {
         // Arrange
@@ -184,16 +183,16 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), clear);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OpeningHoursResponse>();
-        result.ShouldNotBeNull();
-        result.TimeBlocks.ShouldBeEmpty();
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.TimeBlocks).IsEmpty();
     }
 
     // ── Get opening hours ──────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetOpeningHours_ReturnsAllBlocks_GroupedByDay()
     {
         // Arrange
@@ -215,27 +214,27 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<OpeningHoursResponse>();
-        result.ShouldNotBeNull();
-        result.TimeBlocks.Count.ShouldBe(3);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.TimeBlocks.Count).IsEqualTo(3);
 
         // Blocks should be ordered by day then by open time
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "11:30");
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "17:00");
-        result.TimeBlocks.ShouldContain(b => b.DayOfWeek == DayOfWeek.Wednesday && b.OpenTime == "09:00");
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "11:30")).IsTrue();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Monday && b.OpenTime == "17:00")).IsTrue();
+        await Assert.That(result.TimeBlocks.Any(b => b.DayOfWeek == DayOfWeek.Wednesday && b.OpenTime == "09:00")).IsTrue();
 
         // Monday blocks come before Wednesday
         var mondayBlocks = result.TimeBlocks.Where(b => b.DayOfWeek == DayOfWeek.Monday).ToList();
         var wednesdayBlocks = result.TimeBlocks.Where(b => b.DayOfWeek == DayOfWeek.Wednesday).ToList();
-        mondayBlocks.Count.ShouldBe(2);
-        wednesdayBlocks.Count.ShouldBe(1);
+        await Assert.That(mondayBlocks.Count).IsEqualTo(2);
+        await Assert.That(wednesdayBlocks.Count).IsEqualTo(1);
     }
 
     // ── Validation ────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_CloseTimeBeforeOpenTime_Returns400()
     {
         // Arrange
@@ -255,10 +254,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_CloseTimeEqualToOpenTime_Returns400()
     {
         // Arrange
@@ -278,10 +277,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_OverlappingBlocksSameDay_Returns400()
     {
         // Arrange
@@ -302,10 +301,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_InvalidTimeFormat_Returns400()
     {
         // Arrange
@@ -325,12 +324,12 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── 404 cases ─────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_NonExistentShop_Returns404()
     {
         // Arrange
@@ -350,10 +349,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, nonExistentShopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task GetOpeningHours_NonExistentShop_Returns404()
     {
         // Arrange
@@ -365,10 +364,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl(IntegrationTestBase.AlphaSlug, nonExistentShopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task SetOpeningHours_NonExistentBrand_Returns404()
     {
         // Arrange
@@ -388,10 +387,10 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl("non-existent-brand", shopId), request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task GetOpeningHours_NonExistentBrand_Returns404()
     {
         // Arrange
@@ -403,6 +402,6 @@ public sealed class OpeningHoursCrudTests(IntegrationTestBase fixture)
             OpeningHoursUrl("non-existent-brand", shopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 }

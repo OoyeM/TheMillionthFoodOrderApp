@@ -90,6 +90,20 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext) : IModifie
     }
 
     /// <inheritdoc/>
+    public async Task<bool> SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var group = await dbContext.ModifierGroups
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+
+        if (group is null)
+            return false;
+
+        group.SoftDelete();
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SaveChangesAsync(cancellationToken);
 

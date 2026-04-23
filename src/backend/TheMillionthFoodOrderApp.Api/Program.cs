@@ -72,6 +72,10 @@ builder.AddSqlServerDbContext<PlatformDbContext>("platform",
 builder.Services.AddApplication();
 builder.Host.UseWolverine(opts =>
 {
+    // Scan the Infrastructure assembly for Wolverine handlers (e.g. OrderStatusChangedHandler,
+    // BrandDatabaseProvisioner). Wolverine only scans the entry assembly by default.
+    opts.Discovery.IncludeAssembly(typeof(BrandDatabaseProvisioner).Assembly);
+
     // Retry transient SQL failures with cooldown periods: 1s, 5s, then 15s before dead-lettering.
     opts.OnException<SqlException>()
         .RetryWithCooldown(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));

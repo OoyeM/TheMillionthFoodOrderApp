@@ -86,10 +86,8 @@ public sealed class ModifierGroupService(
 
     public async Task DeleteModifierGroupAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var group = await modifierGroupRepository.UpdateAsync(
-            id, g => g.SoftDelete(), cancellationToken);
-
-        if (group is null)
+        var deleted = await modifierGroupRepository.SoftDeleteAsync(id, cancellationToken);
+        if (!deleted)
             throw new KeyNotFoundException($"ModifierGroup with id '{id}' was not found.");
     }
 

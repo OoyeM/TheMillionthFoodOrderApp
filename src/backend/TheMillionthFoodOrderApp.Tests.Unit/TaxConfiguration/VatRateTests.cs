@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.Common;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 
@@ -10,45 +9,45 @@ public sealed class VatRateTests
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithValidData_SetsProperties()
+    [Test]
+    public async Task Create_WithValidData_SetsProperties()
     {
         var vatRate = VatRate.Create(SomeTaxConfigId, ConsumptionMode.Takeaway, 6m);
 
-        vatRate.ShouldNotBeNull();
-        vatRate.Id.ShouldNotBe(Guid.Empty);
-        vatRate.TaxConfigurationId.ShouldBe(SomeTaxConfigId);
-        vatRate.ConsumptionMode.ShouldBe(ConsumptionMode.Takeaway);
-        vatRate.RatePercentage.ShouldBe(6m);
+        await Assert.That(vatRate).IsNotNull();
+        await Assert.That(vatRate.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(vatRate.TaxConfigurationId).IsEqualTo(SomeTaxConfigId);
+        await Assert.That(vatRate.ConsumptionMode).IsEqualTo(ConsumptionMode.Takeaway);
+        await Assert.That(vatRate.RatePercentage).IsEqualTo(6m);
     }
 
-    [Fact]
-    public void Create_WithNegativeRate_ThrowsArgumentOutOfRangeException()
+    [Test]
+    public async Task Create_WithNegativeRate_ThrowsArgumentOutOfRangeException()
     {
-        Should.Throw<ArgumentOutOfRangeException>(() =>
-            VatRate.Create(SomeTaxConfigId, ConsumptionMode.Takeaway, -1m));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            Task.FromResult(VatRate.Create(SomeTaxConfigId, ConsumptionMode.Takeaway, -1m)));
     }
 
-    [Fact]
-    public void Create_WithRateOver100_ThrowsArgumentOutOfRangeException()
+    [Test]
+    public async Task Create_WithRateOver100_ThrowsArgumentOutOfRangeException()
     {
-        Should.Throw<ArgumentOutOfRangeException>(() =>
-            VatRate.Create(SomeTaxConfigId, ConsumptionMode.Takeaway, 100.01m));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            Task.FromResult(VatRate.Create(SomeTaxConfigId, ConsumptionMode.Takeaway, 100.01m)));
     }
 
-    [Fact]
-    public void Create_WithZeroRate_Succeeds()
+    [Test]
+    public async Task Create_WithZeroRate_Succeeds()
     {
         var vatRate = VatRate.Create(SomeTaxConfigId, ConsumptionMode.EatIn, 0m);
 
-        vatRate.RatePercentage.ShouldBe(0m);
+        await Assert.That(vatRate.RatePercentage).IsEqualTo(0m);
     }
 
-    [Fact]
-    public void Create_WithRate100_Succeeds()
+    [Test]
+    public async Task Create_WithRate100_Succeeds()
     {
         var vatRate = VatRate.Create(SomeTaxConfigId, ConsumptionMode.EatIn, 100m);
 
-        vatRate.RatePercentage.ShouldBe(100m);
+        await Assert.That(vatRate.RatePercentage).IsEqualTo(100m);
     }
 }

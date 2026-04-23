@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,15 +9,15 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.ModifierGroups;
 /// Integration tests verifying cross-brand isolation for modifier groups.
 /// Modifier groups created in Brand Alpha must not be visible to Brand Beta.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ModifierGroupIsolationTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
     private static string ModifierGroupsUrl(string brandSlug) =>
         $"/api/brands/{brandSlug}/modifier-groups";
 
-    [Fact]
+    [Test]
     public async Task ModifierGroupsCreatedInAlpha_NotVisibleInBeta()
     {
         var client = CreateClient();
@@ -40,25 +39,25 @@ public sealed class ModifierGroupIsolationTests(IntegrationTestBase fixture)
 
         var createResponse = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug), request);
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(createResponse.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var created = await createResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        created.ShouldNotBeNull();
+        await Assert.That(created).IsNotNull();
 
         // List modifier groups in Beta — should not contain Alpha's group
         var betaListResponse = await client.GetAsync(ModifierGroupsUrl(IntegrationTestBase.BetaSlug));
-        betaListResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(betaListResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var betaGroups = await betaListResponse.Content.ReadFromJsonAsync<List<ModifierGroupListItemResponse>>();
-        betaGroups.ShouldNotBeNull();
-        betaGroups.ShouldNotContain(g => g.Id == created.Id);
+        await Assert.That(betaGroups).IsNotNull();
+        await Assert.That(betaGroups!.Any(g => g.Id == created!.Id)).IsFalse();
 
         // Confirm Alpha's own list does contain the group
         var alphaListResponse = await client.GetAsync(ModifierGroupsUrl(IntegrationTestBase.AlphaSlug));
-        alphaListResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(alphaListResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var alphaGroups = await alphaListResponse.Content.ReadFromJsonAsync<List<ModifierGroupListItemResponse>>();
-        alphaGroups.ShouldNotBeNull();
-        alphaGroups.ShouldContain(g => g.Id == created.Id);
+        await Assert.That(alphaGroups).IsNotNull();
+        await Assert.That(alphaGroups!.Any(g => g.Id == created!.Id)).IsTrue();
     }
 }

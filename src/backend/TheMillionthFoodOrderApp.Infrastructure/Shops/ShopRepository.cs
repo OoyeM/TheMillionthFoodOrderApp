@@ -53,6 +53,37 @@ public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
     }
 
     /// <inheritdoc/>
+    public async Task<Shop?> ReplaceOpeningHoursAsync(Guid shopId, Action<Shop> mutate, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.OpeningHoursTimeBlocks
+            .Where(b => b.ShopId == shopId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        // Clear tracker so FirstAsync returns a fresh instance without old block snapshots.
+        dbContext.ChangeTracker.Clear();
+
+        var shop = await dbContext.Shops
+            .FirstOrDefaultAsync(s => s.Id == shopId, cancellationToken);
+
+        if (shop is null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return null;
+        }
+
+        mutate(shop);
+
+        await dbContext.OpeningHoursTimeBlocks.AddRangeAsync(shop.OpeningHours, cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return shop;
+    }
+
+    /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => await dbContext.SaveChangesAsync(cancellationToken);
 }
