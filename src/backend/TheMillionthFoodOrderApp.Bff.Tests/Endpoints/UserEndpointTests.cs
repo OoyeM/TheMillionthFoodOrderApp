@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Bff.Tests.Fixtures;
 
 namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
@@ -9,12 +8,12 @@ namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
 /// Integration tests for <c>GET /bff/user</c>.
 /// Uses <see cref="BffTestWebAppFactory"/> — no database or Keycloak required.
 /// </summary>
+[ClassDataSource<BffTestWebAppFactory>(Shared = SharedType.PerClass)]
 public sealed class UserEndpointTests(BffTestWebAppFactory factory)
-    : IClassFixture<BffTestWebAppFactory>
 {
     // ── Anonymous ─────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetUser_Anonymous_Returns200WithIsAuthenticatedFalse()
     {
         // Arrange
@@ -28,15 +27,15 @@ public sealed class UserEndpointTests(BffTestWebAppFactory factory)
         var response = await client.GetAsync("/bff/user");
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var body = await ParseJsonAsync(response);
-        body.GetProperty("isAuthenticated").GetBoolean().ShouldBeFalse();
+        await Assert.That(body.GetProperty("isAuthenticated").GetBoolean()).IsFalse();
     }
 
     // ── Authenticated ─────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetUser_AfterMockLogin_Returns200WithUserInfo()
     {
         // Arrange — first sign in via the mock login endpoint to get a session cookie
@@ -47,7 +46,7 @@ public sealed class UserEndpointTests(BffTestWebAppFactory factory)
 
         // Sign in as brand-admin@frietjes; the response sets a bff_session cookie
         var loginResponse = await client.GetAsync("/bff/login?mock=brand-admin@frietjes");
-        loginResponse.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        await Assert.That(loginResponse.StatusCode).IsEqualTo(HttpStatusCode.Redirect);
 
         // The HttpClient automatically stores cookies via CookieContainer when
         // we use CreateClient() — the session cookie is included on subsequent calls.
@@ -56,23 +55,23 @@ public sealed class UserEndpointTests(BffTestWebAppFactory factory)
         var userResponse = await client.GetAsync("/bff/user");
 
         // Assert
-        userResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(userResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var body = await ParseJsonAsync(userResponse);
-        body.GetProperty("isAuthenticated").GetBoolean().ShouldBeTrue();
-        body.GetProperty("displayName").GetString().ShouldBe("Brand Admin (Frietjes)");
-        body.GetProperty("email").GetString().ShouldBe("brand-admin@frietjes.mock.local");
+        await Assert.That(body.GetProperty("isAuthenticated").GetBoolean()).IsTrue();
+        await Assert.That(body.GetProperty("displayName").GetString()).IsEqualTo("Brand Admin (Frietjes)");
+        await Assert.That(body.GetProperty("email").GetString()).IsEqualTo("brand-admin@frietjes.mock.local");
 
         // Roles must contain BrandAdmin
         var roles = body.GetProperty("roles").EnumerateArray()
                         .Select(r => r.GetString())
                         .ToArray();
-        roles.ShouldContain("BrandAdmin");
+        await Assert.That(roles).Contains("BrandAdmin");
 
-        body.GetProperty("brandSlug").GetString().ShouldBe("frietjes");
+        await Assert.That(body.GetProperty("brandSlug").GetString()).IsEqualTo("frietjes");
     }
 
-    [Fact]
+    [Test]
     public async Task GetUser_AfterMockLoginAsPlatformAdmin_HasPlatformAdminRole()
     {
         // Arrange
@@ -83,15 +82,15 @@ public sealed class UserEndpointTests(BffTestWebAppFactory factory)
         var userResponse = await client.GetAsync("/bff/user");
 
         // Assert
-        userResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(userResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var body = await ParseJsonAsync(userResponse);
-        body.GetProperty("isAuthenticated").GetBoolean().ShouldBeTrue();
+        await Assert.That(body.GetProperty("isAuthenticated").GetBoolean()).IsTrue();
 
         var roles = body.GetProperty("roles").EnumerateArray()
                         .Select(r => r.GetString())
                         .ToArray();
-        roles.ShouldContain("PlatformAdmin");
+        await Assert.That(roles).Contains("PlatformAdmin");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

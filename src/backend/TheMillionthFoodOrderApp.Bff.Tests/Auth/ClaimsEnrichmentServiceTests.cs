@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Identity;
 using TheMillionthFoodOrderApp.Bff.Auth;
 using TheMillionthFoodOrderApp.Domain.Identity;
@@ -28,7 +27,7 @@ public sealed class ClaimsEnrichmentServiceTests
 
     // ── Tests ─────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task EnrichClaimsAsync_PlatformAdmin_AddsPlatformAdminRoleClaims()
     {
         // Arrange
@@ -51,15 +50,16 @@ public sealed class ClaimsEnrichmentServiceTests
         await sut.EnrichClaimsAsync(context);
 
         // Assert
-        identity.FindAll(ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ShouldContain(AuthConstants.Roles.PlatformAdmin);
+        await Assert.That(
+            identity.FindAll(ClaimTypes.Role).Select(c => c.Value))
+            .Contains(AuthConstants.Roles.PlatformAdmin);
 
-        identity.FindFirst(AuthConstants.Claims.PlatformRole)?.Value
-                .ShouldBe(AuthConstants.Roles.PlatformAdmin);
+        await Assert.That(
+            identity.FindFirst(AuthConstants.Claims.PlatformRole)?.Value)
+            .IsEqualTo(AuthConstants.Roles.PlatformAdmin);
     }
 
-    [Fact]
+    [Test]
     public async Task EnrichClaimsAsync_BrandAdmin_AddsBrandSlugAndBrandRolesClaims()
     {
         // Arrange
@@ -86,15 +86,15 @@ public sealed class ClaimsEnrichmentServiceTests
         await sut.EnrichClaimsAsync(context);
 
         // Assert
-        identity.FindFirst(AuthConstants.Claims.BrandSlug)?.Value.ShouldBe("frietjes");
-        identity.FindFirst(AuthConstants.Claims.BrandRoles)?.Value.ShouldBe("frietjes:BrandAdmin");
+        await Assert.That(identity.FindFirst(AuthConstants.Claims.BrandSlug)?.Value).IsEqualTo("frietjes");
+        await Assert.That(identity.FindFirst(AuthConstants.Claims.BrandRoles)?.Value).IsEqualTo("frietjes:BrandAdmin");
 
-        identity.FindAll(ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ShouldContain(StaffRole.BrandAdmin.ToString());
+        await Assert.That(
+            identity.FindAll(ClaimTypes.Role).Select(c => c.Value))
+            .Contains(StaffRole.BrandAdmin.ToString());
     }
 
-    [Fact]
+    [Test]
     public async Task EnrichClaimsAsync_UserWithMultipleBrandRoles_AddsAllClaims()
     {
         // Arrange
@@ -127,17 +127,18 @@ public sealed class ClaimsEnrichmentServiceTests
         var brandSlugs = identity.FindAll(AuthConstants.Claims.BrandSlug)
                                  .Select(c => c.Value)
                                  .ToList();
-        brandSlugs.ShouldContain("frietjes");
-        brandSlugs.ShouldContain("other-brand");
+        await Assert.That(brandSlugs).Contains("frietjes");
+        await Assert.That(brandSlugs).Contains("other-brand");
 
         var brandRoles = identity.FindAll(AuthConstants.Claims.BrandRoles)
                                  .Select(c => c.Value)
                                  .ToList();
-        brandRoles.ShouldContain("frietjes:BrandAdmin");
-        brandRoles.ShouldContain("other-brand:CounterStaff");
+        await Assert.That(brandRoles).Contains("frietjes:BrandAdmin");
+        await Assert.That(brandRoles).Contains("other-brand:CounterStaff");
     }
 
-    [Fact(Skip = "Requires integration-level OIDC context — missing 'sub' claim path covered in Wave 2")]
+    [Test]
+    [Skip("Requires integration-level OIDC context — missing 'sub' claim path covered in Wave 2")]
     public Task EnrichClaimsAsync_NoSubClaim_LogsWarningAndSkipsEnrichment()
     {
         // This test requires constructing a TokenValidatedContext where the principal

@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Shouldly;
 using TheMillionthFoodOrderApp.Bff.Auth;
 
 namespace TheMillionthFoodOrderApp.Bff.Tests.Auth;
@@ -12,140 +11,139 @@ public sealed class MockAuthHandlerTests
 {
     // ── Known personas ────────────────────────────────────────────────────────
 
-    [Theory]
-    [InlineData(MockPersonas.PlatformAdmin)]
-    [InlineData(MockPersonas.BrandAdminFrietjes)]
-    [InlineData(MockPersonas.CounterStaffFrietjes)]
-    [InlineData(MockPersonas.Customer)]
-    public void BuildPrincipal_KnownPersona_ReturnsNonNullPrincipal(string persona)
+    [Test]
+    [Arguments(MockPersonas.PlatformAdmin)]
+    [Arguments(MockPersonas.BrandAdminFrietjes)]
+    [Arguments(MockPersonas.CounterStaffFrietjes)]
+    [Arguments(MockPersonas.Customer)]
+    public async Task BuildPrincipal_KnownPersona_ReturnsNonNullPrincipal(string persona)
     {
         var principal = MockAuthHandler.BuildPrincipal(persona);
 
-        principal.ShouldNotBeNull();
+        await Assert.That(principal).IsNotNull();
     }
 
-    [Theory]
-    [InlineData(MockPersonas.PlatformAdmin)]
-    [InlineData(MockPersonas.BrandAdminFrietjes)]
-    [InlineData(MockPersonas.CounterStaffFrietjes)]
-    [InlineData(MockPersonas.Customer)]
-    public void BuildPrincipal_KnownPersona_HasMockAuthSchemeIdentity(string persona)
+    [Test]
+    [Arguments(MockPersonas.PlatformAdmin)]
+    [Arguments(MockPersonas.BrandAdminFrietjes)]
+    [Arguments(MockPersonas.CounterStaffFrietjes)]
+    [Arguments(MockPersonas.Customer)]
+    public async Task BuildPrincipal_KnownPersona_HasMockAuthSchemeIdentity(string persona)
     {
         var principal = MockAuthHandler.BuildPrincipal(persona);
 
-        principal!.Identity!.AuthenticationType.ShouldBe(AuthConstants.Schemes.Mock);
+        await Assert.That(principal!.Identity!.AuthenticationType).IsEqualTo(AuthConstants.Schemes.Mock);
     }
 
-    [Fact]
-    public void BuildPrincipal_PlatformAdmin_HasPlatformAdminRole()
+    [Test]
+    public async Task BuildPrincipal_PlatformAdmin_HasPlatformAdminRole()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.PlatformAdmin);
 
-        principal.ShouldNotBeNull();
-        principal.IsInRole(AuthConstants.Roles.PlatformAdmin).ShouldBeTrue();
+        await Assert.That(principal).IsNotNull();
+        await Assert.That(principal!.IsInRole(AuthConstants.Roles.PlatformAdmin)).IsTrue();
     }
 
-    [Fact]
-    public void BuildPrincipal_PlatformAdmin_HasPlatformRoleClaim()
+    [Test]
+    public async Task BuildPrincipal_PlatformAdmin_HasPlatformRoleClaim()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.PlatformAdmin);
 
-        principal!.FindFirstValue(AuthConstants.Claims.PlatformRole)
-                  .ShouldBe(AuthConstants.Roles.PlatformAdmin);
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.PlatformRole))
+            .IsEqualTo(AuthConstants.Roles.PlatformAdmin);
     }
 
-    [Fact]
-    public void BuildPrincipal_PlatformAdmin_HasNoBrandSlugClaim()
+    [Test]
+    public async Task BuildPrincipal_PlatformAdmin_HasNoBrandSlugClaim()
     {
         // Platform admin is not scoped to a brand
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.PlatformAdmin);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandSlug).ShouldBeNull();
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandSlug)).IsNull();
     }
 
-    [Fact]
-    public void BuildPrincipal_BrandAdminFrietjes_HasBrandAdminRole()
+    [Test]
+    public async Task BuildPrincipal_BrandAdminFrietjes_HasBrandAdminRole()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.BrandAdminFrietjes);
 
-        principal.ShouldNotBeNull();
-        principal.IsInRole(AuthConstants.Roles.BrandAdmin).ShouldBeTrue();
+        await Assert.That(principal).IsNotNull();
+        await Assert.That(principal!.IsInRole(AuthConstants.Roles.BrandAdmin)).IsTrue();
     }
 
-    [Fact]
-    public void BuildPrincipal_BrandAdminFrietjes_HasFrietjesBrandSlug()
+    [Test]
+    public async Task BuildPrincipal_BrandAdminFrietjes_HasFrietjesBrandSlug()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.BrandAdminFrietjes);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandSlug).ShouldBe("frietjes");
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandSlug)).IsEqualTo("frietjes");
     }
 
-    [Fact]
-    public void BuildPrincipal_BrandAdminFrietjes_HasBrandRolesClaim()
+    [Test]
+    public async Task BuildPrincipal_BrandAdminFrietjes_HasBrandRolesClaim()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.BrandAdminFrietjes);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandRoles).ShouldBe("frietjes:BrandAdmin");
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandRoles)).IsEqualTo("frietjes:BrandAdmin");
     }
 
-    [Fact]
-    public void BuildPrincipal_CounterStaffFrietjes_HasCounterStaffRole()
+    [Test]
+    public async Task BuildPrincipal_CounterStaffFrietjes_HasCounterStaffRole()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.CounterStaffFrietjes);
 
-        principal.ShouldNotBeNull();
-        principal.IsInRole(AuthConstants.Roles.CounterStaff).ShouldBeTrue();
+        await Assert.That(principal).IsNotNull();
+        await Assert.That(principal!.IsInRole(AuthConstants.Roles.CounterStaff)).IsTrue();
     }
 
-    [Fact]
-    public void BuildPrincipal_CounterStaffFrietjes_HasFrietjesBrandSlug()
+    [Test]
+    public async Task BuildPrincipal_CounterStaffFrietjes_HasFrietjesBrandSlug()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.CounterStaffFrietjes);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandSlug).ShouldBe("frietjes");
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandSlug)).IsEqualTo("frietjes");
     }
 
-    [Fact]
-    public void BuildPrincipal_CounterStaffFrietjes_HasBrandRolesClaim()
+    [Test]
+    public async Task BuildPrincipal_CounterStaffFrietjes_HasBrandRolesClaim()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.CounterStaffFrietjes);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandRoles).ShouldBe("frietjes:CounterStaff");
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandRoles)).IsEqualTo("frietjes:CounterStaff");
     }
 
-    [Fact]
-    public void BuildPrincipal_Customer_HasCustomerRole()
+    [Test]
+    public async Task BuildPrincipal_Customer_HasCustomerRole()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.Customer);
 
-        principal.ShouldNotBeNull();
-        principal.IsInRole(AuthConstants.Roles.Customer).ShouldBeTrue();
+        await Assert.That(principal).IsNotNull();
+        await Assert.That(principal!.IsInRole(AuthConstants.Roles.Customer)).IsTrue();
     }
 
-    [Fact]
-    public void BuildPrincipal_Customer_HasNoBrandSlugClaim()
+    [Test]
+    public async Task BuildPrincipal_Customer_HasNoBrandSlugClaim()
     {
         var principal = MockAuthHandler.BuildPrincipal(MockPersonas.Customer);
 
-        principal!.FindFirstValue(AuthConstants.Claims.BrandSlug).ShouldBeNull();
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandSlug)).IsNull();
     }
 
     // ── Unknown persona ───────────────────────────────────────────────────────
 
-    [Fact]
-    public void BuildPrincipal_UnknownPersona_ReturnsNull()
+    [Test]
+    public async Task BuildPrincipal_UnknownPersona_ReturnsNull()
     {
         var principal = MockAuthHandler.BuildPrincipal("unknown-persona");
 
-        principal.ShouldBeNull();
+        await Assert.That(principal).IsNull();
     }
 
-    [Fact]
-    public void BuildPrincipal_EmptyString_ReturnsNull()
+    [Test]
+    public async Task BuildPrincipal_EmptyString_ReturnsNull()
     {
         var principal = MockAuthHandler.BuildPrincipal(string.Empty);
 
-        principal.ShouldBeNull();
+        await Assert.That(principal).IsNull();
     }
-
 }

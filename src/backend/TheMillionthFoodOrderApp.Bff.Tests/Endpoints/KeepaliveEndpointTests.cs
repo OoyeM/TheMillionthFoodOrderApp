@@ -1,5 +1,4 @@
 using System.Net;
-using Shouldly;
 using TheMillionthFoodOrderApp.Bff.Tests.Fixtures;
 
 namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
@@ -7,10 +6,10 @@ namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
 /// <summary>
 /// Integration tests for <c>POST /bff/session/keepalive</c>.
 /// </summary>
+[ClassDataSource<BffTestWebAppFactory>(Shared = SharedType.PerClass)]
 public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
-    : IClassFixture<BffTestWebAppFactory>
 {
-    [Fact]
+    [Test]
     public async Task Keepalive_WithoutCookie_Returns401()
     {
         // Arrange — fresh client, no session cookie
@@ -20,10 +19,10 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         var response = await client.PostAsync("/bff/session/keepalive", content: null);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
+    [Test]
     public async Task Keepalive_WithMockPersonaCookie_Returns200()
     {
         // Arrange — sign in to get a session
@@ -34,14 +33,14 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         var response = await client.PostAsync("/bff/session/keepalive", content: null);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
     }
 
-    [Theory]
-    [InlineData("platform-admin")]
-    [InlineData("brand-admin@frietjes")]
-    [InlineData("counter-staff@frietjes")]
-    [InlineData("customer")]
+    [Test]
+    [Arguments("platform-admin")]
+    [Arguments("brand-admin@frietjes")]
+    [Arguments("counter-staff@frietjes")]
+    [Arguments("customer")]
     public async Task Keepalive_AllPersonas_Returns200(string persona)
     {
         // Arrange
@@ -52,6 +51,6 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         var response = await client.PostAsync("/bff/session/keepalive", content: null);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
     }
 }
