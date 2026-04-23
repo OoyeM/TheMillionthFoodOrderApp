@@ -8,4 +8,5 @@
   <Project Path="TheMillionthFoodOrderApp.ServiceDefaults/TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
   <Project Path="TheMillionthFoodOrderApp.Tests.Integration/TheMillionthFoodOrderApp.Tests.Integration.csproj" />
   <Project Path="TheMillionthFoodOrderApp.Tests.Unit/TheMillionthFoodOrderApp.Tests.Unit.csproj" />
+  <Project Path="TheMillionthFoodOrderApp.Bff.Tests/TheMillionthFoodOrderApp.Bff.Tests.csproj" />
 </Solution>
