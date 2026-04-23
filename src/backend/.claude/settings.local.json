@@ -10,7 +10,12 @@
       "WebFetch(domain:www.jimmybogard.com)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:www.ssw.com.au)"
+      "WebFetch(domain:www.ssw.com.au)",
+      "Bash(dotnet run *)",
+      "Bash(dotnet build *)",
+      "Bash(tee C:/Temp/test_output.txt)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(dotnet nuget locals *)"
     ]
   },
   "enableAllProjectMcpServers": true,
