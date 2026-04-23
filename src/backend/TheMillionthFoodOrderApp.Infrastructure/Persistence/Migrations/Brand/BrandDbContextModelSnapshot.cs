@@ -696,7 +696,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.HasOne("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", null)
                         .WithMany()
                         .HasForeignKey("FromStatusId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderLifecycleConfig", null)
@@ -708,7 +708,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.HasOne("TheMillionthFoodOrderApp.Domain.OrderLifecycle.OrderStatus", null)
                         .WithMany()
                         .HasForeignKey("ToStatusId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

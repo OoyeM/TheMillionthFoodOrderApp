@@ -11,21 +11,23 @@ public sealed class OpeningHoursService(IShopRepository shopRepository) : IOpeni
         SetOpeningHoursRequest request,
         CancellationToken cancellationToken = default)
     {
-        var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
+        var shop = await shopRepository.ReplaceOpeningHoursAsync(
+            shopId,
+            s =>
+            {
+                var blocks = request.TimeBlocks
+                    .Select(b => OpeningHoursTimeBlock.Create(
+                        shopId,
+                        b.DayOfWeek,
+                        TimeOnly.Parse(b.OpenTime, CultureInfo.InvariantCulture),
+                        TimeOnly.Parse(b.CloseTime, CultureInfo.InvariantCulture)))
+                    .ToList();
+                s.SetOpeningHours(blocks);
+            },
+            cancellationToken);
+
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
-
-        var blocks = request.TimeBlocks
-            .Select(b => OpeningHoursTimeBlock.Create(
-                shopId,
-                b.DayOfWeek,
-                TimeOnly.Parse(b.OpenTime, CultureInfo.InvariantCulture),
-                TimeOnly.Parse(b.CloseTime, CultureInfo.InvariantCulture)))
-            .ToList();
-
-        shop.SetOpeningHours(blocks);
-
-        await shopRepository.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(shop);
     }

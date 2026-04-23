@@ -13,6 +13,12 @@ public interface IModifierGroupRepository
     /// </summary>
     Task<ModifierGroup?> UpdateAsync(Guid id, Action<ModifierGroup> mutate, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Soft-deletes the modifier group with <paramref name="id"/>. Child translations and modifiers
+    /// are retained for historical order records. Returns false if the group was not found.
+    /// </summary>
+    Task<bool> SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>

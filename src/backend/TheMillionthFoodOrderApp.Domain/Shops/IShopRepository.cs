@@ -14,5 +14,12 @@ public interface IShopRepository
     /// </summary>
     Task<Shop?> UpdateAsync(Guid id, Action<Shop> mutate, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Replaces all OpeningHoursTimeBlocks for the given shop within a transaction.
+    /// Bypasses EF change tracker to avoid snapshot / cascade conflicts.
+    /// Returns the updated shop, or null if not found.
+    /// </summary>
+    Task<Shop?> ReplaceOpeningHoursAsync(Guid shopId, Action<Shop> mutate, CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

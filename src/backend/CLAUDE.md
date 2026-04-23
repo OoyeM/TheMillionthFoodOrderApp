@@ -196,6 +196,16 @@ Each bounded context follows `IXxxService` (interface in Application) → `XxxSe
 - **Money:** `Money` value object (Amount + Currency), mapped as EF owned entity with explicit column names (`BasePrice_Amount`, `BasePrice_Currency`).
 - **Sort ordering:** Use an `int SortOrder` field. Reorder via a dedicated endpoint that accepts an ordered list of IDs and assigns 0..n-1 sequentially. Last-write-wins for MVP.
 - **Domain events:** Wolverine handles domain events in-memory (e.g. `ShopCreatedEvent` triggers brand DB provisioning, `OrderStatusChangedEvent` triggers SignalR notifications).
+- **Replacing child collections (backing-field pattern):** Domain aggregates expose children as `IReadOnlyCollection<T>` backed by a private `List<T>`. When a domain method calls `_field.Clear(); _field.AddRange(newItems)`, EF Core's snapshot-based change detection does **not** reliably detect the new items as Added — because the entity was loaded fresh without those items in its snapshot. This causes `DbUpdateConcurrencyException` ("expected 1 row, affected 0") on `SaveChanges`. The fix is a dedicated `ReplaceXxxAsync` repository method:
+  1. `BeginTransactionAsync`
+  2. `ExecuteDeleteAsync` children WHERE `parentId = id` (bypasses change tracker)
+  3. `ChangeTracker.Clear()` (evicts stale tracked instances so `FirstAsync` returns a fresh object)
+  4. `FirstAsync` parent without includes (no old snapshot)
+  5. `mutate(parent)` — domain method now clears an empty collection and adds new items
+  6. `DbSet.AddRangeAsync(parent.Children)` — **required**: explicitly registers new children; do not rely on navigation snapshot detection
+  7. `SaveChangesAsync` + `CommitAsync`
+
+  Existing examples: `OrderLifecycleConfigRepository.ReplaceAsync`, `TaxConfigurationRepository.ReplaceRatesAsync`, `ShopRepository.ReplaceOpeningHoursAsync`. Apply this pattern whenever a repository method must fully replace a child collection.
 
 ## Real-Time Notifications
 

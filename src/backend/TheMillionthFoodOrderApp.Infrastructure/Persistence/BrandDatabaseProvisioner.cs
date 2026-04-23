@@ -71,6 +71,9 @@ public sealed class BrandDatabaseProvisioner(
         string brandSlug,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(brandSlug))
+            throw new ArgumentException("Brand slug must not be null or empty.", nameof(brandSlug));
+
         var masterConnectionString = BrandConnectionStringHelper.DeriveMasterConnectionString(
             brandConnectionString);
 

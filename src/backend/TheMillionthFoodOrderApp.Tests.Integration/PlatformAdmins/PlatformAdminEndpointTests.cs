@@ -127,41 +127,27 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     {
         var client = CreateClient();
 
-        // Invite a single admin, then invite a second, then deactivate the second
-        // so only the first remains. Then attempt to deactivate the first → 409.
-        // Note: because the shared container may already contain admins from other
-        // tests, we seed exactly 2 fresh admins and deactivate all existing ones first.
-
-        // Get all current admins
-        var listResponse = await client.GetAsync(AdminsUrl);
-        var allAdmins = await listResponse.Content.ReadFromJsonAsync<List<PlatformAdminResponse>>();
-        await Assert.That(allAdmins).IsNotNull();
-
-        // Invite a dedicated "anchor" admin that we will keep
+        // Create the anchor admin first so it exists before we start draining others.
+        // Parallel tests may create admins at any point, so we loop until the anchor
+        // is the only one left rather than doing a one-shot deactivation pass.
         var anchorEmail = $"anchor-{Guid.NewGuid():N}@test.com";
         var anchorResponse = await client.PostAsJsonAsync(
             AdminsUrl, MakeInviteRequest(anchorEmail, "Anchor Admin"));
         var anchor = await anchorResponse.Content.ReadFromJsonAsync<PlatformAdminResponse>();
         await Assert.That(anchor).IsNotNull();
 
-        // Deactivate all pre-existing admins (not the anchor just created)
-        foreach (var admin in allAdmins!)
+        List<PlatformAdminResponse>? remaining;
+        do
         {
-            var dr = await client.PostAsJsonAsync(DeactivateUrl(admin.Id), (object?)null);
-            // 409 means we hit the last-admin guard — that's fine, stop here
-            if (dr.StatusCode == HttpStatusCode.Conflict)
-                break;
+            var listResponse = await client.GetAsync(AdminsUrl);
+            remaining = await listResponse.Content.ReadFromJsonAsync<List<PlatformAdminResponse>>();
+            foreach (var other in remaining!.Where(a => a.Id != anchor!.Id))
+                await client.PostAsJsonAsync(DeactivateUrl(other.Id), (object?)null);
         }
-
-        // Verify we now have exactly 1 admin (the anchor)
-        var currentListResponse = await client.GetAsync(AdminsUrl);
-        var currentAdmins = await currentListResponse.Content.ReadFromJsonAsync<List<PlatformAdminResponse>>();
-        await Assert.That(currentAdmins).IsNotNull();
-        await Assert.That(currentAdmins!.Count).IsEqualTo(1);
-        await Assert.That(currentAdmins[0].Id).IsEqualTo(anchor!.Id);
+        while (remaining!.Any(a => a.Id != anchor!.Id));
 
         // Attempt to deactivate the last remaining admin — must return 409
-        var lastDeactivateResponse = await client.PostAsJsonAsync(DeactivateUrl(anchor.Id), (object?)null);
+        var lastDeactivateResponse = await client.PostAsJsonAsync(DeactivateUrl(anchor!.Id), (object?)null);
 
         await Assert.That(lastDeactivateResponse.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
     }

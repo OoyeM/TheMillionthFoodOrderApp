@@ -182,43 +182,31 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff-last-admin")]
     public async Task DeactivateBrandStaff_LastBrandAdmin_Returns409()
     {
         var client = CreateClient();
         var brandSlug = IntegrationTestBase.AlphaSlug;
 
-        // Get current list of all brand admins
-        var listResponse = await client.GetAsync(StaffUrl(brandSlug));
-        var allStaff = await listResponse.Content.ReadFromJsonAsync<List<StaffMemberResponse>>();
-        await Assert.That(allStaff).IsNotNull();
-
-        // Invite a dedicated anchor BrandAdmin
-        var anchorEmail = $"anchor-brand-admin-{Guid.NewGuid():N}@test.com";
+        // Invite a fresh anchor so we know exactly which role will be the last
+        var anchorEmail = $"last-admin-{Guid.NewGuid():N}@test.com";
         var anchorResponse = await client.PostAsJsonAsync(
             StaffUrl(brandSlug),
-            MakeInviteRequest(anchorEmail, "Anchor Admin", StaffRole.BrandAdmin));
+            MakeInviteRequest(anchorEmail, "Last Admin", StaffRole.BrandAdmin));
         var anchor = await anchorResponse.Content.ReadFromJsonAsync<StaffMemberResponse>();
         await Assert.That(anchor).IsNotNull();
 
-        // Deactivate all pre-existing BrandAdmins (stop on 409 if we hit the last one)
-        foreach (var existing in allStaff!.Where(s => s.Role == StaffRole.BrandAdmin))
-        {
-            var dr = await client.PostAsJsonAsync(DeactivateUrl(brandSlug, existing.RoleId), (object?)null);
-            if (dr.StatusCode == HttpStatusCode.Conflict)
-                break;
-        }
+        // Drain every other BrandAdmin so anchor is the only one left
+        var listResponse = await client.GetAsync(StaffUrl(brandSlug));
+        var currentStaff = await listResponse.Content.ReadFromJsonAsync<List<StaffMemberResponse>>();
+        foreach (var other in currentStaff!.Where(s => s.Role == StaffRole.BrandAdmin && s.RoleId != anchor!.RoleId))
+            await client.PostAsJsonAsync(DeactivateUrl(brandSlug, other.RoleId), (object?)null);
 
-        // Verify exactly 1 BrandAdmin remains (the anchor)
-        var currentListResponse = await client.GetAsync(StaffUrl(brandSlug));
-        var currentStaff = await currentListResponse.Content.ReadFromJsonAsync<List<StaffMemberResponse>>();
-        await Assert.That(currentStaff).IsNotNull();
-        await Assert.That(currentStaff!.Count(s => s.Role == StaffRole.BrandAdmin)).IsEqualTo(1);
-
-        // Attempt to deactivate the last BrandAdmin — must return 409
-        var lastDeactivateResponse = await client.PostAsJsonAsync(
+        // Anchor is now the only BrandAdmin — deactivating it must return 409
+        var response = await client.PostAsJsonAsync(
             DeactivateUrl(brandSlug, anchor!.RoleId), (object?)null);
 
-        await Assert.That(lastDeactivateResponse.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
     }
 
     [Test]

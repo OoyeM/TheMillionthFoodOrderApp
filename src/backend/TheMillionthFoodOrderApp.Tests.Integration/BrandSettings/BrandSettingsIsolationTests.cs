@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Data.SqlClient;
 using TheMillionthFoodOrderApp.Application.BrandSettings;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -12,6 +13,20 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.BrandSettings;
 [ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
 {
+    [Before(Test)]
+    public async Task CleanBrandSettingsAsync()
+    {
+        foreach (var slug in new[] { IntegrationTestBase.AlphaSlug, IntegrationTestBase.BetaSlug })
+        {
+            var connStr = fixture.GetBrandConnectionString(slug);
+            await using var conn = new SqlConnection(connStr);
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM [BrandSettings]";
+            await cmd.ExecuteNonQueryAsync();
+        }
+    }
+
     // ── GET settings ─────────────────────────────────────────────────────────
 
     [Test]
@@ -28,6 +43,7 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
     // ── PUT settings (upsert) ────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("brand-settings-isolation")]
     public async Task PutSettings_WritesToAlpha_NotVisibleToBeta()
     {
         var client = fixture.Factory.CreateClient();
@@ -58,6 +74,7 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-settings-isolation")]
     public async Task PutSettings_BothBrandsHaveIndependentSettings()
     {
         var client = fixture.Factory.CreateClient();
@@ -103,6 +120,7 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-settings-isolation")]
     public async Task PutSettings_UpdateExisting_ReturnsUpdatedValues()
     {
         var client = fixture.Factory.CreateClient();
