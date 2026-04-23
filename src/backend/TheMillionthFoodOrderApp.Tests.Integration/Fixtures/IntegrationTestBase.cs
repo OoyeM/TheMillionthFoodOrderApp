@@ -16,6 +16,11 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 /// </summary>
 public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
 {
+    // FastEndpoints 8.0.x mutates a static JsonSerializerOptions.TypeInfoResolverChain
+    // in UseFastEndpoints(). Concurrent WebApplicationFactory.StartServer() calls from
+    // parallel TUnit class fixtures corrupt the shared list — serialize them instead.
+    private static readonly SemaphoreSlim _serverStartLock = new(1, 1);
+
     private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
@@ -42,6 +47,16 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
         PlatformConnectionString = _sqlContainer.GetConnectionString();
 
         Factory = new IntegrationTestWebAppFactory(PlatformConnectionString);
+
+        await _serverStartLock.WaitAsync();
+        try
+        {
+            _ = Factory.Services; // triggers StartServer() once, serialized
+        }
+        finally
+        {
+            _serverStartLock.Release();
+        }
 
         // Apply platform DB migrations
         await using var scope = Factory.Services.CreateAsyncScope();
