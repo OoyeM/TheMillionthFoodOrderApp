@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.BrandSettings;
@@ -7,108 +6,108 @@ public sealed class BrandColorsTests
 {
     // ── Constructor — happy path ───────────────────────────────────────────────
 
-    [Theory]
-    [InlineData("#fff", "#000", "#abc")]
-    [InlineData("#ffffff", "#000000", "#abcdef")]
-    [InlineData("#2563eb", "#64748b", "#f59e0b")]
-    [InlineData("#abc", "#123456", "#aabbcc")]
-    public void Constructor_WithValidHexColors_SetsProperties(string primary, string secondary, string accent)
+    [Arguments("#fff", "#000", "#abc")]
+    [Arguments("#ffffff", "#000000", "#abcdef")]
+    [Arguments("#2563eb", "#64748b", "#f59e0b")]
+    [Arguments("#abc", "#123456", "#aabbcc")]
+    [Test]
+    public async Task Constructor_WithValidHexColors_SetsProperties(string primary, string secondary, string accent)
     {
         var colors = new BrandColors(primary, secondary, accent);
 
-        colors.Primary.ShouldBe(primary.ToLowerInvariant());
-        colors.Secondary.ShouldBe(secondary.ToLowerInvariant());
-        colors.Accent.ShouldBe(accent.ToLowerInvariant());
+        await Assert.That(colors.Primary).IsEqualTo(primary.ToLowerInvariant());
+        await Assert.That(colors.Secondary).IsEqualTo(secondary.ToLowerInvariant());
+        await Assert.That(colors.Accent).IsEqualTo(accent.ToLowerInvariant());
     }
 
-    [Theory]
-    [InlineData("#ABC", "#abc")]
-    [InlineData("#FFAA00", "#ffaa00")]
-    [InlineData("#2563EB", "#2563eb")]
-    public void Constructor_LowercasesHexOnStore(string input, string expected)
+    [Arguments("#ABC", "#abc")]
+    [Arguments("#FFAA00", "#ffaa00")]
+    [Arguments("#2563EB", "#2563eb")]
+    [Test]
+    public async Task Constructor_LowercasesHexOnStore(string input, string expected)
     {
         var colors = new BrandColors(input, "#000000", "#000000");
 
-        colors.Primary.ShouldBe(expected);
+        await Assert.That(colors.Primary).IsEqualTo(expected);
     }
 
     // ── Constructor — invalid colors ───────────────────────────────────────────
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Constructor_WithEmptyOrWhitespacePrimary_ThrowsArgumentException(string badValue)
+    [Arguments("")]
+    [Arguments("   ")]
+    [Test]
+    public async Task Constructor_WithEmptyOrWhitespacePrimary_ThrowsArgumentException(string badValue)
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors(badValue, "#000000", "#000000"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors(badValue, "#000000", "#000000")));
     }
 
-    [Fact]
-    public void Constructor_WithEmptySecondary_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithEmptySecondary_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors("#ffffff", "", "#000000"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors("#ffffff", "", "#000000")));
     }
 
-    [Fact]
-    public void Constructor_WithEmptyAccent_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithEmptyAccent_ThrowsArgumentException()
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors("#ffffff", "#000000", ""));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors("#ffffff", "#000000", "")));
     }
 
-    [Theory]
-    [InlineData("ffffff")]
-    [InlineData("rgb(0,0,0)")]
-    [InlineData("blue")]
-    public void Constructor_WithMissingHashPrefix_ThrowsArgumentException(string badValue)
+    [Arguments("ffffff")]
+    [Arguments("rgb(0,0,0)")]
+    [Arguments("blue")]
+    [Test]
+    public async Task Constructor_WithMissingHashPrefix_ThrowsArgumentException(string badValue)
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors(badValue, "#000000", "#000000"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors(badValue, "#000000", "#000000")));
     }
 
-    [Theory]
-    [InlineData("#gggggg")]
-    [InlineData("#zzzzzz")]
-    [InlineData("#12345g")]
-    public void Constructor_WithNonHexCharacters_ThrowsArgumentException(string badValue)
+    [Arguments("#gggggg")]
+    [Arguments("#zzzzzz")]
+    [Arguments("#12345g")]
+    [Test]
+    public async Task Constructor_WithNonHexCharacters_ThrowsArgumentException(string badValue)
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors(badValue, "#000000", "#000000"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors(badValue, "#000000", "#000000")));
     }
 
-    [Theory]
-    [InlineData("#ffaa")]
-    [InlineData("#ffaa0")]
-    [InlineData("#ffaa000")]
-    [InlineData("#ff")]
-    [InlineData("#f")]
-    [InlineData("#")]
-    public void Constructor_WithWrongHexLength_ThrowsArgumentException(string badValue)
+    [Arguments("#ffaa")]
+    [Arguments("#ffaa0")]
+    [Arguments("#ffaa000")]
+    [Arguments("#ff")]
+    [Arguments("#f")]
+    [Arguments("#")]
+    [Test]
+    public async Task Constructor_WithWrongHexLength_ThrowsArgumentException(string badValue)
     {
-        Should.Throw<ArgumentException>(() =>
-            new BrandColors(badValue, "#000000", "#000000"));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(new BrandColors(badValue, "#000000", "#000000")));
     }
 
     // ── Equality ───────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Equality_WithIdenticalNormalizedValues_AreEqual()
+    [Test]
+    public async Task Equality_WithIdenticalNormalizedValues_AreEqual()
     {
         var a = new BrandColors("#FFFFFF", "#000000", "#ABCDEF");
         var b = new BrandColors("#ffffff", "#000000", "#abcdef");
 
-        a.ShouldBe(b);
-        (a == b).ShouldBeTrue();
+        await Assert.That(a).IsEqualTo(b);
+        await Assert.That(a == b).IsTrue();
     }
 
-    [Fact]
-    public void Equality_WithDifferentValues_AreNotEqual()
+    [Test]
+    public async Task Equality_WithDifferentValues_AreNotEqual()
     {
         var a = new BrandColors("#ffffff", "#000000", "#abcdef");
         var b = new BrandColors("#ffffff", "#111111", "#abcdef");
 
-        a.ShouldNotBe(b);
-        (a == b).ShouldBeFalse();
+        await Assert.That(a).IsNotEqualTo(b);
+        await Assert.That(a == b).IsFalse();
     }
 }

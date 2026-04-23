@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.MenuCategories;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -12,8 +11,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.MenuCategories;
 /// Covers GET /menu-categories/{id}/products and PUT /menu-categories/{id}/products/order.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -56,7 +55,7 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
 
     // ── GET /menu-categories/{id}/products ────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetCategoryProducts_ReturnsProductsSortedBySortOrderInCategory()
     {
         var client = CreateClient();
@@ -88,20 +87,20 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         // GET the products
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category.Id));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
-        products.Count.ShouldBe(3);
+        await Assert.That(products).IsNotNull();
+        await Assert.That(products!.Count).IsEqualTo(3);
 
         // Verify ascending sort by SortOrderInCategory
         var index1 = products.FindIndex(p => p.Id == product1.Id);
         var index2 = products.FindIndex(p => p.Id == product2.Id);
         var index3 = products.FindIndex(p => p.Id == product3.Id);
-        index1.ShouldBeLessThan(index2);
-        index2.ShouldBeLessThan(index3);
+        await Assert.That(index1).IsLessThan(index2);
+        await Assert.That(index2).IsLessThan(index3);
     }
 
-    [Fact]
+    [Test]
     public async Task GetCategoryProducts_EmptyCategory_ReturnsEmptyList()
     {
         var client = CreateClient();
@@ -114,13 +113,13 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
 
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category!.Id));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
-        products.ShouldBeEmpty();
+        await Assert.That(products).IsNotNull();
+        await Assert.That(products!).IsEmpty();
     }
 
-    [Fact]
+    [Test]
     public async Task GetCategoryProducts_NonExistentCategory_Returns404()
     {
         var client = CreateClient();
@@ -128,10 +127,10 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             CategoryProductsUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task GetCategoryProducts_ReturnsProductsWithCorrectSortOrderValues()
     {
         var client = CreateClient();
@@ -157,18 +156,18 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         // GET the products and check SortOrderInCategory values
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category.Id));
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
+        await Assert.That(products).IsNotNull();
 
-        var p1Result = products.Single(p => p.Id == product1.Id);
+        var p1Result = products!.Single(p => p.Id == product1.Id);
         var p2Result = products.Single(p => p.Id == product2.Id);
 
         // First assigned product gets sort order 1 (0 + 1), second gets 2 (1 + 1)
-        p1Result.SortOrderInCategory.ShouldBeLessThan(p2Result.SortOrderInCategory);
+        await Assert.That(p1Result.SortOrderInCategory).IsLessThan(p2Result.SortOrderInCategory);
     }
 
     // ── Assign product defaults to end of category ────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task AssignProduct_DefaultsToEndOfCategory()
     {
         var client = CreateClient();
@@ -194,17 +193,17 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         // List products and verify product2 appears after product1
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category.Id));
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
-        products.Count.ShouldBe(2);
+        await Assert.That(products).IsNotNull();
+        await Assert.That(products!.Count).IsEqualTo(2);
 
         var index1 = products.FindIndex(p => p.Id == product1.Id);
         var index2 = products.FindIndex(p => p.Id == product2.Id);
-        index1.ShouldBeLessThan(index2);
+        await Assert.That(index1).IsLessThan(index2);
     }
 
     // ── PUT /menu-categories/{id}/products/order ──────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_Returns204_AndPersistsNewOrder()
     {
         var client = CreateClient();
@@ -241,24 +240,24 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var reorderResponse = await client.PutAsJsonAsync(
             ReorderProductsUrl(brand, category.Id), reorderRequest);
 
-        reorderResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(reorderResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // Verify new order persists via GET
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category.Id));
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
-        products.Count.ShouldBe(3);
+        await Assert.That(products).IsNotNull();
+        await Assert.That(products!.Count).IsEqualTo(3);
 
         var index3 = products.FindIndex(p => p.Id == product3.Id);
         var index1 = products.FindIndex(p => p.Id == product1.Id);
         var index2 = products.FindIndex(p => p.Id == product2.Id);
 
         // P3 should now be first, P1 second, P2 third
-        index3.ShouldBeLessThan(index1);
-        index1.ShouldBeLessThan(index2);
+        await Assert.That(index3).IsLessThan(index1);
+        await Assert.That(index1).IsLessThan(index2);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_AssignsSequentialSortOrders()
     {
         var client = CreateClient();
@@ -291,16 +290,16 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         // P2 should have sort order 0, P1 should have sort order 1
         var getResponse = await client.GetAsync(CategoryProductsUrl(brand, category.Id));
         var products = await getResponse.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        products.ShouldNotBeNull();
+        await Assert.That(products).IsNotNull();
 
-        var p2Result = products.Single(p => p.Id == product2.Id);
+        var p2Result = products!.Single(p => p.Id == product2.Id);
         var p1Result = products.Single(p => p.Id == product1.Id);
 
-        p2Result.SortOrderInCategory.ShouldBe(0);
-        p1Result.SortOrderInCategory.ShouldBe(1);
+        await Assert.That(p2Result.SortOrderInCategory).IsEqualTo(0);
+        await Assert.That(p1Result.SortOrderInCategory).IsEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_NonExistentCategory_Returns404()
     {
         var client = CreateClient();
@@ -314,10 +313,10 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ReorderProductsUrl(brand, Guid.NewGuid()), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_WithProductFromDifferentCategory_Returns400()
     {
         var client = CreateClient();
@@ -353,10 +352,10 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ReorderProductsUrl(brand, category1.Id), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_WithEmptyProductIds_Returns400()
     {
         var client = CreateClient();
@@ -375,10 +374,10 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ReorderProductsUrl(brand, category!.Id), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task ReorderProducts_WithDuplicateProductIds_Returns400()
     {
         var client = CreateClient();
@@ -404,6 +403,6 @@ public sealed class CategoryProductOrderTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ReorderProductsUrl(brand, category.Id), reorderRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 }

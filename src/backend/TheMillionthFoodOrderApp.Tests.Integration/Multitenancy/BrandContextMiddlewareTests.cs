@@ -1,6 +1,5 @@
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
 namespace TheMillionthFoodOrderApp.Tests.Integration.Multitenancy;
@@ -9,20 +8,20 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Multitenancy;
 /// Integration tests for <c>BrandContextMiddleware</c> — verifies that the middleware
 /// correctly validates brand slugs and returns the appropriate HTTP status codes.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
-    [Fact]
+    [Test]
     public async Task Request_WithUnknownBrandSlug_Returns404()
     {
         var client = fixture.Factory.CreateClient();
 
         var response = await client.GetAsync("/api/brands/unknown-brand-xyz/settings");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task Request_WithInactiveBrandSlug_Returns403()
     {
         const string inactiveSlug = "middleware-inactive-test";
@@ -49,10 +48,10 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var client = fixture.Factory.CreateClient();
         var response = await client.GetAsync($"/api/brands/{inactiveSlug}/settings");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
     }
 
-    [Fact]
+    [Test]
     public async Task Request_WithValidActiveBrandSlug_PassesThroughMiddleware()
     {
         var client = fixture.Factory.CreateClient();
@@ -63,10 +62,10 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task PlatformEndpoint_WithoutBrandSlug_IsUnaffectedByMiddleware()
     {
         var client = fixture.Factory.CreateClient();
@@ -75,7 +74,7 @@ public sealed class BrandContextMiddlewareTests(IntegrationTestBase fixture)
         var response = await client.GetAsync("/api/brands");
 
         // Middleware must not return 403/404 for brand validation — any 2xx confirms pass-through.
-        response.StatusCode.ShouldNotBe(HttpStatusCode.Forbidden);
-        response.StatusCode.ShouldNotBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsNotEqualTo(HttpStatusCode.Forbidden);
+        await Assert.That(response.StatusCode).IsNotEqualTo(HttpStatusCode.NotFound);
     }
 }

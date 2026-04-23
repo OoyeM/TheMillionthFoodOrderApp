@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,8 +9,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Shops;
 /// Integration tests for the shop open/closed status endpoint.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ShopStatusTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -28,7 +27,7 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
     /// Creates a test shop via the API and returns its id.
     /// Each call uses a unique slug to prevent conflicts across tests sharing the same brand database.
     /// </summary>
-    private static async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
+    private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
     {
         var uniqueSlug = $"status-shop-{Guid.NewGuid():N}";
         var request = new
@@ -48,16 +47,16 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
         };
 
         var response = await client.PostAsJsonAsync(ShopsUrl(brandSlug), request);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var shop = await response.Content.ReadFromJsonAsync<ShopResponse>();
-        shop.ShouldNotBeNull();
-        return shop.Id;
+        await Assert.That(shop).IsNotNull();
+        return shop!.Id;
     }
 
     // ── Status tests ──────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetShopStatus_NoHours_ReturnsClosed_WithNullNextOpeningTime()
     {
         // Arrange
@@ -69,15 +68,15 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(StatusUrl(IntegrationTestBase.BetaSlug, shopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var status = await response.Content.ReadFromJsonAsync<ShopStatusResponse>();
-        status.ShouldNotBeNull();
-        status.IsOpen.ShouldBeFalse();
-        status.NextOpeningTime.ShouldBeNull();
+        await Assert.That(status).IsNotNull();
+        await Assert.That(status!.IsOpen).IsFalse();
+        await Assert.That(status.NextOpeningTime).IsNull();
     }
 
-    [Fact]
+    [Test]
     public async Task GetShopStatus_AllDayEveryDay_ReturnsOpen()
     {
         // Arrange
@@ -100,20 +99,20 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
         };
         var setResponse = await client.PutAsJsonAsync(
             OpeningHoursUrl(IntegrationTestBase.BetaSlug, shopId), setHoursRequest);
-        setResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(setResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         // Act
         var response = await client.GetAsync(StatusUrl(IntegrationTestBase.BetaSlug, shopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var status = await response.Content.ReadFromJsonAsync<ShopStatusResponse>();
-        status.ShouldNotBeNull();
-        status.IsOpen.ShouldBeTrue();
+        await Assert.That(status).IsNotNull();
+        await Assert.That(status!.IsOpen).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetShopStatus_Returns404_ForNonExistentShop()
     {
         // Arrange
@@ -124,10 +123,10 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(StatusUrl(IntegrationTestBase.BetaSlug, nonExistentShopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task GetShopStatus_ResponseIncludesTimeZoneId()
     {
         // Arrange
@@ -138,10 +137,10 @@ public sealed class ShopStatusTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(StatusUrl(IntegrationTestBase.BetaSlug, shopId));
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var status = await response.Content.ReadFromJsonAsync<ShopStatusResponse>();
-        status.ShouldNotBeNull();
-        status.TimeZoneId.ShouldNotBeNullOrEmpty();
+        await Assert.That(status).IsNotNull();
+        await Assert.That(string.IsNullOrEmpty(status!.TimeZoneId)).IsFalse();
     }
 }

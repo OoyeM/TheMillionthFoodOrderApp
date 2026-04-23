@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -11,8 +10,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.ModifierGroups;
 /// Integration tests for assigning modifier groups to products.
 /// Verifies that SET replaces existing assignments and that sort order is respected.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -34,7 +33,7 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
             Translations = new[] { new { LanguageCode = "nl", Name = name, Description = (string?)null } }
         };
         var response = await client.PostAsJsonAsync(ProductsUrl(brandSlug), request);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
         return product!.Id;
     }
@@ -56,14 +55,14 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
             }
         };
         var response = await client.PostAsJsonAsync(ModifierGroupsUrl(brandSlug), request);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var group = await response.Content.ReadFromJsonAsync<ModifierGroupResponse>();
         return group!.Id;
     }
 
     // ── Set assignments ────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task SetProductModifierGroups_Returns200_AssignsGroups()
     {
         var client = CreateClient();
@@ -85,17 +84,17 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ProductModifierGroupsUrl(brand, productId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var assignments = await response.Content.ReadFromJsonAsync<List<ProductModifierGroupResponse>>();
-        assignments.ShouldNotBeNull();
-        assignments.Count.ShouldBe(2);
-        assignments.ShouldContain(a => a.ModifierGroupId == groupId1 && a.SortOrder == 0);
-        assignments.ShouldContain(a => a.ModifierGroupId == groupId2 && a.SortOrder == 1);
-        assignments.All(a => a.ProductId == productId).ShouldBeTrue();
+        await Assert.That(assignments).IsNotNull();
+        await Assert.That(assignments!.Count).IsEqualTo(2);
+        await Assert.That(assignments.Any(a => a.ModifierGroupId == groupId1 && a.SortOrder == 0)).IsTrue();
+        await Assert.That(assignments.Any(a => a.ModifierGroupId == groupId2 && a.SortOrder == 1)).IsTrue();
+        await Assert.That(assignments.All(a => a.ProductId == productId)).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetProductModifierGroups_ReturnsGroupsOrderedBySortOrder()
     {
         var client = CreateClient();
@@ -120,22 +119,22 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
 
         // Get and verify ordering
         var getResponse = await client.GetAsync(ProductModifierGroupsUrl(brand, productId));
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var assignments = await getResponse.Content.ReadFromJsonAsync<List<ProductModifierGroupResponse>>();
-        assignments.ShouldNotBeNull();
-        assignments.Count.ShouldBe(3);
+        await Assert.That(assignments).IsNotNull();
+        await Assert.That(assignments!.Count).IsEqualTo(3);
 
         // Verify the items appear in ascending sort order
-        assignments[0].ModifierGroupId.ShouldBe(groupIdA);
-        assignments[0].SortOrder.ShouldBe(0);
-        assignments[1].ModifierGroupId.ShouldBe(groupIdB);
-        assignments[1].SortOrder.ShouldBe(1);
-        assignments[2].ModifierGroupId.ShouldBe(groupIdC);
-        assignments[2].SortOrder.ShouldBe(2);
+        await Assert.That(assignments[0].ModifierGroupId).IsEqualTo(groupIdA);
+        await Assert.That(assignments[0].SortOrder).IsEqualTo(0);
+        await Assert.That(assignments[1].ModifierGroupId).IsEqualTo(groupIdB);
+        await Assert.That(assignments[1].SortOrder).IsEqualTo(1);
+        await Assert.That(assignments[2].ModifierGroupId).IsEqualTo(groupIdC);
+        await Assert.That(assignments[2].SortOrder).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task SetProductModifierGroups_ReplacesExistingAssignments()
     {
         var client = CreateClient();
@@ -160,17 +159,17 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
         var replaceResponse = await client.PutAsJsonAsync(
             ProductModifierGroupsUrl(brand, productId), secondSet);
 
-        replaceResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(replaceResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var assignments = await replaceResponse.Content.ReadFromJsonAsync<List<ProductModifierGroupResponse>>();
-        assignments.ShouldNotBeNull();
-        assignments.Count.ShouldBe(1);
-        assignments.ShouldContain(a => a.ModifierGroupId == groupId2);
+        await Assert.That(assignments).IsNotNull();
+        await Assert.That(assignments!.Count).IsEqualTo(1);
+        await Assert.That(assignments.Any(a => a.ModifierGroupId == groupId2)).IsTrue();
         // Original groupId1 assignment must be gone
-        assignments.ShouldNotContain(a => a.ModifierGroupId == groupId1);
+        await Assert.That(assignments.Any(a => a.ModifierGroupId == groupId1)).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task SetProductModifierGroups_WithEmptyList_RemovesAll()
     {
         var client = CreateClient();
@@ -191,14 +190,14 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
         var clearResponse = await client.PutAsJsonAsync(
             ProductModifierGroupsUrl(brand, productId), clearRequest);
 
-        clearResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(clearResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var assignments = await clearResponse.Content.ReadFromJsonAsync<List<ProductModifierGroupResponse>>();
-        assignments.ShouldNotBeNull();
-        assignments.ShouldBeEmpty();
+        await Assert.That(assignments).IsNotNull();
+        await Assert.That(assignments!).IsEmpty();
     }
 
-    [Fact]
+    [Test]
     public async Task SetProductModifierGroups_WithDuplicateGroupIds_Returns400()
     {
         var client = CreateClient();
@@ -219,12 +218,12 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ProductModifierGroupsUrl(brand, productId), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Get assignments ────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetProductModifierGroups_ForProductWithNoGroups_ReturnsEmptyList()
     {
         var client = CreateClient();
@@ -234,10 +233,10 @@ public sealed class ProductModifierGroupTests(IntegrationTestBase fixture)
 
         var getResponse = await client.GetAsync(ProductModifierGroupsUrl(brand, productId));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var assignments = await getResponse.Content.ReadFromJsonAsync<List<ProductModifierGroupResponse>>();
-        assignments.ShouldNotBeNull();
-        assignments.ShouldBeEmpty();
+        await Assert.That(assignments).IsNotNull();
+        await Assert.That(assignments!).IsEmpty();
     }
 }

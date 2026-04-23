@@ -237,10 +237,13 @@ All brand-scoped routes are prefixed with `/brands/{brandSlug}/` and guarded by 
 
 ## Testing
 
-- xUnit + Shouldly (assertions), integration tests hit a real database (not mocks)
+- **TUnit** for all tests (unit + integration) — `[Test]` attribute, `await Assert.That(x).IsEqualTo(y)` assertions
+- Integration tests hit a real database (not mocks)
 - **Testcontainers.MsSql** for integration tests — spins up SQL Server in Docker automatically
 - `IntegrationTestWebAppFactory` replaces Aspire's pooled PlatformDbContext with a standard registration pointing at the test container
-- `IntegrationTestBase` provisions multiple brand databases (alpha, beta, gamma) on the same container to verify cross-brand isolation
-- Use `IClassFixture<IntegrationTestBase>` to share the container across tests in a class
+- `IntegrationTestBase` provisions multiple brand databases (alpha, beta, gamma) on the same container to verify cross-brand isolation; implements `IAsyncInitializer, IAsyncDisposable`
+- Use `[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]` on the test class (not `IClassFixture`)
+- All `Assert.That(...)` calls must be awaited — un-awaited assertions silently pass
+- Run tests: `dotnet run -c Release` (not `dotnet test`) inside the test project directory
 
-For detailed patterns, see `.claude/skills/backend-dotnet/docs/`.
+For detailed patterns, see `.claude/skills/dotnet-testing/`.

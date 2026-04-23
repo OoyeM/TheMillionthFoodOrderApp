@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,8 +9,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.ModifierGroups;
 /// Integration tests for modifier group CRUD operations.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
@@ -52,7 +51,7 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
 
     // ── Create ─────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task CreateModifierGroup_Returns201_WithTranslationsAndModifiers()
     {
         var client = CreateClient();
@@ -78,20 +77,20 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var group = await response.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        group.ShouldNotBeNull();
-        group.Id.ShouldNotBe(Guid.Empty);
-        group.Translations.Count.ShouldBe(2);
-        group.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Sauzen");
-        group.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Sauces");
-        group.Modifiers.Count.ShouldBe(2);
-        group.Modifiers.ShouldContain(m => m.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Mayonaise"));
-        group.Modifiers.ShouldContain(m => m.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Ketchup"));
+        await Assert.That(group).IsNotNull();
+        await Assert.That(group!.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(group.Translations.Count).IsEqualTo(2);
+        await Assert.That(group.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Sauzen")).IsTrue();
+        await Assert.That(group.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Sauces")).IsTrue();
+        await Assert.That(group.Modifiers.Count).IsEqualTo(2);
+        await Assert.That(group.Modifiers.Any(m => m.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Mayonaise"))).IsTrue();
+        await Assert.That(group.Modifiers.Any(m => m.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Ketchup"))).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task CreateModifierGroup_WithoutTranslations_Returns400()
     {
         var client = CreateClient();
@@ -112,10 +111,10 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateModifierGroup_WithInvalidLanguageCode_Returns400()
     {
         var client = CreateClient();
@@ -136,10 +135,10 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
+    [Test]
     public async Task CreateModifierGroup_WithDuplicateLanguageCodes_Returns400()
     {
         var client = CreateClient();
@@ -164,12 +163,12 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug), request);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Get ────────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetModifierGroup_Returns200_WithFullData()
     {
         var client = CreateClient();
@@ -178,25 +177,25 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var createResponse = await client.PostAsJsonAsync(
             ModifierGroupsUrl(IntegrationTestBase.AlphaSlug),
             MakeCreateRequest(nlName: "Toppings", frName: "Garnitures"));
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(createResponse.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var created = await createResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
 
         // Get by id
         var getResponse = await client.GetAsync(
             ModifierGroupUrl(IntegrationTestBase.AlphaSlug, created!.Id));
 
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var group = await getResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        group.ShouldNotBeNull();
-        group.Id.ShouldBe(created.Id);
-        group.Translations.Count.ShouldBe(2);
-        group.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Toppings");
-        group.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Garnitures");
-        group.Modifiers.Count.ShouldBe(1);
+        await Assert.That(group).IsNotNull();
+        await Assert.That(group!.Id).IsEqualTo(created.Id);
+        await Assert.That(group.Translations.Count).IsEqualTo(2);
+        await Assert.That(group.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Toppings")).IsTrue();
+        await Assert.That(group.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Garnitures")).IsTrue();
+        await Assert.That(group.Modifiers.Count).IsEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task GetModifierGroup_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -204,12 +203,12 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(
             ModifierGroupUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── List ───────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task ListModifierGroups_ReturnsAll_ExcludesSoftDeleted()
     {
         var client = CreateClient();
@@ -218,31 +217,31 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         // Create two modifier groups
         var create1 = await client.PostAsJsonAsync(
             ModifierGroupsUrl(brand), MakeCreateRequest(nlName: "Groep A"));
-        create1.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(create1.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var group1 = await create1.Content.ReadFromJsonAsync<ModifierGroupResponse>();
 
         var create2 = await client.PostAsJsonAsync(
             ModifierGroupsUrl(brand), MakeCreateRequest(nlName: "Groep B"));
-        create2.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(create2.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var group2 = await create2.Content.ReadFromJsonAsync<ModifierGroupResponse>();
 
         // Soft-delete group1
         var deleteResponse = await client.DeleteAsync(ModifierGroupUrl(brand, group1!.Id));
-        deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(deleteResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // List should contain group2 but not group1
         var listResponse = await client.GetAsync(ModifierGroupsUrl(brand));
-        listResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(listResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var groups = await listResponse.Content.ReadFromJsonAsync<List<ModifierGroupListItemResponse>>();
-        groups.ShouldNotBeNull();
-        groups.ShouldContain(g => g.Id == group2!.Id);
-        groups.ShouldNotContain(g => g.Id == group1.Id);
+        await Assert.That(groups).IsNotNull();
+        await Assert.That(groups!.Any(g => g.Id == group2!.Id)).IsTrue();
+        await Assert.That(groups.Any(g => g.Id == group1.Id)).IsFalse();
     }
 
     // ── Update ─────────────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task UpdateModifierGroup_Returns200_WithUpdatedData()
     {
         var client = CreateClient();
@@ -275,19 +274,19 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             ModifierGroupUrl(brand, created!.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var updated = await updateResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        updated.ShouldNotBeNull();
-        updated.Id.ShouldBe(created.Id);
-        updated.Translations.Count.ShouldBe(2);
-        updated.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Bijgewerkte Naam");
-        updated.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour");
-        updated.Modifiers.Count.ShouldBe(1);
-        updated.Modifiers.ShouldContain(m => m.Translations.Any(t => t.Name == "Truffelzout"));
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.Id).IsEqualTo(created.Id);
+        await Assert.That(updated.Translations.Count).IsEqualTo(2);
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "nl" && t.Name == "Bijgewerkte Naam")).IsTrue();
+        await Assert.That(updated.Translations.Any(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour")).IsTrue();
+        await Assert.That(updated.Modifiers.Count).IsEqualTo(1);
+        await Assert.That(updated.Modifiers.Any(m => m.Translations.Any(t => t.Name == "Truffelzout"))).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateModifierGroup_CanChangeModifiers()
     {
         var client = CreateClient();
@@ -309,7 +308,7 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         };
         var createResponse = await client.PostAsJsonAsync(ModifierGroupsUrl(brand), createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        created!.Modifiers.Count.ShouldBe(1);
+        await Assert.That(created!.Modifiers.Count).IsEqualTo(1);
 
         // Update with two different modifiers
         var updateRequest = new
@@ -335,18 +334,18 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             ModifierGroupUrl(brand, created.Id), updateRequest);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var updated = await updateResponse.Content.ReadFromJsonAsync<ModifierGroupResponse>();
-        updated.ShouldNotBeNull();
-        updated.Modifiers.Count.ShouldBe(2);
-        updated.Modifiers.ShouldContain(m => m.Translations.Any(t => t.Name == "Nieuwe Modifier A"));
-        updated.Modifiers.ShouldContain(m => m.Translations.Any(t => t.Name == "Nieuwe Modifier B"));
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.Modifiers.Count).IsEqualTo(2);
+        await Assert.That(updated.Modifiers.Any(m => m.Translations.Any(t => t.Name == "Nieuwe Modifier A"))).IsTrue();
+        await Assert.That(updated.Modifiers.Any(m => m.Translations.Any(t => t.Name == "Nieuwe Modifier B"))).IsTrue();
         // Original modifier should no longer exist
-        updated.Modifiers.ShouldNotContain(m => m.Translations.Any(t => t.Name == "Modifier 1"));
+        await Assert.That(updated.Modifiers.Any(m => m.Translations.Any(t => t.Name == "Modifier 1"))).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task UpdateModifierGroup_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -367,12 +366,12 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.PutAsJsonAsync(
             ModifierGroupUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()), updateRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── Delete (soft-delete) ───────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task DeleteModifierGroup_Returns204_SoftDeletes()
     {
         var client = CreateClient();
@@ -385,14 +384,14 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
 
         // Delete
         var deleteResponse = await client.DeleteAsync(ModifierGroupUrl(brand, created!.Id));
-        deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Assert.That(deleteResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         // Get by id should return 404 (soft-deleted, filtered by global query filter)
         var getResponse = await client.GetAsync(ModifierGroupUrl(brand, created.Id));
-        getResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteModifierGroup_NonExistent_Returns404()
     {
         var client = CreateClient();
@@ -400,6 +399,6 @@ public sealed class ModifierGroupCrudTests(IntegrationTestBase fixture)
         var response = await client.DeleteAsync(
             ModifierGroupUrl(IntegrationTestBase.AlphaSlug, Guid.NewGuid()));
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 }

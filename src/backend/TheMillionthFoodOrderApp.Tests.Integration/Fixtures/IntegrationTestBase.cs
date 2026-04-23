@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using TheMillionthFoodOrderApp.Domain.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using TUnit.Core.Interfaces;
 
 namespace TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -11,9 +12,9 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 /// Base class for integration tests. Manages a shared SQL Server Testcontainer
 /// and creates isolated brand databases for each test brand (alpha, beta).
 ///
-/// One container is shared across all tests in the collection via <see cref="IClassFixture{T}"/>.
+/// One container is shared across all tests in the class via <see cref="ClassDataSource{T}"/>.
 /// </summary>
-public sealed class IntegrationTestBase : IAsyncLifetime
+public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
 {
     private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
@@ -56,7 +57,7 @@ public sealed class IntegrationTestBase : IAsyncLifetime
         await ProvisionBrandDatabaseAsync(GammaSlug);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await Factory.DisposeAsync();
         await _sqlContainer.DisposeAsync();

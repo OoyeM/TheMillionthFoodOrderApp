@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.BrandSettings;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.BrandSettings;
@@ -7,73 +6,73 @@ public sealed class PresetFontsTests
 {
     // ── All collection ─────────────────────────────────────────────────────────
 
-    [Fact]
-    public void All_ContainsExactlyElevenFonts()
+    [Test]
+    public async Task All_ContainsExactlyElevenFonts()
     {
-        PresetFonts.All.Count.ShouldBe(11);
+        await Assert.That(PresetFonts.All.Count).IsEqualTo(11);
     }
 
-    [Fact]
-    public void All_IncludesSystemDefault()
+    [Test]
+    public async Task All_IncludesSystemDefault()
     {
-        PresetFonts.All.ShouldContain(PresetFonts.SystemDefault);
+        await Assert.That(PresetFonts.All).Contains(PresetFonts.SystemDefault);
     }
 
     // ── IsValid — known fonts ─────────────────────────────────────────────────
 
-    [Theory]
-    [InlineData("System Default")]
-    [InlineData("Inter")]
-    [InlineData("Roboto")]
-    [InlineData("Open Sans")]
-    [InlineData("Lato")]
-    [InlineData("Poppins")]
-    [InlineData("Montserrat")]
-    [InlineData("Nunito")]
-    [InlineData("Raleway")]
-    [InlineData("Source Sans 3")]
-    [InlineData("DM Sans")]
-    public void IsValid_WithRegisteredFont_ReturnsTrue(string font)
+    [Arguments("System Default")]
+    [Arguments("Inter")]
+    [Arguments("Roboto")]
+    [Arguments("Open Sans")]
+    [Arguments("Lato")]
+    [Arguments("Poppins")]
+    [Arguments("Montserrat")]
+    [Arguments("Nunito")]
+    [Arguments("Raleway")]
+    [Arguments("Source Sans 3")]
+    [Arguments("DM Sans")]
+    [Test]
+    public async Task IsValid_WithRegisteredFont_ReturnsTrue(string font)
     {
-        PresetFonts.IsValid(font).ShouldBeTrue();
+        await Assert.That(PresetFonts.IsValid(font)).IsTrue();
     }
 
     // ── IsValid — invalid fonts ───────────────────────────────────────────────
 
-    [Fact]
-    public void IsValid_WithNullFont_ReturnsFalse()
+    [Test]
+    public async Task IsValid_WithNullFont_ReturnsFalse()
     {
-        PresetFonts.IsValid(null!).ShouldBeFalse();
+        await Assert.That(PresetFonts.IsValid(null!)).IsFalse();
     }
 
-    [Fact]
-    public void IsValid_WithEmptyString_ReturnsFalse()
+    [Test]
+    public async Task IsValid_WithEmptyString_ReturnsFalse()
     {
-        PresetFonts.IsValid("").ShouldBeFalse();
+        await Assert.That(PresetFonts.IsValid("")).IsFalse();
     }
 
-    [Fact]
-    public void IsValid_WithUnknownFont_ReturnsFalse()
+    [Test]
+    public async Task IsValid_WithUnknownFont_ReturnsFalse()
     {
-        PresetFonts.IsValid("NotAFont").ShouldBeFalse();
+        await Assert.That(PresetFonts.IsValid("NotAFont")).IsFalse();
     }
 
     // IsValid uses StringComparer.Ordinal — case-sensitive exact match
-    [Theory]
-    [InlineData("inter")]
-    [InlineData("INTER")]
-    [InlineData("ROBOTO")]
-    public void IsValid_WithKnownFontInWrongCase_ReturnsFalse(string font)
+    [Arguments("inter")]
+    [Arguments("INTER")]
+    [Arguments("ROBOTO")]
+    [Test]
+    public async Task IsValid_WithKnownFontInWrongCase_ReturnsFalse(string font)
     {
-        PresetFonts.IsValid(font).ShouldBeFalse();
+        await Assert.That(PresetFonts.IsValid(font)).IsFalse();
     }
 
-    [Theory]
-    [InlineData("Arial")]
-    [InlineData("Comic Sans MS")]
-    [InlineData("Times New Roman")]
-    public void IsValid_WithCommonNonApprovedFont_ReturnsFalse(string font)
+    [Arguments("Arial")]
+    [Arguments("Comic Sans MS")]
+    [Arguments("Times New Roman")]
+    [Test]
+    public async Task IsValid_WithCommonNonApprovedFont_ReturnsFalse(string font)
     {
-        PresetFonts.IsValid(font).ShouldBeFalse();
+        await Assert.That(PresetFonts.IsValid(font)).IsFalse();
     }
 }

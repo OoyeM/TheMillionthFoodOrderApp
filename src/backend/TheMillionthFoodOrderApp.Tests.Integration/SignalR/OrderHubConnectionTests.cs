@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.SignalR.Client;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -11,8 +10,8 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.SignalR;
 /// Integration tests for the OrderHub SignalR hub.
 /// Verifies that clients can connect, join groups, and receive real-time order status updates.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateHttpClient() => fixture.Factory.CreateClient();
 
@@ -45,11 +44,11 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
         response.EnsureSuccessStatusCode();
 
         var shop = await response.Content.ReadFromJsonAsync<ShopResponse>();
-        shop.ShouldNotBeNull();
-        return shop.Id;
+        await Assert.That(shop).IsNotNull();
+        return shop!.Id;
     }
 
-    [Fact]
+    [Test]
     public async Task Client_CanConnect_JoinShopGroup_AndReceiveOrderStatusChanged()
     {
         // Arrange
@@ -74,7 +73,7 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         // Act — connect and join shop group
         await hubConnection.StartAsync();
-        hubConnection.State.ShouldBe(HubConnectionState.Connected);
+        await Assert.That(hubConnection.State).IsEqualTo(HubConnectionState.Connected);
 
         await hubConnection.InvokeAsync("JoinShopGroup", IntegrationTestBase.AlphaSlug, shopId.ToString());
 
@@ -92,19 +91,19 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         // Assert — should receive the event within 5 seconds
         var completed = await Task.WhenAny(receivedSignal.Task, Task.Delay(5000));
-        completed.ShouldBe(receivedSignal.Task, "Timed out waiting for SignalR OrderStatusChanged event");
+        await Assert.That(completed).IsEqualTo(receivedSignal.Task as Task);
 
-        receivedUpdate.ShouldNotBeNull();
-        receivedUpdate.BrandSlug.ShouldBe(IntegrationTestBase.AlphaSlug);
-        receivedUpdate.ShopId.ShouldBe(shopId);
-        receivedUpdate.PreviousStatus.ShouldBe("placed");
-        receivedUpdate.NewStatus.ShouldBe("preparing");
-        receivedUpdate.CustomerName.ShouldBe("Test Customer");
+        await Assert.That(receivedUpdate).IsNotNull();
+        await Assert.That(receivedUpdate!.BrandSlug).IsEqualTo(IntegrationTestBase.AlphaSlug);
+        await Assert.That(receivedUpdate.ShopId).IsEqualTo(shopId);
+        await Assert.That(receivedUpdate.PreviousStatus).IsEqualTo("placed");
+        await Assert.That(receivedUpdate.NewStatus).IsEqualTo("preparing");
+        await Assert.That(receivedUpdate.CustomerName).IsEqualTo("Test Customer");
 
         await hubConnection.DisposeAsync();
     }
 
-    [Fact]
+    [Test]
     public async Task Client_InDifferentShopGroup_DoesNotReceiveEvent()
     {
         // Arrange
@@ -139,12 +138,12 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         // Assert — signal should NOT arrive within 500ms
         var completed = await Task.WhenAny(unexpectedSignal.Task, Task.Delay(500));
-        completed.ShouldNotBe(unexpectedSignal.Task, "Client in a different shop group should not receive the event");
+        await Assert.That(completed).IsNotEqualTo(unexpectedSignal.Task as Task);
 
         await hubConnection.DisposeAsync();
     }
 
-    [Fact]
+    [Test]
     public async Task Client_InOrderGroup_ReceivesEventForThatOrder()
     {
         // Arrange
@@ -184,11 +183,11 @@ public sealed class OrderHubConnectionTests(IntegrationTestBase fixture)
 
         // Assert
         var completed = await Task.WhenAny(receivedSignal.Task, Task.Delay(5000));
-        completed.ShouldBe(receivedSignal.Task, "Timed out waiting for SignalR OrderStatusChanged event");
+        await Assert.That(completed).IsEqualTo(receivedSignal.Task as Task);
 
-        receivedUpdate.ShouldNotBeNull();
-        receivedUpdate.OrderId.ShouldBe(orderId);
-        receivedUpdate.NewStatus.ShouldBe("ready");
+        await Assert.That(receivedUpdate).IsNotNull();
+        await Assert.That(receivedUpdate!.OrderId).IsEqualTo(orderId);
+        await Assert.That(receivedUpdate.NewStatus).IsEqualTo("ready");
 
         await hubConnection.DisposeAsync();
     }

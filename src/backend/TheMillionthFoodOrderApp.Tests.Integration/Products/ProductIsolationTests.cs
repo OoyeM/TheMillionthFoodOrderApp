@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,15 +9,15 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.Products;
 /// Integration tests verifying cross-brand isolation for products.
 /// Products created in Brand Alpha must not be visible to Brand Beta.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class ProductIsolationTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     private HttpClient CreateClient() => fixture.Factory.CreateClient();
 
     private static string ProductsUrl(string brandSlug) =>
         $"/api/brands/{brandSlug}/products";
 
-    [Fact]
+    [Test]
     public async Task CreateProductInAlpha_NotVisibleInGamma()
     {
         var client = CreateClient();
@@ -34,20 +33,20 @@ public sealed class ProductIsolationTests(IntegrationTestBase fixture)
         };
         var createResponse = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), request);
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(createResponse.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
 
         // List products in Gamma (empty brand) — should not contain Alpha's product
         var gammaList = await client.GetAsync(ProductsUrl(IntegrationTestBase.GammaSlug));
-        gammaList.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(gammaList.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var gammaProducts = await gammaList.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        gammaProducts.ShouldNotBeNull();
-        gammaProducts.ShouldNotContain(p => p.Id == created!.Id);
+        await Assert.That(gammaProducts).IsNotNull();
+        await Assert.That(gammaProducts!.Any(p => p.Id == created!.Id)).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task BothBrandsHaveIndependentProducts()
     {
         var client = CreateClient();
@@ -73,24 +72,24 @@ public sealed class ProductIsolationTests(IntegrationTestBase fixture)
 
         var alphaCreate = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.AlphaSlug), alphaRequest);
-        alphaCreate.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(alphaCreate.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var alphaProduct = await alphaCreate.Content.ReadFromJsonAsync<ProductResponse>();
 
         var betaCreate = await client.PostAsJsonAsync(
             ProductsUrl(IntegrationTestBase.BetaSlug), betaRequest);
-        betaCreate.StatusCode.ShouldBe(HttpStatusCode.Created);
+        await Assert.That(betaCreate.StatusCode).IsEqualTo(HttpStatusCode.Created);
         var betaProduct = await betaCreate.Content.ReadFromJsonAsync<ProductResponse>();
 
         // Alpha's list should contain Alpha's product but not Beta's
         var alphaList = await client.GetAsync(ProductsUrl(IntegrationTestBase.AlphaSlug));
         var alphaProducts = await alphaList.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        alphaProducts!.ShouldContain(p => p.Id == alphaProduct!.Id);
-        alphaProducts.ShouldNotContain(p => p.Id == betaProduct!.Id);
+        await Assert.That(alphaProducts!.Any(p => p.Id == alphaProduct!.Id)).IsTrue();
+        await Assert.That(alphaProducts.Any(p => p.Id == betaProduct!.Id)).IsFalse();
 
         // Beta's list should contain Beta's product but not Alpha's
         var betaList = await client.GetAsync(ProductsUrl(IntegrationTestBase.BetaSlug));
         var betaProducts = await betaList.Content.ReadFromJsonAsync<List<ProductListItemResponse>>();
-        betaProducts!.ShouldContain(p => p.Id == betaProduct!.Id);
-        betaProducts.ShouldNotContain(p => p.Id == alphaProduct!.Id);
+        await Assert.That(betaProducts!.Any(p => p.Id == betaProduct!.Id)).IsTrue();
+        await Assert.That(betaProducts.Any(p => p.Id == alphaProduct!.Id)).IsFalse();
     }
 }

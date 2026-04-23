@@ -1,4 +1,3 @@
-using Shouldly;
 using TheMillionthFoodOrderApp.Domain.Products;
 
 namespace TheMillionthFoodOrderApp.Tests.Unit.Products;
@@ -12,24 +11,24 @@ public sealed class ProductTests
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithValidData_ReturnsProduct()
+    [Test]
+    public async Task Create_WithValidData_ReturnsProduct()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.ShouldNotBeNull();
-        product.Id.ShouldNotBe(Guid.Empty);
-        product.BasePrice.Amount.ShouldBe(3.50m);
-        product.BasePrice.Currency.ShouldBe("EUR");
-        product.ImageUrl.ShouldBeNull();
-        product.IsDeleted.ShouldBeFalse();
-        product.DeletedAt.ShouldBeNull();
-        product.Translations.Count.ShouldBe(1);
-        product.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Test Product");
+        await Assert.That(product).IsNotNull();
+        await Assert.That(product.Id).IsNotEqualTo(Guid.Empty);
+        await Assert.That(product.BasePrice.Amount).IsEqualTo(3.50m);
+        await Assert.That(product.BasePrice.Currency).IsEqualTo("EUR");
+        await Assert.That(product.ImageUrl).IsNull();
+        await Assert.That(product.IsDeleted).IsFalse();
+        await Assert.That(product.DeletedAt).IsNull();
+        await Assert.That(product.Translations.Count).IsEqualTo(1);
+        await Assert.That(product.Translations).Contains(t => t.LanguageCode == "nl" && t.Name == "Test Product");
     }
 
-    [Fact]
-    public void Create_WithMultipleTranslations_IncludesAll()
+    [Test]
+    public async Task Create_WithMultipleTranslations_IncludesAll()
     {
         var translations = new (string, string, string?)[]
         {
@@ -40,52 +39,52 @@ public sealed class ProductTests
 
         var product = Product.Create(new Money(3.50m, "EUR"), null, translations);
 
-        product.Translations.Count.ShouldBe(3);
+        await Assert.That(product.Translations.Count).IsEqualTo(3);
     }
 
-    [Fact]
-    public void Create_WithImageUrl_SetsImageUrl()
+    [Test]
+    public async Task Create_WithImageUrl_SetsImageUrl()
     {
         var product = Product.Create(
             new Money(3.50m, "EUR"),
             "https://example.com/image.jpg",
             ValidTranslations);
 
-        product.ImageUrl.ShouldBe("https://example.com/image.jpg");
+        await Assert.That(product.ImageUrl).IsEqualTo("https://example.com/image.jpg");
     }
 
-    [Fact]
-    public void Create_WithNoTranslations_ThrowsArgumentException()
+    [Test]
+    public async Task Create_WithNoTranslations_ThrowsArgumentException()
     {
         var emptyTranslations = Array.Empty<(string, string, string?)>();
 
-        Should.Throw<ArgumentException>(() =>
-            Product.Create(new Money(3.50m, "EUR"), null, emptyTranslations));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(Product.Create(new Money(3.50m, "EUR"), null, emptyTranslations)));
     }
 
-    [Fact]
-    public void Create_RaisesProductCreatedEvent()
+    [Test]
+    public async Task Create_RaisesProductCreatedEvent()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.DomainEvents.Count.ShouldBe(1);
-        product.DomainEvents.ShouldContain(e => e is ProductCreatedEvent);
+        await Assert.That(product.DomainEvents.Count).IsEqualTo(1);
+        await Assert.That(product.DomainEvents).Contains(e => e is ProductCreatedEvent);
     }
 
-    [Fact]
-    public void Create_GeneratesUuidV7()
+    [Test]
+    public async Task Create_GeneratesUuidV7()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
         // UUIDv7 has version nibble = 7 (bits 48-51)
         var version = (product.Id.ToByteArray()[7] >> 4) & 0x0F;
-        version.ShouldBe(7);
+        await Assert.That(version).IsEqualTo(7);
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Update_ReplacesAllTranslations()
+    [Test]
+    public async Task Update_ReplacesAllTranslations()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         var originalCreatedAt = product.CreatedAt;
@@ -98,41 +97,44 @@ public sealed class ProductTests
 
         product.Update(new Money(5.00m, "EUR"), "https://img.com/new.jpg", newTranslations);
 
-        product.BasePrice.Amount.ShouldBe(5.00m);
-        product.ImageUrl.ShouldBe("https://img.com/new.jpg");
-        product.Translations.Count.ShouldBe(2);
-        product.Translations.ShouldContain(t => t.LanguageCode == "nl" && t.Name == "Updated Name");
-        product.Translations.ShouldContain(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour");
-        product.UpdatedAt.ShouldBeGreaterThanOrEqualTo(originalCreatedAt);
+        await Assert.That(product.BasePrice.Amount).IsEqualTo(5.00m);
+        await Assert.That(product.ImageUrl).IsEqualTo("https://img.com/new.jpg");
+        await Assert.That(product.Translations.Count).IsEqualTo(2);
+        await Assert.That(product.Translations).Contains(t => t.LanguageCode == "nl" && t.Name == "Updated Name");
+        await Assert.That(product.Translations).Contains(t => t.LanguageCode == "fr" && t.Name == "Nom Mis à Jour");
+        await Assert.That(product.UpdatedAt).IsGreaterThanOrEqualTo(originalCreatedAt);
     }
 
-    [Fact]
-    public void Update_WithNoTranslations_ThrowsArgumentException()
+    [Test]
+    public async Task Update_WithNoTranslations_ThrowsArgumentException()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        Should.Throw<ArgumentException>(() =>
-            product.Update(new Money(5.00m, "EUR"), null, Array.Empty<(string, string, string?)>()));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+        {
+            product.Update(new Money(5.00m, "EUR"), null, Array.Empty<(string, string, string?)>());
+            return Task.CompletedTask;
+        });
     }
 
     // ── SoftDelete ────────────────────────────────────────────────────────────
 
-    [Fact]
-    public void SoftDelete_SetsIsDeletedAndDeletedAt()
+    [Test]
+    public async Task SoftDelete_SetsIsDeletedAndDeletedAt()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         product.ClearDomainEvents();
 
         product.SoftDelete();
 
-        product.IsDeleted.ShouldBeTrue();
-        product.DeletedAt.ShouldNotBeNull();
-        product.DomainEvents.Count.ShouldBe(1);
-        product.DomainEvents.ShouldContain(e => e is ProductDeletedEvent);
+        await Assert.That(product.IsDeleted).IsTrue();
+        await Assert.That(product.DeletedAt).IsNotNull();
+        await Assert.That(product.DomainEvents.Count).IsEqualTo(1);
+        await Assert.That(product.DomainEvents).Contains(e => e is ProductDeletedEvent);
     }
 
-    [Fact]
-    public void SoftDelete_WhenAlreadyDeleted_IsIdempotent()
+    [Test]
+    public async Task SoftDelete_WhenAlreadyDeleted_IsIdempotent()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
         product.ClearDomainEvents();
@@ -143,78 +145,78 @@ public sealed class ProductTests
 
         product.SoftDelete(); // Second call
 
-        product.IsDeleted.ShouldBeTrue();
-        product.DeletedAt.ShouldBe(firstDeletedAt);
-        product.DomainEvents.Count.ShouldBe(0); // No duplicate event
+        await Assert.That(product.IsDeleted).IsTrue();
+        await Assert.That(product.DeletedAt).IsEqualTo(firstDeletedAt);
+        await Assert.That(product.DomainEvents.Count).IsEqualTo(0); // No duplicate event
     }
 
     // ── Allergens & Dietary Tags ─────────────────────────────────────────────
 
-    [Fact]
-    public void Create_WithAllergens_SetsAllergens()
+    [Test]
+    public async Task Create_WithAllergens_SetsAllergens()
     {
         var allergens = new[] { Allergen.Gluten, Allergen.Milk, Allergen.Eggs };
 
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, allergens);
 
-        product.Allergens.Count.ShouldBe(3);
-        product.Allergens.ShouldContain(Allergen.Gluten);
-        product.Allergens.ShouldContain(Allergen.Milk);
-        product.Allergens.ShouldContain(Allergen.Eggs);
+        await Assert.That(product.Allergens.Count).IsEqualTo(3);
+        await Assert.That(product.Allergens).Contains(Allergen.Gluten);
+        await Assert.That(product.Allergens).Contains(Allergen.Milk);
+        await Assert.That(product.Allergens).Contains(Allergen.Eggs);
     }
 
-    [Fact]
-    public void Create_WithDietaryTags_SetsDietaryTags()
+    [Test]
+    public async Task Create_WithDietaryTags_SetsDietaryTags()
     {
         var dietaryTags = new[] { DietaryTag.Vegan, DietaryTag.GlutenFree };
 
         var product = Product.Create(
             new Money(3.50m, "EUR"), null, ValidTranslations, dietaryTags: dietaryTags);
 
-        product.DietaryTags.Count.ShouldBe(2);
-        product.DietaryTags.ShouldContain(DietaryTag.Vegan);
-        product.DietaryTags.ShouldContain(DietaryTag.GlutenFree);
+        await Assert.That(product.DietaryTags.Count).IsEqualTo(2);
+        await Assert.That(product.DietaryTags).Contains(DietaryTag.Vegan);
+        await Assert.That(product.DietaryTags).Contains(DietaryTag.GlutenFree);
     }
 
-    [Fact]
-    public void Create_WithNullAllergens_DefaultsToEmpty()
+    [Test]
+    public async Task Create_WithNullAllergens_DefaultsToEmpty()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.Allergens.Count.ShouldBe(0);
-        product.DietaryTags.Count.ShouldBe(0);
+        await Assert.That(product.Allergens.Count).IsEqualTo(0);
+        await Assert.That(product.DietaryTags.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Create_WithDuplicateAllergens_DeduplicatesSilently()
+    [Test]
+    public async Task Create_WithDuplicateAllergens_DeduplicatesSilently()
     {
         var allergens = new[] { Allergen.Gluten, Allergen.Gluten, Allergen.Milk };
 
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, allergens);
 
-        product.Allergens.Count.ShouldBe(2);
+        await Assert.That(product.Allergens.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void Create_WithInvalidAllergenValue_ThrowsArgumentException()
+    [Test]
+    public async Task Create_WithInvalidAllergenValue_ThrowsArgumentException()
     {
         var invalid = new[] { (Allergen)999 };
 
-        Should.Throw<ArgumentException>(() =>
-            Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, invalid));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, invalid)));
     }
 
-    [Fact]
-    public void Create_WithInvalidDietaryTagValue_ThrowsArgumentException()
+    [Test]
+    public async Task Create_WithInvalidDietaryTagValue_ThrowsArgumentException()
     {
         var invalid = new[] { (DietaryTag)42 };
 
-        Should.Throw<ArgumentException>(() =>
-            Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, dietaryTags: invalid));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Task.FromResult(Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations, dietaryTags: invalid)));
     }
 
-    [Fact]
-    public void Update_ReplacesAllergens()
+    [Test]
+    public async Task Update_ReplacesAllergens()
     {
         var product = Product.Create(
             new Money(3.50m, "EUR"), null, ValidTranslations,
@@ -224,13 +226,13 @@ public sealed class ProductTests
             new Money(3.50m, "EUR"), null, ValidTranslations,
             new[] { Allergen.Fish });
 
-        product.Allergens.Count.ShouldBe(1);
-        product.Allergens.ShouldContain(Allergen.Fish);
-        product.Allergens.ShouldNotContain(Allergen.Gluten);
+        await Assert.That(product.Allergens.Count).IsEqualTo(1);
+        await Assert.That(product.Allergens).Contains(Allergen.Fish);
+        await Assert.That(product.Allergens).DoesNotContain(Allergen.Gluten);
     }
 
-    [Fact]
-    public void Update_WithNullAllergens_ClearsAllergens()
+    [Test]
+    public async Task Update_WithNullAllergens_ClearsAllergens()
     {
         var product = Product.Create(
             new Money(3.50m, "EUR"), null, ValidTranslations,
@@ -238,11 +240,11 @@ public sealed class ProductTests
 
         product.Update(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        product.Allergens.Count.ShouldBe(0);
+        await Assert.That(product.Allergens.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Update_ReplacesDietaryTags()
+    [Test]
+    public async Task Update_ReplacesDietaryTags()
     {
         var product = Product.Create(
             new Money(3.50m, "EUR"), null, ValidTranslations,
@@ -252,19 +254,22 @@ public sealed class ProductTests
             new Money(3.50m, "EUR"), null, ValidTranslations,
             dietaryTags: new[] { DietaryTag.Halal, DietaryTag.Vegetarian });
 
-        product.DietaryTags.Count.ShouldBe(2);
-        product.DietaryTags.ShouldContain(DietaryTag.Halal);
-        product.DietaryTags.ShouldNotContain(DietaryTag.Vegan);
+        await Assert.That(product.DietaryTags.Count).IsEqualTo(2);
+        await Assert.That(product.DietaryTags).Contains(DietaryTag.Halal);
+        await Assert.That(product.DietaryTags).DoesNotContain(DietaryTag.Vegan);
     }
 
-    [Fact]
-    public void Update_WithInvalidAllergenValue_ThrowsArgumentException()
+    [Test]
+    public async Task Update_WithInvalidAllergenValue_ThrowsArgumentException()
     {
         var product = Product.Create(new Money(3.50m, "EUR"), null, ValidTranslations);
 
-        Should.Throw<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+        {
             product.Update(
                 new Money(3.50m, "EUR"), null, ValidTranslations,
-                new[] { (Allergen)(-1) }));
+                new[] { (Allergen)(-1) });
+            return Task.CompletedTask;
+        });
     }
 }

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
 using TheMillionthFoodOrderApp.Application.BrandSettings;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
 
@@ -10,12 +9,12 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.BrandSettings;
 /// Integration tests proving that brand settings are fully isolated between brands.
 /// Data written to Brand Alpha must never be visible to Brand Beta and vice versa.
 /// </summary>
+[ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
-    : IClassFixture<IntegrationTestBase>
 {
     // ── GET settings ─────────────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task GetSettings_WhenNoSettingsExist_Returns404()
     {
         var client = fixture.Factory.CreateClient();
@@ -23,12 +22,12 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         // Use Gamma — a brand that no other test writes to, so ordering doesn't matter.
         var response = await client.GetAsync($"/api/brands/{IntegrationTestBase.GammaSlug}/settings");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     // ── PUT settings (upsert) ────────────────────────────────────────────────
 
-    [Fact]
+    [Test]
     public async Task PutSettings_WritesToAlpha_NotVisibleToBeta()
     {
         var client = fixture.Factory.CreateClient();
@@ -45,20 +44,20 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings",
             alphaSettings);
 
-        putResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(putResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var alphaResult = await putResponse.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        alphaResult.ShouldNotBeNull();
-        alphaResult.DefaultLanguage.ShouldBe("nl-BE");
+        await Assert.That(alphaResult).IsNotNull();
+        await Assert.That(alphaResult!.DefaultLanguage).IsEqualTo("nl-BE");
 
         // Beta should still return 404 — Alpha's data must not leak
         var betaGetResponse = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings");
 
-        betaGetResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        await Assert.That(betaGetResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [Test]
     public async Task PutSettings_BothBrandsHaveIndependentSettings()
     {
         var client = fixture.Factory.CreateClient();
@@ -81,29 +80,29 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         var alphaPut = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings",
             alphaSettings);
-        alphaPut.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(alphaPut.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         var betaPut = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings",
             betaSettings);
-        betaPut.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(betaPut.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
         // Read back Alpha — must not have Beta's language
         var alphaGet = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings");
-        alphaGet.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(alphaGet.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var alphaResult = await alphaGet.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        alphaResult!.DefaultLanguage.ShouldBe("nl-BE");
+        await Assert.That(alphaResult!.DefaultLanguage).IsEqualTo("nl-BE");
 
         // Read back Beta — must not have Alpha's language
         var betaGet = await client.GetAsync(
             $"/api/brands/{IntegrationTestBase.BetaSlug}/settings");
-        betaGet.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(betaGet.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var betaResult = await betaGet.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        betaResult!.DefaultLanguage.ShouldBe("fr-BE");
+        await Assert.That(betaResult!.DefaultLanguage).IsEqualTo("fr-BE");
     }
 
-    [Fact]
+    [Test]
     public async Task PutSettings_UpdateExisting_ReturnsUpdatedValues()
     {
         var client = fixture.Factory.CreateClient();
@@ -128,9 +127,9 @@ public sealed class BrandSettingsIsolationTests(IntegrationTestBase fixture)
         var updateResponse = await client.PutAsJsonAsync(
             $"/api/brands/{IntegrationTestBase.AlphaSlug}/settings", updated);
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await Assert.That(updateResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
         var result = await updateResponse.Content.ReadFromJsonAsync<BrandSettingsResponse>();
-        result!.DefaultLanguage.ShouldBe("fr-BE");
-        result.Timezone.ShouldBe("Europe/Paris");
+        await Assert.That(result!.DefaultLanguage).IsEqualTo("fr-BE");
+        await Assert.That(result.Timezone).IsEqualTo("Europe/Paris");
     }
 }
