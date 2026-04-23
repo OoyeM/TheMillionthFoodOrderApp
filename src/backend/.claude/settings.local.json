@@ -6,7 +6,11 @@
       "Bash(aspire start:*)",
       "mcp__aspire__list_resources",
       "Bash(aspire ps:*)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "WebFetch(domain:www.jimmybogard.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.ssw.com.au)"
     ]
   },
   "enableAllProjectMcpServers": true,

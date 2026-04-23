@@ -45,7 +45,7 @@ public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus, IW
 
     public override async Task HandleAsync(SimulateOrderStatusChangeRequest req, CancellationToken ct)
     {
-        if (!env.IsDevelopment())
+        if (!env.IsDevelopment() && !env.IsEnvironment("Testing"))
         {
             await HttpContext.Response.SendNotFoundAsync(ct);
             return;
@@ -61,7 +61,7 @@ public sealed class SimulateOrderStatusChangeEndpoint(IMessageBus messageBus, IW
             req.NewStatus,
             req.CustomerName);
 
-        await messageBus.PublishAsync(@event);
+        await messageBus.InvokeAsync(@event, ct);
 
         await HttpContext.Response.SendAsync(
             new SimulateOrderStatusChangeResponse(orderId, "Event published"),

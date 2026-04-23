@@ -21,17 +21,18 @@ public sealed class OrderStatusTransitionConfiguration : IEntityTypeConfiguratio
         builder.Property(t => t.ToStatusId)
             .IsRequired();
 
-        // Use Restrict to avoid SQL Server multiple cascade path error —
-        // parent cascade from OrderLifecycleConfig handles cleanup.
+        // ClientCascade: EF Core cascades deletions client-side without a DB-level CASCADE,
+        // avoiding SQL Server's multiple cascade path error while still cleaning up transitions
+        // when their parent statuses are deleted.
         builder.HasOne<OrderStatus>()
             .WithMany()
             .HasForeignKey(t => t.FromStatusId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.ClientCascade);
 
         builder.HasOne<OrderStatus>()
             .WithMany()
             .HasForeignKey(t => t.ToStatusId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.ClientCascade);
 
         builder.HasIndex(t => new { t.OrderLifecycleConfigId, t.FromStatusId, t.ToStatusId })
             .IsUnique()

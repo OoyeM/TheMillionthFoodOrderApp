@@ -21,7 +21,6 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
         {
             config = Domain.TaxConfiguration.TaxConfiguration.Create();
             await repository.AddAsync(config, cancellationToken);
-            await repository.SaveChangesAsync(cancellationToken);
         }
 
         var rates = request.VatRates

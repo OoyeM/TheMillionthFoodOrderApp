@@ -87,7 +87,7 @@ public sealed class ModifierGroupTests
         var group = ModifierGroup.Create(ValidTranslations, modifiers);
 
         var sortOrders = group.Modifiers.Select(m => m.SortOrder).OrderBy(s => s).ToList();
-        await Assert.That(sortOrders).IsEqualTo([0, 1, 2]);
+        await Assert.That(sortOrders).IsEquivalentTo([0, 1, 2]);
     }
 
     // ── ModifierGroup.Update ───────────────────────────────────────────────────

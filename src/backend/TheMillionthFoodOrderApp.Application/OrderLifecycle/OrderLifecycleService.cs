@@ -36,14 +36,9 @@ public sealed class OrderLifecycleService(
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
 
-        var config = await repository.GetByShopIdAsync(shopId, cancellationToken);
-
-        if (config is null)
-        {
-            config = OrderLifecycleConfig.CreateDefault(shopId);
-            await repository.AddAsync(config, cancellationToken);
-            await repository.SaveChangesAsync(cancellationToken);
-        }
+        var existing = await repository.GetByShopIdAsync(shopId, cancellationToken);
+        var isNew = existing is null;
+        var config = existing ?? OrderLifecycleConfig.CreateDefault(shopId);
 
         // Build domain entities from the request
         var statuses = request.Statuses
@@ -61,7 +56,12 @@ public sealed class OrderLifecycleService(
                 sortOrderToId[t.ToSortOrder]))
             .ToList();
 
+        // ConfigureLifecycle replaces the default statuses/transitions in memory.
+        // AddAsync is called AFTER so EF Core tracks the final state in one shot.
         config.ConfigureLifecycle(statuses, transitions);
+
+        if (isNew)
+            await repository.AddAsync(config, cancellationToken);
 
         await repository.SaveChangesAsync(cancellationToken);
 
