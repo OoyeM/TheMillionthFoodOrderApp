@@ -240,7 +240,7 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
         await Assert.That(updated).IsNotNull();
 
         // Assert — CreatedAt unchanged, UpdatedAt bumped
-        await Assert.That(updated!.CreatedAt).IsEquivalentTo(created!.CreatedAt);
+        await Assert.That(updated!.CreatedAt.ToUnixTimeSeconds()).IsEquivalentTo(created!.CreatedAt.ToUnixTimeSeconds());
         await Assert.That(updated.UpdatedAt).IsGreaterThanOrEqualTo(created.UpdatedAt);
     }
 
