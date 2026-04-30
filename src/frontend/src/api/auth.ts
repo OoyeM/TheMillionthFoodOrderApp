@@ -6,6 +6,8 @@ import type { BffUserResponse, AuthUser, UserRole } from '@/types/auth';
  * - baseURL: '/bff' — Vite proxies this to the BFF host (http://localhost:5261)
  * - withCredentials: true — sends session cookie
  * - No X-Brand-Slug interceptor: BFF auth is brand-agnostic at this layer
+ *
+ * @expected-unused — Lower-level BFF client — public API surface for future consumers
  */
 export const bffClient = axios.create({
   baseURL: '/bff',

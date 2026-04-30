@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { orderLifecycleApi } from '@api/orderLifecycle';
 import type { ConfigureOrderLifecycleRequest } from '../../../types/common';
 
-/** Centralized query key factory — scoped by brandSlug + shopId for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug + shopId for proper cache isolation.
+ *
+ * @expected-unused — US-FP-024 (Order lifecycle) — used by mutations for cache invalidation
+ */
 export const orderLifecycleKeys = {
   all: (brandSlug: string, shopId: string) =>
     ['orderLifecycle', brandSlug, shopId] as const,

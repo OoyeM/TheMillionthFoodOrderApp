@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { platformAdminsApi } from '@api/platformAdmins';
 import type { InvitePlatformAdminRequest } from '@api/platformAdmins';
 
-/** Centralized query key factory — keeps cache invalidation consistent. */
+/**
+ * Centralized query key factory — keeps cache invalidation consistent.
+ *
+ * @expected-unused — US-FP-001 (Platform admin) — used by mutations for cache invalidation
+ */
 export const platformAdminKeys = {
   all: ['platform-admins'] as const,
 };

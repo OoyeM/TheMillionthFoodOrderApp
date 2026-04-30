@@ -7,7 +7,11 @@ import type {
   UpdateComboProductRequest,
 } from '@api/products';
 
-/** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug for proper cache isolation.
+ *
+ * @expected-unused — US-FP-005 (Product CRUD) — used by mutations for cache invalidation
+ */
 export const productKeys = {
   all: (brandSlug: string) => ['products', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['products', brandSlug, id] as const,

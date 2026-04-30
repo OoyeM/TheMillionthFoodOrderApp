@@ -1,3 +1,7 @@
+// fallow-ignore-file unused-file
+//
+// Generic render-with-providers helpers; consumed once test suites converge on shared setup.
+
 import { type ReactNode } from 'react';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';

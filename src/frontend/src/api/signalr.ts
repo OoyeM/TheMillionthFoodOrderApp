@@ -1,3 +1,9 @@
+// fallow-ignore-file unused-export
+// fallow-ignore-file unused-file
+//
+// Real-time SignalR client + hooks. Wired up by US-FP-068
+// (Real-time order updates infrastructure).
+
 import {
   HubConnectionBuilder,
   HubConnection,

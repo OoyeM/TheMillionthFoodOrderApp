@@ -1,3 +1,9 @@
+// fallow-ignore-file unused-export
+// fallow-ignore-file unused-type
+// fallow-ignore-file unused-file
+//
+// Real-time SignalR React hook. Consumed by US-FP-068.
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { HubConnection, HubConnectionState } from '@microsoft/signalr';
 import { getOrderHubConnection } from './signalr';

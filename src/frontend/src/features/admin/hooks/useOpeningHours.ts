@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { openingHoursApi } from '@api/openingHours';
 import type { SetOpeningHoursRequest } from '../../../types/common';
 
-/** Centralized query key factory — scoped by brandSlug + shopId for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug + shopId for proper cache isolation.
+ *
+ * @expected-unused — US-FP-009 (Opening hours) — used by mutations for cache invalidation
+ */
 export const openingHoursKeys = {
   all: (brandSlug: string, shopId: string) =>
     ['openingHours', brandSlug, shopId] as const,
@@ -23,7 +27,11 @@ export function useOpeningHours(brandSlug: string, shopId: string) {
   });
 }
 
-/** Fetch real-time open/closed status for a shop. */
+/**
+ * Fetch real-time open/closed status for a shop.
+ *
+ * @expected-unused — US-FP-024 (Shop status badge) — wired up when storefront ships
+ */
 export function useShopStatus(brandSlug: string, shopId: string) {
   return useQuery({
     queryKey: openingHoursKeys.status(brandSlug, shopId),

@@ -22,6 +22,9 @@ export interface ReorderMenuCategoryRequest {
   sortOrder: number;
 }
 
+/**
+ * @expected-unused — DTO/response shape used once US-FP-022 (Menu category assignment) ships
+ */
 export interface AssignProductRequest {
   productId: string;
   categoryId: string;

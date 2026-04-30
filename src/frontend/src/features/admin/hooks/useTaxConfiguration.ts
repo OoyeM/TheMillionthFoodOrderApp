@@ -2,7 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taxConfigurationApi } from '../../../api/taxConfiguration';
 import type { UpdateTaxConfigurationRequest } from '../../../types/common';
 
-/** Centralized query key factory for tax configuration queries. */
+/**
+ * Centralized query key factory for tax configuration queries.
+ *
+ * @expected-unused — US-FP-046 (VAT) — used by mutations for cache invalidation
+ */
 export const taxConfigurationKeys = {
   config: (brandSlug: string) => ['taxConfiguration', brandSlug] as const,
 };

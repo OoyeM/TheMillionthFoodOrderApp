@@ -3,7 +3,11 @@ import { brandsApi } from '@api/brands';
 import type { CreateBrandRequest, UpdateBrandRequest } from '@api/brands';
 import type { StaffAuthMethod } from '../../../types/common';
 
-/** Centralized query key factory — keeps cache invalidation consistent. */
+/**
+ * Centralized query key factory — keeps cache invalidation consistent.
+ *
+ * @expected-unused — US-FP-002 (Brand CRUD) — used by mutations for cache invalidation
+ */
 export const brandKeys = {
   all: ['brands'] as const,
   detail: (id: string) => ['brands', id] as const,

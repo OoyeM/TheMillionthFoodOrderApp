@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { brandStaffApi } from '@api/brandStaff';
 import type { InviteBrandStaffRequest } from '@api/brandStaff';
 
-/** Centralized query key factory — keeps cache invalidation consistent. */
+/**
+ * Centralized query key factory — keeps cache invalidation consistent.
+ *
+ * @expected-unused — US-FP-007 (Brand staff) — used by mutations for cache invalidation
+ */
 export const brandStaffKeys = {
   all: (brandSlug: string) => ['brand-staff', brandSlug] as const,
   byShop: (brandSlug: string, shopId: string) =>
@@ -22,7 +26,11 @@ export function useBrandStaff(brandSlug: string) {
   });
 }
 
-/** Fetch staff for a specific shop within a brand. */
+/**
+ * Fetch staff for a specific shop within a brand.
+ *
+ * @expected-unused — US-FP-007 (Shop staff) — wired up when staff list page lands
+ */
 export function useShopStaff(brandSlug: string, shopId: string) {
   return useQuery({
     queryKey: brandStaffKeys.byShop(brandSlug, shopId),

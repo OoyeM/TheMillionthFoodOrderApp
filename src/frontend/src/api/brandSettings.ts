@@ -7,6 +7,9 @@ export interface UpdateBrandThemingRequest {
   customDomain?: string | null;
 }
 
+/**
+ * @expected-unused — DTO/response shape used once US-FP-003 (Brand theming) logo upload ships
+ */
 export interface UploadBrandLogoResponse {
   logoUrl: string;
 }
