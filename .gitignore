@@ -56,3 +56,6 @@ nunit-*.xml
 # Claude
 .claude/settings.local.json
 node_modules/
+
+# Fallow caches (any depth)
+.fallow/

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect } from 'vitest';
 
 // Initialize i18n before tests
-import '../i18n/config';
+import './i18n/config';
 
 /**
  * Smoke test: verifies the app renders without throwing.
