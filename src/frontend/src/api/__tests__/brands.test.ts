@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { http, HttpResponse } from 'msw';
+import { describe, it, expect } from 'vitest';
 import { server } from '../../test/msw/server';
 import { brandsApi } from '../brands';
+import { mockEndpoint } from '../../test/mswHelpers';
+import { expectAuthSessionExpired } from '../../test/authExpiredHarness';
 
 /**
  * Tests for src/api/brands.ts
@@ -21,22 +22,8 @@ describe('brandsApi', () => {
     });
 
     it('dispatches auth:session-expired on 401', async () => {
-      server.use(
-        http.get('/api/brands', () => new HttpResponse(null, { status: 401 })),
-      );
-
-      const listener = vi.fn();
-      window.addEventListener('auth:session-expired', listener);
-
-      try {
-        await brandsApi.list();
-      } catch {
-        // Expected
-      } finally {
-        window.removeEventListener('auth:session-expired', listener);
-      }
-
-      expect(listener).toHaveBeenCalledOnce();
+      server.use(mockEndpoint('get', '/api/brands', 401));
+      await expectAuthSessionExpired(() => brandsApi.list());
     });
   });
 
