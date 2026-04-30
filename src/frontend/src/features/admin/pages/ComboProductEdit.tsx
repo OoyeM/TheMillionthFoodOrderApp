@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  useProduct,
-  useProducts,
-  useUpdateComboProduct,
-  useDeleteProduct,
-} from '../hooks/useProducts';
+import { Controller, type UseFormRegister } from 'react-hook-form';
+import { useProducts, useDeleteProduct } from '../hooks/useProducts';
 import {
   useProductModifierGroups,
   useModifierGroups,
   useSetProductModifierGroups,
 } from '../hooks/useModifierGroups';
-import type { SupportedLocale, ProductListItem, ProductModifierGroupResponse } from '../../../types/common';
+import { useResourceForm } from '../forms/useResourceForm';
+import { productKeys } from '../hooks/useProducts';
+import { productsApi } from '../../../api/products';
+import { comboProductEditSchema, type ComboProductEditFormValues } from './schemas/comboProductEditSchema';
+import type {
+  SupportedLocale,
+  ProductListItem,
+  ProductModifierGroupResponse,
+  Product,
+} from '../../../types/common';
+import type { UpdateComboProductRequest } from '../../../api/products';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -24,23 +30,25 @@ const LANGUAGES: { code: SupportedLocale; label: string }[] = [
   { code: 'de', label: 'DE' },
 ];
 
-interface TranslationState {
-  name: string;
-  description: string;
-}
+// ---------------------------------------------------------------------------
+// Helper — build a translations map from the API array, filling missing locales
+// ---------------------------------------------------------------------------
 
-type TranslationsMap = Record<SupportedLocale, TranslationState>;
-
-const emptyTranslations: TranslationsMap = {
-  nl: { name: '', description: '' },
-  fr: { name: '', description: '' },
-  de: { name: '', description: '' },
-};
-
-interface FormErrors {
-  basePrice?: string;
-  nlName?: string;
-  components?: string;
+function buildTranslationsMap(
+  apiTranslations: Product['translations'],
+): ComboProductEditFormValues['translations'] {
+  const map: ComboProductEditFormValues['translations'] = {
+    nl: { name: '', description: '' },
+    fr: { name: '', description: '' },
+    de: { name: '', description: '' },
+  };
+  for (const tr of apiTranslations) {
+    const loc = tr.languageCode as SupportedLocale;
+    if (loc in map) {
+      map[loc] = { name: tr.name, description: tr.description ?? '' };
+    }
+  }
+  return map;
 }
 
 // ---------------------------------------------------------------------------
@@ -59,28 +67,16 @@ export function ComboProductEdit() {
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedProductId = productId ?? '';
 
-  const { data: product, isLoading, isError, error } = useProduct(resolvedBrandSlug, resolvedProductId);
   const { data: allProducts } = useProducts(resolvedBrandSlug);
-  const updateCombo = useUpdateComboProduct(resolvedBrandSlug, resolvedProductId);
   const deleteProduct = useDeleteProduct(resolvedBrandSlug);
 
-  // Modifier groups
+  // Modifier groups (kept imperative — separate resource / mutation)
   const { data: productModifierGroups } = useProductModifierGroups(resolvedBrandSlug, resolvedProductId);
   const { data: allModifierGroups } = useModifierGroups(resolvedBrandSlug);
   const setProductModifierGroups = useSetProductModifierGroups(resolvedBrandSlug, resolvedProductId);
   const [assignedGroups, setAssignedGroups] = useState<ProductModifierGroupResponse[]>([]);
   const [assignmentsInitialized, setAssignmentsInitialized] = useState(false);
   const [selectedGroupToAdd, setSelectedGroupToAdd] = useState('');
-
-  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
-  const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
-  const [basePrice, setBasePrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [selectedComponents, setSelectedComponents] = useState<ProductListItem[]>([]);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formInitialized, setFormInitialized] = useState(false);
-
-  const simpleProducts = allProducts?.filter((p) => p.productType === 'Simple') ?? [];
 
   // Populate assigned modifier groups when data arrives
   useEffect(() => {
@@ -90,128 +86,97 @@ export function ComboProductEdit() {
     }
   }, [productModifierGroups, assignmentsInitialized]);
 
-  // Populate form when product data arrives
-  useEffect(() => {
-    if (product !== undefined && allProducts !== undefined && !formInitialized) {
-      setBasePrice(product.basePrice.amount.toString());
-      setImageUrl(product.imageUrl ?? '');
+  // Active translation tab (UI-only state — not part of the form schema)
+  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
 
-      const translationsMap: TranslationsMap = { ...emptyTranslations };
-      for (const tr of product.translations) {
-        if (tr.languageCode in translationsMap) {
-          translationsMap[tr.languageCode as SupportedLocale] = {
-            name: tr.name,
-            description: tr.description ?? '',
-          };
-        }
-      }
-      setTranslations(translationsMap);
+  // ---------------------------------------------------------------------------
+  // Main form via useResourceForm
+  // ---------------------------------------------------------------------------
 
-      // Populate combo items from product data
-      if (product.comboItems) {
-        const components: ProductListItem[] = [];
-        for (const ci of product.comboItems.sort((a, b) => a.sortOrder - b.sortOrder)) {
-          const found = allProducts.find((p) => p.id === ci.componentProductId);
-          if (found) {
-            components.push(found);
-          }
-        }
-        setSelectedComponents(components);
-      }
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    Product,
+    ComboProductEditFormValues,
+    UpdateComboProductRequest
+  >({
+    queryKey: productKeys.detail(resolvedBrandSlug, resolvedProductId),
+    fetch: () => productsApi.get(resolvedBrandSlug, resolvedProductId),
+    update: (payload) => productsApi.updateCombo(resolvedBrandSlug, resolvedProductId, payload),
+    schema: comboProductEditSchema,
+    defaultValues: {
+      basePrice: 0,
+      imageUrl: '',
+      translations: {
+        nl: { name: '', description: '' },
+        fr: { name: '', description: '' },
+        de: { name: '', description: '' },
+      },
+      componentProductIds: [],
+    },
+    toFormValues: (product) => ({
+      basePrice: product.basePrice.amount,
+      imageUrl: product.imageUrl ?? '',
+      translations: buildTranslationsMap(product.translations),
+      componentProductIds: (product.comboItems ?? [])
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((c) => c.componentProductId),
+    }),
+    toUpdatePayload: (values) => ({
+      basePrice: values.basePrice,
+      imageUrl: values.imageUrl.trim() || null,
+      translations: (['nl', 'fr', 'de'] as const)
+        .filter((loc) => values.translations[loc].name.trim().length > 0)
+        .map((loc) => ({
+          languageCode: loc,
+          name: values.translations[loc].name.trim(),
+          description: values.translations[loc].description.trim() || null,
+        })),
+      componentProductIds: values.componentProductIds,
+    }),
+    invalidate: [productKeys.all(resolvedBrandSlug)],
+    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/products`),
+  });
 
-      setFormInitialized(true);
+  // ---------------------------------------------------------------------------
+  // Derived data
+  // ---------------------------------------------------------------------------
+
+  const simpleProducts = allProducts?.filter((p) => p.productType === 'Simple') ?? [];
+
+  // ---------------------------------------------------------------------------
+  // Handlers — combo component list (Controller-based, not useFieldArray)
+  // ---------------------------------------------------------------------------
+
+  function handleToggleComponent(product: ProductListItem, currentIds: string[], onChange: (ids: string[]) => void) {
+    const exists = currentIds.includes(product.id);
+    if (exists) {
+      onChange(currentIds.filter((id) => id !== product.id));
+    } else {
+      onChange([...currentIds, product.id]);
     }
-  }, [product, allProducts, formInitialized]);
-
-  function updateTranslation(
-    locale: SupportedLocale,
-    field: keyof TranslationState,
-    value: string,
-  ) {
-    setTranslations((prev) => ({
-      ...prev,
-      [locale]: { ...prev[locale], [field]: value },
-    }));
   }
 
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-    const price = parseFloat(basePrice);
-    if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = t('admin.comboProducts.errors.priceRequired');
-    }
-    if (translations.nl.name.trim().length === 0) {
-      next.nlName = t('admin.comboProducts.errors.nlNameRequired');
-    }
-    if (selectedComponents.length < 2) {
-      next.components = t('admin.comboProducts.errors.minComponents');
-    }
-    return next;
-  }
-
-  function handleToggleComponent(product: ProductListItem) {
-    setSelectedComponents((prev) => {
-      const exists = prev.some((p) => p.id === product.id);
-      if (exists) {
-        return prev.filter((p) => p.id !== product.id);
-      }
-      return [...prev, product];
-    });
-  }
-
-  function handleMoveUp(index: number) {
+  function handleMoveUp(index: number, currentIds: string[], onChange: (ids: string[]) => void) {
     if (index === 0) return;
-    setSelectedComponents((prev) => {
-      const next = [...prev];
-      [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
-      return next;
-    });
+    const next = [...currentIds];
+    [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+    onChange(next);
   }
 
-  function handleMoveDown(index: number) {
-    setSelectedComponents((prev) => {
-      if (index >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
-      return next;
-    });
+  function handleMoveDown(index: number, currentIds: string[], onChange: (ids: string[]) => void) {
+    if (index >= currentIds.length - 1) return;
+    const next = [...currentIds];
+    [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+    onChange(next);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-
-    const translationInputs = LANGUAGES.filter(
-      (l) => translations[l.code].name.trim().length > 0,
-    ).map((l) => ({
-      languageCode: l.code,
-      name: translations[l.code].name.trim(),
-      description: translations[l.code].description.trim() || null,
-    }));
-
-    updateCombo.mutate(
-      {
-        basePrice: parseFloat(basePrice),
-        imageUrl: imageUrl.trim() || null,
-        translations: translationInputs,
-        componentProductIds: selectedComponents.map((p) => p.id),
-      },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/products`);
-        },
-      },
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Delete handler
+  // ---------------------------------------------------------------------------
 
   function handleDelete() {
-    const name = translations.nl.name || '(unnamed)';
-    if (window.confirm(t('admin.comboProducts.confirmDelete', { name }))) {
+    const nlName = form.getValues('translations.nl.name') || '(unnamed)';
+    if (window.confirm(t('admin.comboProducts.confirmDelete', { name: nlName }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
           navigate(`/${brandSlug}/${lang}/admin/products`);
@@ -225,14 +190,12 @@ export function ComboProductEdit() {
   }
 
   // ---------------------------------------------------------------------------
-  // Modifier group assignment handlers
+  // Modifier group assignment handlers (imperative — separate resource)
   // ---------------------------------------------------------------------------
 
   function handleAddModifierGroup() {
     if (!selectedGroupToAdd) return;
-    const alreadyAssigned = assignedGroups.some(
-      (g) => g.modifierGroupId === selectedGroupToAdd,
-    );
+    const alreadyAssigned = assignedGroups.some((g) => g.modifierGroupId === selectedGroupToAdd);
     if (alreadyAssigned) return;
 
     const groupInfo = allModifierGroups?.find((g) => g.id === selectedGroupToAdd);
@@ -287,7 +250,7 @@ export function ComboProductEdit() {
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isLoading) {
+  if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#6b7280' }}>Loading combo product...</p>
@@ -295,12 +258,12 @@ export function ComboProductEdit() {
     );
   }
 
-  if (isError) {
+  if (fetchError) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
           Failed to load combo product:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
         </p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
           Back to list
@@ -309,20 +272,20 @@ export function ComboProductEdit() {
     );
   }
 
-  if (product === undefined) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Combo product not found.</p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Form render
+  // ---------------------------------------------------------------------------
 
-  // ---------------------------------------------------------------------------
-  // Form
-  // ---------------------------------------------------------------------------
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = form;
+
+  const watchedImageUrl = watch('imageUrl');
+  // Pre-compute error messages to avoid complex type inference inside JSX
+  const nlNameError = (errors.translations?.nl?.name as { message?: string } | undefined)?.message;
+  const componentIdsError = (errors.componentProductIds as { message?: string } | undefined)?.message;
 
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
@@ -330,7 +293,7 @@ export function ComboProductEdit() {
         {t('admin.comboProducts.edit')}
       </h1>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={submit} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
@@ -341,12 +304,11 @@ export function ComboProductEdit() {
             type="number"
             min="0.01"
             step="0.01"
-            value={basePrice}
-            onChange={(e) => setBasePrice(e.target.value)}
+            {...register('basePrice', { valueAsNumber: true })}
             style={inputStyle(!!errors.basePrice)}
             placeholder="e.g. 3.50"
           />
-          {errors.basePrice && <FieldError message={errors.basePrice} />}
+          {errors.basePrice?.message && <FieldError message={errors.basePrice.message} />}
         </div>
 
         {/* Image URL */}
@@ -357,14 +319,13 @@ export function ComboProductEdit() {
           <input
             id="imageUrl"
             type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            {...register('imageUrl')}
             style={inputStyle(false)}
             placeholder="https://example.com/image.jpg"
           />
-          {imageUrl.trim() && (
+          {watchedImageUrl && watchedImageUrl.trim().length > 0 ? (
             <img
-              src={imageUrl}
+              src={watchedImageUrl}
               alt="Preview"
               style={{
                 marginTop: '0.5rem',
@@ -377,7 +338,7 @@ export function ComboProductEdit() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Translation Tabs */}
@@ -408,46 +369,18 @@ export function ComboProductEdit() {
               }}
             >
               {l.label}
-              {l.code === 'nl' && ' *'}
+              {l.code === 'nl' ? ' *' : null}
             </button>
           ))}
         </div>
 
-        {/* Active tab content */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
-          </label>
-          <input
-            id={`name-${activeTab}`}
-            type="text"
-            value={translations[activeTab].name}
-            onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
-            placeholder={`Combo name in ${activeTab.toUpperCase()}`}
-          />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
-        </div>
+        {/* Translation fields — rendered for all tabs, only the active one is visible */}
+        <TranslationFields
+          activeTab={activeTab}
+          register={register}
+          nlNameError={nlNameError}
+        />
 
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <textarea
-            id={`desc-${activeTab}`}
-            value={translations[activeTab].description}
-            onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={`Combo description in ${activeTab.toUpperCase()}`}
-          />
-        </div>
-
-        {/* Metadata */}
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          Created: {new Date(product.createdAt).toLocaleString()} &mdash; Last updated:{' '}
-          {new Date(product.updatedAt).toLocaleString()}
-        </p>
 
         {/* Component Products */}
         <section style={{ marginBottom: '1.5rem' }}>
@@ -458,135 +391,155 @@ export function ComboProductEdit() {
             {t('admin.comboProducts.componentProductsHint')}
           </p>
 
-          {errors.components && <FieldError message={errors.components} />}
+          {componentIdsError && <FieldError message={componentIdsError} />}
 
-          {/* Selected components with reorder controls */}
-          {selectedComponents.length > 0 && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              {selectedComponents.map((comp, index) => (
-                <div
-                  key={comp.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.375rem',
-                    marginBottom: '0.375rem',
-                    background: '#f9fafb',
-                  }}
-                >
-                  <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>
-                    {comp.name}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>
-                    {'\u20AC'} {comp.basePrice.amount.toFixed(2)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveUp(index)}
-                    disabled={index === 0}
-                    style={{
-                      ...reorderButtonStyle,
-                      opacity: index === 0 ? 0.3 : 1,
-                      cursor: index === 0 ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    &#9650;
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveDown(index)}
-                    disabled={index === selectedComponents.length - 1}
-                    style={{
-                      ...reorderButtonStyle,
-                      opacity: index === selectedComponents.length - 1 ? 0.3 : 1,
-                      cursor: index === selectedComponents.length - 1 ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    &#9660;
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleComponent(comp)}
-                    style={{
-                      padding: '0.125rem 0.5rem',
-                      fontSize: '0.75rem',
-                      background: '#fff',
-                      border: '1px solid #fca5a5',
-                      borderRadius: '0.25rem',
-                      color: '#dc2626',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {t('admin.comboProducts.remove')}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <Controller
+            name="componentProductIds"
+            control={form.control}
+            render={({ field }) => {
+              const currentIds: string[] = field.value ?? [];
+              const selectedProducts = currentIds
+                .map((id) => allProducts?.find((p) => p.id === id))
+                .filter((p): p is ProductListItem => p !== undefined);
 
-          {/* Available products to add */}
-          {simpleProducts.length === 0 && selectedComponents.length === 0 && (
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
-              {t('admin.comboProducts.noSimpleProducts')}
-            </p>
-          )}
-          {simpleProducts.length > 0 && (
-            <div
-              style={{
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.375rem',
-                maxHeight: '12rem',
-                overflowY: 'auto',
-              }}
-            >
-              {simpleProducts
-                .filter((p) => !selectedComponents.some((s) => s.id === p.id))
-                .map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleToggleComponent(p)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 0.75rem',
-                      cursor: 'pointer',
-                      borderBottom: '1px solid #f3f4f6',
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = '#f9fafb';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    }}
-                  >
-                    <span style={{ flex: 1, fontSize: '0.875rem' }}>{p.name}</span>
-                    <span
-                      style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}
+              return (
+                <>
+                  {/* Selected components with reorder controls */}
+                  {selectedProducts.length > 0 && (
+                    <div style={{ marginBottom: '0.75rem' }}>
+                      {selectedProducts.map((comp, index) => (
+                        <div
+                          key={comp.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 0.75rem',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.375rem',
+                            marginBottom: '0.375rem',
+                            background: '#f9fafb',
+                          }}
+                        >
+                          <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>
+                            {comp.name}
+                          </span>
+                          <span
+                            style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}
+                          >
+                            {'€'} {comp.basePrice.amount.toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveUp(index, currentIds, field.onChange)}
+                            disabled={index === 0}
+                            style={{
+                              ...reorderButtonStyle,
+                              opacity: index === 0 ? 0.3 : 1,
+                              cursor: index === 0 ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            &#9650;
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveDown(index, currentIds, field.onChange)}
+                            disabled={index === selectedProducts.length - 1}
+                            style={{
+                              ...reorderButtonStyle,
+                              opacity: index === selectedProducts.length - 1 ? 0.3 : 1,
+                              cursor: index === selectedProducts.length - 1 ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            &#9660;
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleComponent(comp, currentIds, field.onChange)}
+                            style={{
+                              padding: '0.125rem 0.5rem',
+                              fontSize: '0.75rem',
+                              background: '#fff',
+                              border: '1px solid #fca5a5',
+                              borderRadius: '0.25rem',
+                              color: '#dc2626',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {t('admin.comboProducts.remove')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Available products to add */}
+                  {simpleProducts.length === 0 && selectedProducts.length === 0 && (
+                    <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+                      {t('admin.comboProducts.noSimpleProducts')}
+                    </p>
+                  )}
+                  {simpleProducts.length > 0 && (
+                    <div
+                      style={{
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.375rem',
+                        maxHeight: '12rem',
+                        overflowY: 'auto',
+                      }}
                     >
-                      {'\u20AC'} {p.basePrice.amount.toFixed(2)}
-                    </span>
-                    <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>+ Add</span>
-                  </div>
-                ))}
-              {simpleProducts.filter((p) => !selectedComponents.some((s) => s.id === p.id))
-                .length === 0 && (
-                <p style={{ padding: '0.75rem', color: '#9ca3af', fontSize: '0.875rem' }}>
-                  {t('admin.comboProducts.allProductsSelected')}
-                </p>
-              )}
-            </div>
-          )}
+                      {simpleProducts
+                        .filter((p) => !currentIds.includes(p.id))
+                        .map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => handleToggleComponent(p, currentIds, field.onChange)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              padding: '0.5rem 0.75rem',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #f3f4f6',
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = '#f9fafb';
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = 'transparent';
+                            }}
+                          >
+                            <span style={{ flex: 1, fontSize: '0.875rem' }}>{p.name}</span>
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                color: '#6b7280',
+                                fontFamily: 'monospace',
+                              }}
+                            >
+                              {'€'} {p.basePrice.amount.toFixed(2)}
+                            </span>
+                            <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>+ Add</span>
+                          </div>
+                        ))}
+                      {simpleProducts.filter((p) => !currentIds.includes(p.id)).length === 0 && (
+                        <p style={{ padding: '0.75rem', color: '#9ca3af', fontSize: '0.875rem' }}>
+                          {t('admin.comboProducts.allProductsSelected')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
+            }}
+          />
         </section>
 
         {/* API error */}
-        {updateCombo.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateCombo.error instanceof Error
-              ? updateCombo.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : 'Failed to save changes. Please try again.'}
           </p>
         )}
@@ -594,19 +547,19 @@ export function ComboProductEdit() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateCombo.isPending}
+            disabled={isSubmitting}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateCombo.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateCombo.isPending ? 0.6 : 1,
+              opacity: isSubmitting ? 0.6 : 1,
             }}
           >
-            {updateCombo.isPending ? t('admin.comboProducts.saving') : t('admin.comboProducts.saveChanges')}
+            {isSubmitting ? t('admin.comboProducts.saving') : t('admin.comboProducts.saveChanges')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
@@ -789,12 +742,113 @@ export function ComboProductEdit() {
             opacity: setProductModifierGroups.isPending ? 0.6 : 1,
           }}
         >
-          {setProductModifierGroups.isPending
-            ? 'Saving...'
-            : t('admin.modifierGroups.saveAssignments')}
+          {setProductModifierGroups.isPending ? 'Saving...' : t('admin.modifierGroups.saveAssignments')}
         </button>
       </section>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TranslationFields — extracted so `register` call is in a non-hook component
+// context where TypeScript resolves literal path types correctly.
+// ---------------------------------------------------------------------------
+
+interface TranslationFieldsProps {
+  activeTab: SupportedLocale;
+  register: UseFormRegister<ComboProductEditFormValues>;
+  nlNameError: string | undefined;
+}
+
+function TranslationFields({ activeTab, register, nlNameError }: TranslationFieldsProps) {
+  if (activeTab === 'nl') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-nl">
+            Name <RequiredMark />
+          </label>
+          <input
+            id="name-nl"
+            type="text"
+            {...register('translations.nl.name')}
+            style={inputStyle(!!nlNameError)}
+            placeholder="Combo name in NL"
+          />
+          {nlNameError && <FieldError message={nlNameError} />}
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-nl">
+            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <textarea
+            id="desc-nl"
+            {...register('translations.nl.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder="Combo description in NL"
+          />
+        </div>
+      </>
+    );
+  }
+  if (activeTab === 'fr') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-fr">
+            Name
+          </label>
+          <input
+            id="name-fr"
+            type="text"
+            {...register('translations.fr.name')}
+            style={inputStyle(false)}
+            placeholder="Combo name in FR"
+          />
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-fr">
+            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <textarea
+            id="desc-fr"
+            {...register('translations.fr.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder="Combo description in FR"
+          />
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={labelStyle} htmlFor="name-de">
+          Name
+        </label>
+        <input
+          id="name-de"
+          type="text"
+          {...register('translations.de.name')}
+          style={inputStyle(false)}
+          placeholder="Combo name in DE"
+        />
+      </div>
+      <div style={{ marginBottom: '0.5rem' }}>
+        <label style={labelStyle} htmlFor="desc-de">
+          Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+        </label>
+        <textarea
+          id="desc-de"
+          {...register('translations.de.description')}
+          rows={3}
+          style={{ ...inputStyle(false), resize: 'vertical' }}
+          placeholder="Combo description in DE"
+        />
+      </div>
+    </>
   );
 }
 
