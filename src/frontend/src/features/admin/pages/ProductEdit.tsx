@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useProduct, useUpdateProduct, useDeleteProduct } from '../hooks/useProducts';
+import { Controller, type UseFormRegister } from 'react-hook-form';
+import type { TFunction } from 'i18next';
+import { useDeleteProduct, productKeys } from '../hooks/useProducts';
 import {
   useProductModifierGroups,
   useModifierGroups,
   useSetProductModifierGroups,
 } from '../hooks/useModifierGroups';
-import { useBrandSettings } from '../hooks/useBrandSettings';
+import { useResourceForm } from '../forms/useResourceForm';
+import { productsApi } from '../../../api/products';
+import type { UpdateProductRequest } from '../../../api/products';
+import { productEditSchema, type ProductEditFormValues } from './schemas/productEditSchema';
 import {
   Allergen,
   DietaryTag,
   ALLERGEN_KEYS,
   DIETARY_TAG_KEYS,
-  extractPrimaryLocale
 } from '../../../types/common';
-import type { SupportedLocale, ProductModifierGroupResponse } from '../../../types/common';
+import type { SupportedLocale, ProductModifierGroupResponse, Product } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -27,22 +31,25 @@ const LANGUAGES: { code: SupportedLocale; label: string }[] = [
   { code: 'de', label: 'DE' },
 ];
 
-interface TranslationState {
-  name: string;
-  description: string;
-}
+// ---------------------------------------------------------------------------
+// Helper — build a translations map from the API array, filling missing locales
+// ---------------------------------------------------------------------------
 
-type TranslationsMap = Record<SupportedLocale, TranslationState>;
-
-const emptyTranslations: TranslationsMap = {
-  nl: { name: '', description: '' },
-  fr: { name: '', description: '' },
-  de: { name: '', description: '' },
-};
-
-interface FormErrors {
-  basePrice?: string;
-  primaryName?: string;
+function buildTranslationsMap(
+  apiTranslations: Product['translations'],
+): ProductEditFormValues['translations'] {
+  const map: ProductEditFormValues['translations'] = {
+    nl: { name: '', description: '' },
+    fr: { name: '', description: '' },
+    de: { name: '', description: '' },
+  };
+  for (const tr of apiTranslations) {
+    const loc = tr.languageCode as SupportedLocale;
+    if (loc in map) {
+      map[loc] = { name: tr.name, description: tr.description ?? '' };
+    }
+  }
+  return map;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,29 +67,16 @@ export function ProductEdit() {
 
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedProductId = productId ?? '';
-  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
-  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
-  const { data: product, isLoading, isError, error } = useProduct(resolvedBrandSlug, resolvedProductId);
-  const updateProduct = useUpdateProduct(resolvedBrandSlug, resolvedProductId);
   const deleteProduct = useDeleteProduct(resolvedBrandSlug);
 
-  // Modifier groups
+  // Modifier groups (kept imperative — separate resource / mutation)
   const { data: productModifierGroups } = useProductModifierGroups(resolvedBrandSlug, resolvedProductId);
   const { data: allModifierGroups } = useModifierGroups(resolvedBrandSlug);
   const setProductModifierGroups = useSetProductModifierGroups(resolvedBrandSlug, resolvedProductId);
   const [assignedGroups, setAssignedGroups] = useState<ProductModifierGroupResponse[]>([]);
   const [assignmentsInitialized, setAssignmentsInitialized] = useState(false);
   const [selectedGroupToAdd, setSelectedGroupToAdd] = useState('');
-
-  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
-  const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
-  const [basePrice, setBasePrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formInitialized, setFormInitialized] = useState(false);
-  const [selectedAllergens, setSelectedAllergens] = useState<Set<number>>(new Set());
-  const [selectedDietaryTags, setSelectedDietaryTags] = useState<Set<number>>(new Set());
 
   // Populate assigned modifier groups when data arrives
   useEffect(() => {
@@ -92,105 +86,68 @@ export function ProductEdit() {
     }
   }, [productModifierGroups, assignmentsInitialized]);
 
-  // Populate form when product data arrives
-  useEffect(() => {
-    if (product !== undefined && !formInitialized) {
-      setBasePrice(product.basePrice.amount.toString());
-      setImageUrl(product.imageUrl ?? '');
+  // Active translation tab (UI-only state — not part of the form schema)
+  const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
 
-      const translationsMap: TranslationsMap = { ...emptyTranslations };
-      for (const t of product.translations) {
-        if (t.languageCode in translationsMap) {
-          translationsMap[t.languageCode as SupportedLocale] = {
-            name: t.name,
-            description: t.description ?? '',
-          };
-        }
-      }
-      setTranslations(translationsMap);
-      setSelectedAllergens(new Set(product.allergens));
-      setSelectedDietaryTags(new Set(product.dietaryTags));
-      setFormInitialized(true);
-    }
-  }, [product, formInitialized]);
+  // ---------------------------------------------------------------------------
+  // Main form via useResourceForm
+  // Note: the schema enforces NL as the required locale at the form layer.
+  // The original code validated the brand's defaultLanguage (primaryLocale) instead.
+  // Simplified here to always require NL, matching ComboProductEdit/MenuCategoryEdit.
+  // ---------------------------------------------------------------------------
 
-  function updateTranslation(
-    locale: SupportedLocale,
-    field: keyof TranslationState,
-    value: string,
-  ) {
-    setTranslations((prev) => ({
-      ...prev,
-      [locale]: { ...prev[locale], [field]: value },
-    }));
-  }
-
-  function toggleAllergen(value: number) {
-    setSelectedAllergens((prev) => {
-      const next = new Set(prev);
-      if (next.has(value)) next.delete(value);
-      else next.add(value);
-      return next;
-    });
-  }
-
-  function toggleDietaryTag(value: number) {
-    setSelectedDietaryTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(value)) next.delete(value);
-      else next.add(value);
-      return next;
-    });
-  }
-
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-    const price = parseFloat(basePrice);
-    if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = t('admin.products.validation.basePriceRequired');
-    }
-    if (translations[primaryLocale].name.trim().length === 0) {
-      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
-    }
-    return next;
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-
-    const translationInputs = LANGUAGES.filter(
-      (l) => translations[l.code].name.trim().length > 0,
-    ).map((l) => ({
-      languageCode: l.code,
-      name: translations[l.code].name.trim(),
-      description: translations[l.code].description.trim() || null,
-    }));
-
-    updateProduct.mutate(
-      {
-        basePrice: parseFloat(basePrice),
-        imageUrl: imageUrl.trim() || null,
-        translations: translationInputs,
-        allergens: [...selectedAllergens],
-        dietaryTags: [...selectedDietaryTags],
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    Product,
+    ProductEditFormValues,
+    UpdateProductRequest
+  >({
+    queryKey: productKeys.detail(resolvedBrandSlug, resolvedProductId),
+    fetch: () => productsApi.get(resolvedBrandSlug, resolvedProductId),
+    update: (payload) => productsApi.update(resolvedBrandSlug, resolvedProductId, payload),
+    schema: productEditSchema,
+    defaultValues: {
+      basePrice: 0,
+      imageUrl: '',
+      translations: {
+        nl: { name: '', description: '' },
+        fr: { name: '', description: '' },
+        de: { name: '', description: '' },
       },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/products`);
-        },
-      },
-    );
-  }
+      allergens: [],
+      dietaryTags: [],
+    },
+    toFormValues: (product) => ({
+      basePrice: product.basePrice.amount,
+      imageUrl: product.imageUrl ?? '',
+      translations: buildTranslationsMap(product.translations),
+      // allergens/dietaryTags stored as number[] at form layer (was Set<number>)
+      allergens: product.allergens ?? [],
+      dietaryTags: product.dietaryTags ?? [],
+    }),
+    toUpdatePayload: (values) => ({
+      basePrice: values.basePrice,
+      imageUrl: values.imageUrl.trim() || null,
+      translations: (['nl', 'fr', 'de'] as const)
+        .filter((loc) => values.translations[loc].name.trim().length > 0)
+        .map((loc) => ({
+          languageCode: loc,
+          name: values.translations[loc].name.trim(),
+          description: values.translations[loc].description.trim() || null,
+        })),
+      allergens: values.allergens,
+      dietaryTags: values.dietaryTags,
+    }),
+    invalidate: [productKeys.all(resolvedBrandSlug)],
+    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/products`),
+  });
+
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
 
   function handleDelete() {
-    const name = translations.nl.name || '(unnamed)';
-    if (window.confirm(t('admin.products.confirmDelete', { name }))) {
+    const nlName = form.getValues('translations.nl.name') || '(unnamed)';
+    if (window.confirm(t('admin.products.confirmDelete', { name: nlName }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
           navigate(`/${brandSlug}/${lang}/admin/products`);
@@ -204,14 +161,12 @@ export function ProductEdit() {
   }
 
   // ---------------------------------------------------------------------------
-  // Modifier group assignment handlers
+  // Modifier group assignment handlers (imperative — separate resource)
   // ---------------------------------------------------------------------------
 
   function handleAddModifierGroup() {
     if (!selectedGroupToAdd) return;
-    const alreadyAssigned = assignedGroups.some(
-      (g) => g.modifierGroupId === selectedGroupToAdd,
-    );
+    const alreadyAssigned = assignedGroups.some((g) => g.modifierGroupId === selectedGroupToAdd);
     if (alreadyAssigned) return;
 
     const groupInfo = allModifierGroups?.find((g) => g.id === selectedGroupToAdd);
@@ -266,7 +221,7 @@ export function ProductEdit() {
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isLoading) {
+  if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#6b7280' }}>{t('admin.products.loadingProduct')}</p>
@@ -274,12 +229,12 @@ export function ProductEdit() {
     );
   }
 
-  if (isError) {
+  if (fetchError) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
           {t('admin.products.loadError')}{' '}
-          {error instanceof Error ? error.message : t('error')}
+          {fetchError instanceof Error ? fetchError.message : t('error')}
         </p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
           {t('admin.products.backToList')}
@@ -288,20 +243,20 @@ export function ProductEdit() {
     );
   }
 
-  if (product === undefined) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>{t('admin.products.notFound')}</p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          {t('admin.products.backToList')}
-        </button>
-      </main>
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Form render
+  // ---------------------------------------------------------------------------
 
-  // ---------------------------------------------------------------------------
-  // Form
-  // ---------------------------------------------------------------------------
+  const {
+    register,
+    formState: { errors },
+    watch,
+    control,
+  } = form;
+
+  const watchedImageUrl = watch('imageUrl');
+  // Pre-compute error messages to avoid complex type inference inside JSX
+  const nlNameError = (errors.translations?.nl?.name as { message?: string } | undefined)?.message;
 
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
@@ -309,7 +264,7 @@ export function ProductEdit() {
         {t('admin.products.edit')}
       </h1>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={submit} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
@@ -320,12 +275,11 @@ export function ProductEdit() {
             type="number"
             min="0.01"
             step="0.01"
-            value={basePrice}
-            onChange={(e) => setBasePrice(e.target.value)}
+            {...register('basePrice', { valueAsNumber: true })}
             style={inputStyle(!!errors.basePrice)}
             placeholder={t('admin.products.pricePlaceholder')}
           />
-          {errors.basePrice && <FieldError message={errors.basePrice} />}
+          {errors.basePrice?.message && <FieldError message={errors.basePrice.message} />}
         </div>
 
         {/* Image URL */}
@@ -337,14 +291,13 @@ export function ProductEdit() {
           <input
             id="imageUrl"
             type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            {...register('imageUrl')}
             style={inputStyle(false)}
             placeholder="https://example.com/image.jpg"
           />
-          {imageUrl.trim() && (
+          {watchedImageUrl && watchedImageUrl.trim().length > 0 ? (
             <img
-              src={imageUrl}
+              src={watchedImageUrl}
               alt="Preview"
               style={{
                 marginTop: '0.5rem',
@@ -357,7 +310,7 @@ export function ProductEdit() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Allergens */}
@@ -365,27 +318,43 @@ export function ProductEdit() {
           <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
             {t('admin.products.allergens')}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {ALLERGEN_KEYS.map((key) => (
-              <label
-                key={key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedAllergens.has(Allergen[key])}
-                  onChange={() => toggleAllergen(Allergen[key])}
-                />
-                {t(`allergens.${key}`)}
-              </label>
-            ))}
-          </div>
+          <Controller
+            name="allergens"
+            control={control}
+            render={({ field }) => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {ALLERGEN_KEYS.map((key) => {
+                  const val = Allergen[key];
+                  const checked = (field.value ?? []).includes(val);
+                  return (
+                    <label
+                      key={key}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) {
+                            field.onChange((field.value ?? []).filter((v) => v !== val));
+                          } else {
+                            field.onChange([...(field.value ?? []), val]);
+                          }
+                        }}
+                      />
+                      {t(`allergens.${key}`)}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
         </div>
 
         {/* Dietary Tags */}
@@ -393,27 +362,43 @@ export function ProductEdit() {
           <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
             {t('admin.products.dietaryTags')}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {DIETARY_TAG_KEYS.map((key) => (
-              <label
-                key={key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedDietaryTags.has(DietaryTag[key])}
-                  onChange={() => toggleDietaryTag(DietaryTag[key])}
-                />
-                {t(`dietaryTags.${key}`)}
-              </label>
-            ))}
-          </div>
+          <Controller
+            name="dietaryTags"
+            control={control}
+            render={({ field }) => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {DIETARY_TAG_KEYS.map((key) => {
+                  const val = DietaryTag[key];
+                  const checked = (field.value ?? []).includes(val);
+                  return (
+                    <label
+                      key={key}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) {
+                            field.onChange((field.value ?? []).filter((v) => v !== val));
+                          } else {
+                            field.onChange([...(field.value ?? []), val]);
+                          }
+                        }}
+                      />
+                      {t(`dietaryTags.${key}`)}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
         </div>
 
         {/* Translation Tabs */}
@@ -444,53 +429,24 @@ export function ProductEdit() {
               }}
             >
               {l.label}
-              {l.code === primaryLocale && ' *'}
+              {l.code === 'nl' ? ' *' : null}
             </button>
           ))}
         </div>
 
-        {/* Active tab content */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === primaryLocale && <RequiredMark />}
-          </label>
-          <input
-            id={`name-${activeTab}`}
-            type="text"
-            value={translations[activeTab].name}
-            onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
-            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
-            placeholder={`Product name in ${activeTab.toUpperCase()}`}
-          />
-          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
-        </div>
-
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            {t('admin.products.description')}{' '}
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
-          </label>
-          <textarea
-            id={`desc-${activeTab}`}
-            value={translations[activeTab].description}
-            onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={t('admin.products.descriptionPlaceholder', { lang: activeTab.toUpperCase() })}
-          />
-        </div>
-
-        {/* Metadata */}
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          {t('admin.products.createdAt')}: {new Date(product.createdAt).toLocaleString()} &mdash;{' '}
-          {t('admin.products.updatedAt')}: {new Date(product.updatedAt).toLocaleString()}
-        </p>
+        {/* Translation fields — rendered for all tabs, only the active one is visible */}
+        <TranslationFields
+          activeTab={activeTab}
+          register={register}
+          nlNameError={nlNameError}
+          t={t}
+        />
 
         {/* API error */}
-        {updateProduct.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateProduct.error instanceof Error
-              ? updateProduct.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : t('admin.products.updateError')}
           </p>
         )}
@@ -498,19 +454,19 @@ export function ProductEdit() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateProduct.isPending}
+            disabled={isSubmitting}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateProduct.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateProduct.isPending ? 0.6 : 1,
+              opacity: isSubmitting ? 0.6 : 1,
             }}
           >
-            {updateProduct.isPending ? t('admin.products.saving') : t('admin.products.saveChanges')}
+            {isSubmitting ? t('admin.products.saving') : t('admin.products.saveChanges')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             {t('admin.products.cancel')}
@@ -693,12 +649,118 @@ export function ProductEdit() {
             opacity: setProductModifierGroups.isPending ? 0.6 : 1,
           }}
         >
-          {setProductModifierGroups.isPending
-            ? 'Saving...'
-            : t('admin.modifierGroups.saveAssignments')}
+          {setProductModifierGroups.isPending ? 'Saving...' : t('admin.modifierGroups.saveAssignments')}
         </button>
       </section>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TranslationFields — extracted so `register` call uses literal path strings,
+// which TypeScript resolves correctly (dynamic template-literal paths produce
+// unknown spreads in strict TSX).
+// ---------------------------------------------------------------------------
+
+interface TranslationFieldsProps {
+  activeTab: SupportedLocale;
+  register: UseFormRegister<ProductEditFormValues>;
+  nlNameError: string | undefined;
+  t: TFunction;
+}
+
+function TranslationFields({ activeTab, register, nlNameError, t }: TranslationFieldsProps) {
+  if (activeTab === 'nl') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-nl">
+            Name <RequiredMark />
+          </label>
+          <input
+            id="name-nl"
+            type="text"
+            {...register('translations.nl.name')}
+            style={inputStyle(!!nlNameError)}
+            placeholder={t('admin.products.namePlaceholder', { lang: 'NL' })}
+          />
+          {nlNameError && <FieldError message={nlNameError} />}
+        </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-nl">
+            {t('admin.products.description')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
+          </label>
+          <textarea
+            id="desc-nl"
+            {...register('translations.nl.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder={t('admin.products.descriptionPlaceholder', { lang: 'NL' })}
+          />
+        </div>
+      </>
+    );
+  }
+  if (activeTab === 'fr') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-fr">
+            Name
+          </label>
+          <input
+            id="name-fr"
+            type="text"
+            {...register('translations.fr.name')}
+            style={inputStyle(false)}
+            placeholder={t('admin.products.namePlaceholder', { lang: 'FR' })}
+          />
+        </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-fr">
+            {t('admin.products.description')}{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
+          </label>
+          <textarea
+            id="desc-fr"
+            {...register('translations.fr.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder={t('admin.products.descriptionPlaceholder', { lang: 'FR' })}
+          />
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={labelStyle} htmlFor="name-de">
+          Name
+        </label>
+        <input
+          id="name-de"
+          type="text"
+          {...register('translations.de.name')}
+          style={inputStyle(false)}
+          placeholder={t('admin.products.namePlaceholder', { lang: 'DE' })}
+        />
+      </div>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={labelStyle} htmlFor="desc-de">
+          {t('admin.products.description')}{' '}
+          <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
+        </label>
+        <textarea
+          id="desc-de"
+          {...register('translations.de.description')}
+          rows={3}
+          style={{ ...inputStyle(false), resize: 'vertical' }}
+          placeholder={t('admin.products.descriptionPlaceholder', { lang: 'DE' })}
+        />
+      </div>
+    </>
   );
 }
 
