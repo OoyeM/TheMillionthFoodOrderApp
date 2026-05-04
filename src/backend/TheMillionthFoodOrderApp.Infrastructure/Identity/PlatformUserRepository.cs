@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Identity;
 
-public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatformUserRepository
+public sealed class PlatformUserRepository(PlatformDbContext dbContext, IMessageBus messageBus) : IPlatformUserRepository
 {
     public async Task<PlatformUser?> GetByExternalIdentityIdAsync(
         string externalIdentityId,
@@ -29,7 +30,9 @@ public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatf
         try
         {
             await dbContext.PlatformUsers.AddAsync(user, cancellationToken);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
             return (user, true);
         }
         catch (DbUpdateException ex) when (
@@ -151,5 +154,9 @@ public sealed class PlatformUserRepository(PlatformDbContext dbContext) : IPlatf
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }
