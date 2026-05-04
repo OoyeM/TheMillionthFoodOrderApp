@@ -96,7 +96,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-046** | Apply Belgian VAT rates | 022 |
 | ✅ | **US-FP-068** | Real-time updates (SignalR/SSE) | — (infra, can start in L1) |
-| ⬜ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
+| ✅ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
 | ⬜ | **US-FP-058** | Complete payment flow (mocked) | 016 |
 | ⬜ | **US-FP-017** | Place an order as a guest | 016 |
 | ⬜ | **US-FP-018** | Place an in-store order (POS) | 016 |
@@ -209,7 +209,7 @@ L0: [069✅] → [061✅] → [001✅] → [070✅] → [004✅] → [002✅]
 
 L1: [A: Products✅]  [B: Auth/Staff🚧]  [C: Shop Config🚧]  [D: Branding✅]  ← 4 parallel
          │                │                  │
-L2: [046✅ VAT] [068✅ Realtime] → [016 Ordering] → [058/017/018]             ← ordering core
+L2: [046✅ VAT] [068✅ Realtime] → [016✅ Ordering] → [058/017/018]            ← ordering core
                                         │
 L3: [E: Kitchen] [F: Customer] [G: Shop Mgmt] [H: Loyalty] [I: Reports]      ← 5 parallel
          │            │
