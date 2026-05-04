@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Products;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Products;
 /// Brand-scoped product repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class ProductRepository(BrandDbContext dbContext) : IProductRepository
+public sealed class ProductRepository(BrandDbContext dbContext, IMessageBus messageBus) : IProductRepository
 {
     /// <inheritdoc/>
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -65,8 +66,11 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
         if (product.ComboItems.Count > 0)
             dbContext.ComboItems.AddRange(product.ComboItems);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return product;
     }
 
@@ -81,7 +85,10 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
 
         mutate(product);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return product;
     }
 
@@ -124,5 +131,9 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }
