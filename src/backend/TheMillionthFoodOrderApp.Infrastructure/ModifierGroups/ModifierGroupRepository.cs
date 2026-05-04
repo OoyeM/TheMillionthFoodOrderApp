@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 /// Brand-scoped modifier group repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class ModifierGroupRepository(BrandDbContext dbContext) : IModifierGroupRepository
+public sealed class ModifierGroupRepository(BrandDbContext dbContext, IMessageBus messageBus) : IModifierGroupRepository
 {
     /// <inheritdoc/>
     public async Task<ModifierGroup?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -84,8 +85,11 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext) : IModifie
             dbContext.ModifierTranslations.AddRange(modifier.Translations);
         }
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return group;
     }
 
@@ -99,13 +103,21 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext) : IModifie
             return false;
 
         group.SoftDelete();
+
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return true;
     }
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ProductModifierGroup>> GetProductModifierGroupsAsync(
@@ -136,7 +148,9 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext) : IModifie
             await dbContext.ProductModifierGroups.AddAsync(pmg, cancellationToken);
         }
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
     }
 }
