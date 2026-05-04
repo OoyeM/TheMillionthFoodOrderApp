@@ -23,5 +23,9 @@ public sealed class BrandRepository(PlatformDbContext dbContext, IMessageBus mes
         => await dbContext.Brands.AddAsync(brand, cancellationToken);
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }
