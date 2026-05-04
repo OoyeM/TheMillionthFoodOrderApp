@@ -6,6 +6,65 @@
     "description": "Consultez notre menu et passez votre commande.",
     "languageSelector": {
       "ariaLabel": "Choisir la langue"
+    },
+    "menu": {
+      "title": "Menu",
+      "add": "Ajouter",
+      "addItem": "Ajouter {{name}} au panier",
+      "addToCart": "Ajouter au panier",
+      "customise": "Personnaliser",
+      "cancel": "Annuler",
+      "closeModal": "Fermer",
+      "noCategories": "Aucune catégorie de menu disponible.",
+      "loadingModifiers": "Chargement des options…",
+      "noModifiers": "Aucune personnalisation disponible."
+    },
+    "cart": {
+      "title": "Panier",
+      "empty": "Votre panier est vide.",
+      "close": "Fermer le panier",
+      "remove": "Supprimer",
+      "subtotal": "Sous-total",
+      "goToCheckout": "Passer à la caisse",
+      "increaseQuantity": "Augmenter la quantité",
+      "decreaseQuantity": "Diminuer la quantité"
+    },
+    "checkout": {
+      "title": "Passer commande",
+      "orderTypeLabel": "Type de commande",
+      "orderType": {
+        "Pickup": "À emporter",
+        "EatIn": "Sur place",
+        "Delivery": "Livraison"
+      },
+      "customerNameLabel": "Nom",
+      "customerNamePlaceholder": "Votre nom (optionnel)",
+      "optional": "optionnel",
+      "orderSummary": "Récapitulatif de commande",
+      "subtotal": "Sous-total",
+      "vatEatIn": "TVA 21% applicable (consommation sur place).",
+      "vatTakeaway": "TVA 6% applicable (emporter / livraison).",
+      "paymentAtCounter": "Paiement au comptoir.",
+      "paymentAtPickup": "Paiement au retrait.",
+      "paymentOnline": "Paiement en ligne bientôt disponible.",
+      "placeOrder": "Passer la commande",
+      "placing": "En cours…",
+      "submitError": "Échec de la commande. Veuillez réessayer.",
+      "cartEmpty": "Votre panier est vide."
+    },
+    "order": {
+      "confirmed": "Commande confirmée !",
+      "preparing": "Votre commande est en cours de préparation.",
+      "orderNumber": "Numéro de commande",
+      "orderType": "Type de commande",
+      "customerName": "Nom",
+      "status": "Statut",
+      "items": "Articles",
+      "each": "chacun",
+      "subtotal": "Sous-total",
+      "vat": "TVA ({{rate}}%)",
+      "total": "Total",
+      "backToHome": "Retour à l'accueil"
     }
   },
   "pos": {

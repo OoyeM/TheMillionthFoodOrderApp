@@ -6,6 +6,65 @@
     "description": "Sehen Sie unsere Speisekarte und geben Sie Ihre Bestellung auf.",
     "languageSelector": {
       "ariaLabel": "Sprache wählen"
+    },
+    "menu": {
+      "title": "Menü",
+      "add": "Hinzufügen",
+      "addItem": "{{name}} in den Warenkorb legen",
+      "addToCart": "In den Warenkorb",
+      "customise": "Anpassen",
+      "cancel": "Abbrechen",
+      "closeModal": "Schließen",
+      "noCategories": "Keine Menükategorien verfügbar.",
+      "loadingModifiers": "Optionen werden geladen…",
+      "noModifiers": "Keine Anpassungen verfügbar."
+    },
+    "cart": {
+      "title": "Warenkorb",
+      "empty": "Ihr Warenkorb ist leer.",
+      "close": "Warenkorb schließen",
+      "remove": "Entfernen",
+      "subtotal": "Zwischensumme",
+      "goToCheckout": "Zur Kasse",
+      "increaseQuantity": "Menge erhöhen",
+      "decreaseQuantity": "Menge verringern"
+    },
+    "checkout": {
+      "title": "Bestellung aufgeben",
+      "orderTypeLabel": "Bestellart",
+      "orderType": {
+        "Pickup": "Abholung",
+        "EatIn": "Vor Ort",
+        "Delivery": "Lieferung"
+      },
+      "customerNameLabel": "Name",
+      "customerNamePlaceholder": "Ihr Name (optional)",
+      "optional": "optional",
+      "orderSummary": "Bestellübersicht",
+      "subtotal": "Zwischensumme",
+      "vatEatIn": "21% MwSt. anwendbar (Verzehr vor Ort).",
+      "vatTakeaway": "6% MwSt. anwendbar (Abholung / Lieferung).",
+      "paymentAtCounter": "Zahlung an der Kasse.",
+      "paymentAtPickup": "Zahlung bei Abholung.",
+      "paymentOnline": "Online-Zahlung demnächst verfügbar.",
+      "placeOrder": "Bestellung aufgeben",
+      "placing": "Wird aufgegeben…",
+      "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen.",
+      "cartEmpty": "Ihr Warenkorb ist leer."
+    },
+    "order": {
+      "confirmed": "Bestellung bestätigt!",
+      "preparing": "Ihre Bestellung wird vorbereitet.",
+      "orderNumber": "Bestellnummer",
+      "orderType": "Bestellart",
+      "customerName": "Name",
+      "status": "Status",
+      "items": "Artikel",
+      "each": "je",
+      "subtotal": "Zwischensumme",
+      "vat": "MwSt. ({{rate}}%)",
+      "total": "Gesamt",
+      "backToHome": "Zurück zur Startseite"
     }
   },
   "pos": {

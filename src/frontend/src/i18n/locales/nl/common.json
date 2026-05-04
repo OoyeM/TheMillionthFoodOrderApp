@@ -6,6 +6,65 @@
     "description": "Bekijk ons menu en plaats uw bestelling.",
     "languageSelector": {
       "ariaLabel": "Taal selecteren"
+    },
+    "menu": {
+      "title": "Menu",
+      "add": "Toevoegen",
+      "addItem": "{{name}} toevoegen aan winkelwagen",
+      "addToCart": "Toevoegen aan winkelwagen",
+      "customise": "Aanpassen",
+      "cancel": "Annuleren",
+      "closeModal": "Sluiten",
+      "noCategories": "Geen menu-categorieën beschikbaar.",
+      "loadingModifiers": "Opties laden…",
+      "noModifiers": "Geen aanpassingen beschikbaar."
+    },
+    "cart": {
+      "title": "Winkelwagen",
+      "empty": "Uw winkelwagen is leeg.",
+      "close": "Winkelwagen sluiten",
+      "remove": "Verwijderen",
+      "subtotal": "Subtotaal",
+      "goToCheckout": "Naar kassa",
+      "increaseQuantity": "Hoeveelheid verhogen",
+      "decreaseQuantity": "Hoeveelheid verlagen"
+    },
+    "checkout": {
+      "title": "Bestelling plaatsen",
+      "orderTypeLabel": "Besteltype",
+      "orderType": {
+        "Pickup": "Afhalen",
+        "EatIn": "Ter plaatse",
+        "Delivery": "Bezorging"
+      },
+      "customerNameLabel": "Naam",
+      "customerNamePlaceholder": "Uw naam (optioneel)",
+      "optional": "optioneel",
+      "orderSummary": "Besteloverzicht",
+      "subtotal": "Subtotaal",
+      "vatEatIn": "21% BTW is van toepassing (ter plaatse eten).",
+      "vatTakeaway": "6% BTW is van toepassing (afhalen / bezorging).",
+      "paymentAtCounter": "Betaling aan de balie.",
+      "paymentAtPickup": "Betaling bij afhaling.",
+      "paymentOnline": "Online betaling volgt binnenkort.",
+      "placeOrder": "Bestelling plaatsen",
+      "placing": "Bezig met plaatsen…",
+      "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw.",
+      "cartEmpty": "Uw winkelwagen is leeg."
+    },
+    "order": {
+      "confirmed": "Bestelling bevestigd!",
+      "preparing": "Uw bestelling wordt bereid.",
+      "orderNumber": "Bestelnummer",
+      "orderType": "Besteltype",
+      "customerName": "Naam",
+      "status": "Status",
+      "items": "Artikelen",
+      "each": "elk",
+      "subtotal": "Subtotaal",
+      "vat": "BTW ({{rate}}%)",
+      "total": "Totaal",
+      "backToHome": "Terug naar beginpagina"
     }
   },
   "pos": {
