@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Brands;
 
-public sealed class BrandRepository(PlatformDbContext dbContext) : IBrandRepository
+public sealed class BrandRepository(PlatformDbContext dbContext, IMessageBus messageBus) : IBrandRepository
 {
     public async Task<Brand?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => await dbContext.Brands.FindAsync([id], cancellationToken);
