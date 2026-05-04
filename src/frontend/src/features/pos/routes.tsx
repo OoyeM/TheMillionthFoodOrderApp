@@ -1,3 +1,7 @@
+// fallow-ignore-file unused-file
+//
+// POS route module. Wired up by US-FP-018 (POS ordering).
+
 import type { RouteObject } from 'react-router-dom';
 import { PosDashboard } from './pages/Dashboard';
 

@@ -24,6 +24,8 @@ export interface AuthUser {
 
 /**
  * Top-level auth state held by the auth context / providers.
+ *
+ * @expected-unused — DTO/response shape used once auth context consumers are wired up
  */
 export interface AuthState {
   isAuthenticated: boolean;

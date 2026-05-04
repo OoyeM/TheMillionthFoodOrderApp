@@ -24,3 +24,5 @@ A record of how this app was built using Claude Code. Covers the decisions made,
 | 015 | 2026-04-07 | [US-FP-022: Configure order lifecycle statuses](./015-order-lifecycle-statuses.md) |
 | 017 | 2026-04-07 | [US-FP-030: Product catalog translations](./017-product-catalog-translations.md) |
 | 018 | 2026-04-07 | [US-FP-007: Create and manage combo products](./018-combo-products.md) |
+| 019 | 2026-05-04 | [Domain event dispatch via Wolverine](./019-domain-event-dispatch.md) |
+| 020 | 2026-05-04 | [Frontend form refactor + integration test reliability](./020-frontend-form-refactor.md) |

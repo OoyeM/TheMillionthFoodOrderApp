@@ -6,7 +6,11 @@ import type {
   SetProductModifierGroupsRequest,
 } from '@api/modifierGroups';
 
-/** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug for proper cache isolation.
+ *
+ * @expected-unused — US-FP-008 (Modifier groups) — used by mutations for cache invalidation
+ */
 export const modifierGroupKeys = {
   all: (brandSlug: string) => ['modifier-groups', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['modifier-groups', brandSlug, id] as const,

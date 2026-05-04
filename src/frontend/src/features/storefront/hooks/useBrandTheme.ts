@@ -13,7 +13,11 @@ export const defaultTheme: BrandTheme = {
   bodyFontFamily: 'System Default',
 };
 
-/** Query key factory for brand theme queries. */
+/**
+ * Query key factory for brand theme queries.
+ *
+ * @expected-unused — US-FP-003 (Brand theming) — used by mutations for cache invalidation
+ */
 export const brandThemeKeys = {
   theme: (brandSlug: string) => ['brandTheme', brandSlug] as const,
 };

@@ -1,3 +1,7 @@
+// fallow-ignore-file unused-file
+//
+// Storefront route module. Wired up by US-FP-016 + US-FP-017 (online + guest ordering).
+
 import type { RouteObject } from 'react-router-dom';
 import { Home } from './pages/Home';
 

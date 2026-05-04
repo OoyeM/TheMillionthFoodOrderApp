@@ -35,4 +35,5 @@ void i18next
     },
   });
 
+/** @expected-unused — i18n instance re-exported for consumers that need the raw instance; i18next is initialized as a side effect on import */
 export default i18next;

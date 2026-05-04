@@ -6,6 +6,9 @@
         "agent",
         "mcp"
       ]
+    },
+    "fallow": {
+      "command": "fallow-mcp"
     }
   }
 }

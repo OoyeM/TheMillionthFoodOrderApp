@@ -2,6 +2,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../test/msw/server';
 import { apiClient, setActiveBrandSlug, getActiveBrandSlug } from '../client';
+import { mockEndpoint } from '../../test/mswHelpers';
+import {
+  expectAuthSessionExpired,
+  expectNoAuthSessionExpired,
+} from '../../test/authExpiredHarness';
+import { runWithEventListener } from '../../test/eventListenerHarness';
 
 /**
  * Tests for the shared axios client:
@@ -65,80 +71,32 @@ describe('apiClient interceptors', () => {
 
   describe('401 → auth:session-expired event', () => {
     it('dispatches auth:session-expired on 401 response', async () => {
-      server.use(
-        http.get('/api/brands', () => new HttpResponse(null, { status: 401 })),
-      );
-
-      const listener = vi.fn();
-      window.addEventListener('auth:session-expired', listener);
-
-      try {
-        await apiClient.get('/brands');
-      } catch {
-        // Expected rejection
-      } finally {
-        window.removeEventListener('auth:session-expired', listener);
-      }
-
-      expect(listener).toHaveBeenCalledOnce();
+      server.use(mockEndpoint('get', '/api/brands', 401));
+      await expectAuthSessionExpired(() => apiClient.get('/brands'));
     });
 
     it('does NOT dispatch auth:session-expired on 403 response', async () => {
-      server.use(
-        http.get('/api/brands', () => new HttpResponse(null, { status: 403 })),
-      );
-
-      const listener = vi.fn();
-      window.addEventListener('auth:session-expired', listener);
-
-      try {
-        await apiClient.get('/brands');
-      } catch {
-        // Expected rejection
-      } finally {
-        window.removeEventListener('auth:session-expired', listener);
-      }
-
-      expect(listener).not.toHaveBeenCalled();
+      server.use(mockEndpoint('get', '/api/brands', 403));
+      await expectNoAuthSessionExpired(() => apiClient.get('/brands'));
     });
   });
 
   describe('403 → auth:access-denied event', () => {
     it('dispatches auth:access-denied on 403 response', async () => {
-      server.use(
-        http.get('/api/brands', () => new HttpResponse(null, { status: 403 })),
+      server.use(mockEndpoint('get', '/api/brands', 403));
+      const { listener } = await runWithEventListener(
+        'auth:access-denied',
+        () => apiClient.get('/brands'),
       );
-
-      const listener = vi.fn();
-      window.addEventListener('auth:access-denied', listener);
-
-      try {
-        await apiClient.get('/brands');
-      } catch {
-        // Expected rejection
-      } finally {
-        window.removeEventListener('auth:access-denied', listener);
-      }
-
       expect(listener).toHaveBeenCalledOnce();
     });
 
     it('does NOT dispatch auth:access-denied on 401 response', async () => {
-      server.use(
-        http.get('/api/brands', () => new HttpResponse(null, { status: 401 })),
+      server.use(mockEndpoint('get', '/api/brands', 401));
+      const { listener } = await runWithEventListener(
+        'auth:access-denied',
+        () => apiClient.get('/brands'),
       );
-
-      const listener = vi.fn();
-      window.addEventListener('auth:access-denied', listener);
-
-      try {
-        await apiClient.get('/brands');
-      } catch {
-        // Expected rejection
-      } finally {
-        window.removeEventListener('auth:access-denied', listener);
-      }
-
       expect(listener).not.toHaveBeenCalled();
     });
   });

@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { shopsApi } from '@api/shops';
 import type { CreateShopRequest, UpdateShopRequest } from '@api/shops';
 
-/** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug for proper cache isolation.
+ *
+ * @expected-unused — US-FP-007 (Shop CRUD) — used by mutations for cache invalidation
+ */
 export const shopKeys = {
   all: (brandSlug: string) => ['shops', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['shops', brandSlug, id] as const,

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Shops;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Shops;
 /// Brand-scoped shop repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
+public sealed class ShopRepository(BrandDbContext dbContext, IMessageBus messageBus) : IShopRepository
 {
     /// <inheritdoc/>
     public async Task<Shop?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -48,7 +49,11 @@ public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
             return null;
 
         mutate(shop);
+
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return shop;
     }
 
@@ -77,13 +82,19 @@ public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
 
         await dbContext.OpeningHoursTimeBlocks.AddRangeAsync(shop.OpeningHours, cancellationToken);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
 
         return shop;
     }
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }

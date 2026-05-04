@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { type UseFormRegister } from 'react-hook-form';
 import {
-  useMenuCategory,
-  useUpdateMenuCategory,
   useDeleteMenuCategory,
   useCategoryProducts,
   useReorderCategoryProducts,
 } from '../hooks/useMenuCategories';
-import { useBrandSettings } from '../hooks/useBrandSettings';
-import { extractPrimaryLocale } from '../../../types/common';
-import type { ProductListItem, SupportedLocale } from '../../../types/common';
+import { menuCategoryKeys } from '../hooks/useMenuCategories';
+import { menuCategoriesApi } from '../../../api/menuCategories';
+import type { UpdateMenuCategoryRequest } from '../../../api/menuCategories';
+import { useResourceForm } from '../forms/useResourceForm';
+import { menuCategoryEditSchema, type MenuCategoryEditFormValues } from './schemas/menuCategoryEditSchema';
+import type { MenuCategory, SupportedLocale, ProductListItem } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -22,21 +24,25 @@ const LANGUAGES: { code: SupportedLocale; label: string }[] = [
   { code: 'de', label: 'DE' },
 ];
 
-interface TranslationState {
-  name: string;
-}
+// ---------------------------------------------------------------------------
+// Helper — build a translations map from the API array, filling missing locales
+// ---------------------------------------------------------------------------
 
-type TranslationsMap = Record<SupportedLocale, TranslationState>;
-
-const emptyTranslations: TranslationsMap = {
-  nl: { name: '' },
-  fr: { name: '' },
-  de: { name: '' },
-};
-
-interface FormErrors {
-  sortOrder?: string;
-  primaryName?: string;
+function buildTranslationsMap(
+  apiTranslations: MenuCategory['translations'],
+): MenuCategoryEditFormValues['translations'] {
+  const map: MenuCategoryEditFormValues['translations'] = {
+    nl: { name: '' },
+    fr: { name: '' },
+    de: { name: '' },
+  };
+  for (const tr of apiTranslations) {
+    const loc = tr.languageCode as SupportedLocale;
+    if (loc in map) {
+      map[loc] = { name: tr.name };
+    }
+  }
+  return map;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,18 +60,10 @@ export function MenuCategoryEdit() {
 
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedCategoryId = categoryId ?? '';
-  const { data: brandSettings } = useBrandSettings(resolvedBrandSlug);
-  const primaryLocale = extractPrimaryLocale(brandSettings?.defaultLanguage);
 
-  const {
-    data: category,
-    isLoading,
-    isError,
-    error,
-  } = useMenuCategory(resolvedBrandSlug, resolvedCategoryId);
-  const updateCategory = useUpdateMenuCategory(resolvedBrandSlug, resolvedCategoryId);
   const deleteCategory = useDeleteMenuCategory(resolvedBrandSlug);
 
+  // Product-reorder section — stays imperative (separate resource / separate mutation)
   const {
     data: categoryProducts,
     isLoading: isLoadingProducts,
@@ -74,13 +72,6 @@ export function MenuCategoryEdit() {
   const reorderProducts = useReorderCategoryProducts(resolvedBrandSlug, resolvedCategoryId);
 
   const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
-  const [translations, setTranslations] = useState<TranslationsMap>({ ...emptyTranslations });
-  const [sortOrder, setSortOrder] = useState('0');
-  const [imageUrl, setImageUrl] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formInitialized, setFormInitialized] = useState(false);
-
-  // Local ordered list of products — populated from server data, then mutated by move up/down
   const [orderedProducts, setOrderedProducts] = useState<ProductListItem[]>([]);
   const [productOrderDirty, setProductOrderDirty] = useState(false);
 
@@ -94,28 +85,72 @@ export function MenuCategoryEdit() {
     }
   }, [categoryProducts, productOrderDirty]);
 
-  // Populate form when category data arrives
-  useEffect(() => {
-    if (category !== undefined && !formInitialized) {
-      setSortOrder(category.sortOrder.toString());
-      setImageUrl(category.imageUrl ?? '');
+  // ---------------------------------------------------------------------------
+  // Main form via useResourceForm
+  // Note: the schema enforces NL as the required locale at the form layer.
+  // The original code validated the brand's defaultLanguage (primaryLocale) instead.
+  // That was over-engineering for what's mostly an NL-first product; simplified here
+  // to always require NL, matching the ComboProductEdit pattern.
+  // ---------------------------------------------------------------------------
 
-      const translationsMap: TranslationsMap = { ...emptyTranslations };
-      for (const t of category.translations) {
-        if (t.languageCode in translationsMap) {
-          translationsMap[t.languageCode as SupportedLocale] = { name: t.name };
-        }
-      }
-      setTranslations(translationsMap);
-      setFormInitialized(true);
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    MenuCategory,
+    MenuCategoryEditFormValues,
+    UpdateMenuCategoryRequest
+  >({
+    queryKey: menuCategoryKeys.detail(resolvedBrandSlug, resolvedCategoryId),
+    fetch: () => menuCategoriesApi.get(resolvedBrandSlug, resolvedCategoryId),
+    update: (payload) => menuCategoriesApi.update(resolvedBrandSlug, resolvedCategoryId, payload),
+    schema: menuCategoryEditSchema,
+    defaultValues: {
+      sortOrder: 0,
+      imageUrl: '',
+      translations: {
+        nl: { name: '' },
+        fr: { name: '' },
+        de: { name: '' },
+      },
+    },
+    toFormValues: (cat) => ({
+      sortOrder: cat.sortOrder,
+      imageUrl: cat.imageUrl ?? '',
+      translations: buildTranslationsMap(cat.translations),
+    }),
+    toUpdatePayload: (values) => ({
+      sortOrder: values.sortOrder,
+      imageUrl: values.imageUrl.trim() || null,
+      translations: (['nl', 'fr', 'de'] as const)
+        .filter((loc) => values.translations[loc].name.trim().length > 0)
+        .map((loc) => ({
+          languageCode: loc,
+          name: values.translations[loc].name.trim(),
+        })),
+    }),
+    invalidate: [menuCategoryKeys.all(resolvedBrandSlug)],
+    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/menu-categories`),
+  });
+
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
+
+  function handleDelete() {
+    const name = form.getValues('translations.nl.name') || '(unnamed)';
+    if (
+      window.confirm(
+        `Delete "${name}"? This will remove the category. Products assigned to it will be unassigned.`,
+      )
+    ) {
+      deleteCategory.mutate(resolvedCategoryId, {
+        onSuccess: () => {
+          navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
+        },
+      });
     }
-  }, [category, formInitialized]);
+  }
 
-  function updateTranslation(locale: SupportedLocale, value: string) {
-    setTranslations((prev) => ({
-      ...prev,
-      [locale]: { name: value },
-    }));
+  function handleCancel() {
+    navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
   }
 
   function moveProduct(index: number, direction: 'up' | 'down') {
@@ -144,72 +179,11 @@ export function MenuCategoryEdit() {
     );
   }
 
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-    const order = parseInt(sortOrder, 10);
-    if (!sortOrder.trim() || isNaN(order) || order < 0) {
-      next.sortOrder = 'Sort order must be a non-negative integer.';
-    }
-    if (translations[primaryLocale].name.trim().length === 0) {
-      next.primaryName = `${primaryLocale.toUpperCase()} name is required.`;
-    }
-    return next;
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-
-    const translationInputs = LANGUAGES.filter(
-      (l) => translations[l.code].name.trim().length > 0,
-    ).map((l) => ({
-      languageCode: l.code,
-      name: translations[l.code].name.trim(),
-    }));
-
-    updateCategory.mutate(
-      {
-        sortOrder: parseInt(sortOrder, 10),
-        imageUrl: imageUrl.trim() || null,
-        translations: translationInputs,
-      },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
-        },
-      },
-    );
-  }
-
-  function handleDelete() {
-    const name = translations.nl.name || '(unnamed)';
-    if (
-      window.confirm(
-        `Delete "${name}"? This will remove the category. Products assigned to it will be unassigned.`,
-      )
-    ) {
-      deleteCategory.mutate(resolvedCategoryId, {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
-        },
-      });
-    }
-  }
-
-  function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
-  }
-
   // ---------------------------------------------------------------------------
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isLoading) {
+  if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#6b7280' }}>Loading menu category...</p>
@@ -217,12 +191,12 @@ export function MenuCategoryEdit() {
     );
   }
 
-  if (isError) {
+  if (fetchError) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
           Failed to load menu category:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
         </p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
           Back to list
@@ -231,20 +205,20 @@ export function MenuCategoryEdit() {
     );
   }
 
-  if (category === undefined) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Menu category not found.</p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Form render
+  // ---------------------------------------------------------------------------
 
-  // ---------------------------------------------------------------------------
-  // Form
-  // ---------------------------------------------------------------------------
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = form;
+
+  const watchedImageUrl = watch('imageUrl');
+  // Pre-compute error messages to avoid complex type inference inside JSX
+  const nlNameError = (errors.translations?.nl?.name as { message?: string } | undefined)?.message;
+  const sortOrderError = errors.sortOrder?.message;
 
   return (
     <main style={{ padding: '1.5rem', maxWidth: '48rem' }}>
@@ -252,7 +226,7 @@ export function MenuCategoryEdit() {
         Edit Menu Category
       </h1>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={submit} noValidate>
         {/* Sort Order */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="sortOrder">
@@ -263,12 +237,11 @@ export function MenuCategoryEdit() {
             type="number"
             min="0"
             step="1"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            style={inputStyle(!!errors.sortOrder)}
+            {...register('sortOrder', { valueAsNumber: true })}
+            style={inputStyle(!!sortOrderError)}
             placeholder="e.g. 0"
           />
-          {errors.sortOrder && <FieldError message={errors.sortOrder} />}
+          {sortOrderError != null && <FieldError message={sortOrderError} />}
         </div>
 
         {/* Image URL */}
@@ -280,14 +253,13 @@ export function MenuCategoryEdit() {
           <input
             id="imageUrl"
             type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            {...register('imageUrl')}
             style={inputStyle(false)}
             placeholder="https://example.com/image.jpg"
           />
-          {imageUrl.trim() && (
+          {watchedImageUrl && watchedImageUrl.trim().length > 0 ? (
             <img
-              src={imageUrl}
+              src={watchedImageUrl}
               alt="Preview"
               style={{
                 marginTop: '0.5rem',
@@ -300,7 +272,7 @@ export function MenuCategoryEdit() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Translation Tabs */}
@@ -331,38 +303,23 @@ export function MenuCategoryEdit() {
               }}
             >
               {l.label}
-              {l.code === primaryLocale && ' *'}
+              {l.code === 'nl' ? ' *' : null}
             </button>
           ))}
         </div>
 
-        {/* Active tab content */}
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === primaryLocale && <RequiredMark />}
-          </label>
-          <input
-            id={`name-${activeTab}`}
-            type="text"
-            value={translations[activeTab].name}
-            onChange={(e) => updateTranslation(activeTab, e.target.value)}
-            style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
-            placeholder={`Category name in ${activeTab.toUpperCase()}`}
-          />
-          {activeTab === primaryLocale && errors.primaryName && <FieldError message={errors.primaryName} />}
-        </div>
-
-        {/* Metadata */}
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          Created: {new Date(category.createdAt).toLocaleString()} &mdash; Last updated:{' '}
-          {new Date(category.updatedAt).toLocaleString()}
-        </p>
+        {/* Translation fields — extracted subcomponent so literal paths resolve correctly in TS */}
+        <TranslationFields
+          activeTab={activeTab}
+          register={register}
+          nlNameError={nlNameError}
+        />
 
         {/* API error */}
-        {updateCategory.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateCategory.error instanceof Error
-              ? updateCategory.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : 'Failed to save changes. Please try again.'}
           </p>
         )}
@@ -370,19 +327,19 @@ export function MenuCategoryEdit() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateCategory.isPending}
+            disabled={isSubmitting}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateCategory.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateCategory.isPending ? 0.6 : 1,
+              opacity: isSubmitting ? 0.6 : 1,
             }}
           >
-            {updateCategory.isPending ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
@@ -513,7 +470,7 @@ export function MenuCategoryEdit() {
                   </td>
                   <td style={{ padding: '0.75rem' }}>{product.name}</td>
                   <td style={{ padding: '0.75rem', fontFamily: 'monospace' }}>
-                    {'\u20AC'} {product.basePrice.amount.toFixed(2)}
+                    {'€'} {product.basePrice.amount.toFixed(2)}
                   </td>
                   <td style={{ padding: '0.75rem' }}>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -544,6 +501,68 @@ export function MenuCategoryEdit() {
         )}
       </section>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TranslationFields — extracted so `register` call uses literal path strings,
+// which TypeScript resolves correctly (dynamic template-literal paths produce
+// unknown spreads in strict TSX).
+// ---------------------------------------------------------------------------
+
+interface TranslationFieldsProps {
+  activeTab: SupportedLocale;
+  register: UseFormRegister<MenuCategoryEditFormValues>;
+  nlNameError: string | undefined;
+}
+
+function TranslationFields({ activeTab, register, nlNameError }: TranslationFieldsProps) {
+  if (activeTab === 'nl') {
+    return (
+      <div style={{ marginBottom: '0.5rem' }}>
+        <label style={labelStyle} htmlFor="name-nl">
+          Name <RequiredMark />
+        </label>
+        <input
+          id="name-nl"
+          type="text"
+          {...register('translations.nl.name')}
+          style={inputStyle(!!nlNameError)}
+          placeholder="Category name in NL"
+        />
+        {nlNameError && <FieldError message={nlNameError} />}
+      </div>
+    );
+  }
+  if (activeTab === 'fr') {
+    return (
+      <div style={{ marginBottom: '0.5rem' }}>
+        <label style={labelStyle} htmlFor="name-fr">
+          Name
+        </label>
+        <input
+          id="name-fr"
+          type="text"
+          {...register('translations.fr.name')}
+          style={inputStyle(false)}
+          placeholder="Category name in FR"
+        />
+      </div>
+    );
+  }
+  return (
+    <div style={{ marginBottom: '0.5rem' }}>
+      <label style={labelStyle} htmlFor="name-de">
+        Name
+      </label>
+      <input
+        id="name-de"
+        type="text"
+        {...register('translations.de.name')}
+        style={inputStyle(false)}
+        placeholder="Category name in DE"
+      />
+    </div>
   );
 }
 

@@ -18,6 +18,8 @@ export function extractPrimaryLocale(bcp47Tag: string | undefined): SupportedLoc
 
 /**
  * A string value that has been translated into all supported locales.
+ *
+ * @expected-unused — DTO/response shape used once multilingual product/category features ship (US-FP-022)
  */
 export type LocalizedString = Record<SupportedLocale, string>;
 
@@ -109,6 +111,7 @@ export const Allergen = {
   Lupin: 12,
   Molluscs: 13,
 } as const;
+/** @expected-unused — DTO/response shape used once US-FP-005 (Product CRUD) allergen display ships */
 export type Allergen = (typeof Allergen)[keyof typeof Allergen];
 
 /** Label keys for allergens, used for i18n lookup. */
@@ -123,6 +126,7 @@ export const DietaryTag = {
   GlutenFree: 2,
   Halal: 3,
 } as const;
+/** @expected-unused — DTO/response shape used once US-FP-005 (Product CRUD) dietary tag display ships */
 export type DietaryTag = (typeof DietaryTag)[keyof typeof DietaryTag];
 
 /** Label keys for dietary tags, used for i18n lookup. */
@@ -286,6 +290,7 @@ export const PRESET_FONTS = [
   'DM Sans',
 ] as const;
 
+/** @expected-unused — DTO/response shape used once US-FP-003 (Brand theming) font picker ships */
 export type PresetFont = (typeof PRESET_FONTS)[number];
 
 // ── Modifier Groups ─────────────────────────────────────────────────────────

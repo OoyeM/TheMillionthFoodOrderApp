@@ -10,6 +10,13 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.BrandStaff;
 /// Integration tests for brand staff account endpoints.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+/// <remarks>
+/// All tests carry [NotInParallel("brand-staff")] so they run sequentially with each other.
+/// Every test in this class mutates or reads the shared brand databases (alpha/beta/gamma),
+/// and parallel execution causes data races — e.g. concurrent invitations interfere with the
+/// last-admin guard test, and reads on gamma can race against writes on alpha.
+/// Other test classes (products, shops, etc.) are unaffected and still run in parallel.
+/// </remarks>
 [ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
 {
@@ -34,6 +41,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     // ── List ─────────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task ListBrandStaff_EmptyBrand_Returns200WithEmptyList()
     {
         var client = CreateClient();
@@ -49,6 +57,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     // ── Invite ────────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task InviteBrandStaff_BrandAdmin_Returns201()
     {
         var client = CreateClient();
@@ -71,6 +80,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task InviteBrandStaff_ShopRole_WithShopId_Returns201()
     {
         var client = CreateClient();
@@ -96,6 +106,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task InviteBrandStaff_ShopRoleWithoutShopId_Returns400()
     {
         var client = CreateClient();
@@ -109,6 +120,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task InviteBrandStaff_DuplicateRole_Returns409()
     {
         var client = CreateClient();
@@ -128,6 +140,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task InviteBrandStaff_ExistingUserNewRole_Returns201()
     {
         var client = CreateClient();
@@ -158,6 +171,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     // ── Deactivate ────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task DeactivateBrandStaff_Returns204()
     {
         var client = CreateClient();
@@ -182,7 +196,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
-    [NotInParallel("brand-staff-last-admin")]
+    [NotInParallel("brand-staff")]
     public async Task DeactivateBrandStaff_LastBrandAdmin_Returns409()
     {
         var client = CreateClient();
@@ -196,7 +210,8 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
         var anchor = await anchorResponse.Content.ReadFromJsonAsync<StaffMemberResponse>();
         await Assert.That(anchor).IsNotNull();
 
-        // Drain every other BrandAdmin so anchor is the only one left
+        // Drain every other BrandAdmin accumulated by previous tests in this run.
+        // Sequential execution (NotInParallel) guarantees no new admins arrive mid-drain.
         var listResponse = await client.GetAsync(StaffUrl(brandSlug));
         var currentStaff = await listResponse.Content.ReadFromJsonAsync<List<StaffMemberResponse>>();
         foreach (var other in currentStaff!.Where(s => s.Role == StaffRole.BrandAdmin && s.RoleId != anchor!.RoleId))
@@ -210,6 +225,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task DeactivateBrandStaff_NotFound_Returns404()
     {
         var client = CreateClient();
@@ -224,6 +240,7 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     // ── Shop-filtered list ────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("brand-staff")]
     public async Task ListShopStaff_ReturnsOnlyShopRoles()
     {
         var client = CreateClient();

@@ -7,7 +7,11 @@ import type {
   ReorderProductsRequest,
 } from '@api/menuCategories';
 
-/** Centralized query key factory — scoped by brandSlug for proper cache isolation. */
+/**
+ * Centralized query key factory — scoped by brandSlug for proper cache isolation.
+ *
+ * @expected-unused — US-FP-022 (Menu categories) — used by mutations for cache invalidation
+ */
 export const menuCategoryKeys = {
   all: (brandSlug: string) => ['menuCategories', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['menuCategories', brandSlug, id] as const,
@@ -95,7 +99,11 @@ export function useReorderMenuCategory(brandSlug: string) {
   });
 }
 
-/** Assign a product to a menu category. Invalidates list and detail on success. */
+/**
+ * Assign a product to a menu category. Invalidates list and detail on success.
+ *
+ * @expected-unused — US-FP-022 (Menu category assignment) — deferred to admin UX
+ */
 export function useAssignProductToCategory(brandSlug: string, categoryId: string) {
   const queryClient = useQueryClient();
 

@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.TaxConfiguration;
 
-public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxConfigurationRepository
+public sealed class TaxConfigurationRepository(BrandDbContext dbContext, IMessageBus messageBus) : ITaxConfigurationRepository
 {
     public async Task<Domain.TaxConfiguration.TaxConfiguration?> GetAsync(CancellationToken cancellationToken = default)
         => await dbContext.TaxConfigurations
@@ -48,12 +49,18 @@ public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxC
 
         await dbContext.VatRates.AddRangeAsync(config.VatRates, cancellationToken);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
 
         return config;
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }
