@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.OrderLifecycle;
 
-public sealed class OrderLifecycleConfigRepository(BrandDbContext dbContext) : IOrderLifecycleConfigRepository
+public sealed class OrderLifecycleConfigRepository(BrandDbContext dbContext, IMessageBus messageBus) : IOrderLifecycleConfigRepository
 {
     public async Task<OrderLifecycleConfig?> GetByShopIdAsync(Guid shopId, CancellationToken cancellationToken = default)
         => await dbContext.OrderLifecycleConfigs
@@ -57,14 +58,20 @@ public sealed class OrderLifecycleConfigRepository(BrandDbContext dbContext) : I
         await dbContext.OrderStatuses.AddRangeAsync(config.Statuses, cancellationToken);
         dbContext.OrderStatusTransitions.AddRange(config.Transitions);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
 
         return config;
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 
     private void DetachChildren(OrderLifecycleConfig config)
     {
@@ -73,5 +80,4 @@ public sealed class OrderLifecycleConfigRepository(BrandDbContext dbContext) : I
         foreach (var s in config.Statuses.ToList())
             dbContext.Entry(s).State = EntityState.Detached;
     }
-
 }
