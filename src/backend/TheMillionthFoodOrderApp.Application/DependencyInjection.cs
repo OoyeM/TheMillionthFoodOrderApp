@@ -5,6 +5,7 @@ using TheMillionthFoodOrderApp.Application.Identity;
 using TheMillionthFoodOrderApp.Application.MenuCategories;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Application.TaxConfiguration;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IOpeningHoursService, OpeningHoursService>();
         services.AddScoped<IOrderLifecycleService, OrderLifecycleService>();
         services.AddScoped<ITaxConfigurationService, TaxConfigurationService>();
+        services.AddScoped<IOrderService, OrderService>();
 
         return services;
     }
