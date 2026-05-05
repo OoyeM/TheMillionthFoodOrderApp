@@ -47,6 +47,16 @@
       "paymentAtCounter": "Zahlung an der Kasse.",
       "paymentAtPickup": "Zahlung bei Abholung.",
       "paymentOnline": "Online-Zahlung demnächst verfügbar.",
+      "payment": {
+        "label": "Zahlung",
+        "creditCard": "Kreditkarte",
+        "bancontact": "Bancontact",
+        "cashAtPickup": "Bei Abholung zahlen",
+        "processing": "Zahlung wird verarbeitet...",
+        "pleaseWait": "Bitte warten...",
+        "statusPaid": "Bezahlt",
+        "statusPayAtPickup": "Bei Abholung zahlen"
+      },
       "placeOrder": "Bestellung aufgeben",
       "placing": "Wird aufgegeben…",
       "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen.",

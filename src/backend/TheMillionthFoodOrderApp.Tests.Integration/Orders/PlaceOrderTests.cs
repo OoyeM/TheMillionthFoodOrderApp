@@ -123,6 +123,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = "Jan Janssen",
             Items = new[]
             {
@@ -141,6 +142,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         await Assert.That(order.ShopId).IsEqualTo(shopId);
         await Assert.That(order.BrandSlug).IsEqualTo(brand);
         await Assert.That(order.OrderType).IsEqualTo("Pickup");
+        await Assert.That(order.PaymentMethod).IsEqualTo("CashAtPickup");
         await Assert.That(order.CustomerName).IsEqualTo("Jan Janssen");
         await Assert.That(order.StatusName).IsNotEmpty();
         await Assert.That(order.VatRatePercent).IsEqualTo(6m);
@@ -178,6 +180,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Delivery",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -213,6 +216,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -258,6 +262,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -293,6 +298,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var requestBody = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -329,6 +335,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -352,6 +359,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = Array.Empty<object>()
         };
@@ -373,6 +381,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "DineIn",  // Not a valid OrderType value
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -397,6 +406,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -416,6 +426,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -447,6 +458,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -478,6 +490,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -546,6 +559,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -581,5 +595,38 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
         // Modifier PriceAdjustment is still recorded individually for display
         await Assert.That(item.SelectedModifiers[0].PriceAdjustment).IsEqualTo(0.50m);
+    }
+
+    // ── PaymentMethod ─────────────────────────────────────────────────────────
+
+    [Test]
+    public async Task PlaceOrder_WithCreditCard_StoresPaymentMethod()
+    {
+        // Verifies that a non-default payment method is captured on the order and returned in the response.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        await SeedTaxConfigAsync(client, brand);
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 4.00m, name: "Frietje XL");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CreditCard",
+            CustomerName = (string?)null,
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.PaymentMethod).IsEqualTo("CreditCard");
     }
 }

@@ -97,7 +97,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ✅ | **US-FP-046** | Apply Belgian VAT rates | 022 |
 | ✅ | **US-FP-068** | Real-time updates (SignalR/SSE) | — (infra, can start in L1) |
 | ✅ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
-| ⬜ | **US-FP-058** | Complete payment flow (mocked) | 016 |
+| ✅ | **US-FP-058** | Complete payment flow (mocked) | 016 |
 | ⬜ | **US-FP-017** | Place an order as a guest | 016 |
 | ⬜ | **US-FP-018** | Place an in-store order (POS) | 016 |
 

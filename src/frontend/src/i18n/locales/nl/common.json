@@ -47,6 +47,16 @@
       "paymentAtCounter": "Betaling aan de balie.",
       "paymentAtPickup": "Betaling bij afhaling.",
       "paymentOnline": "Online betaling volgt binnenkort.",
+      "payment": {
+        "label": "Betaling",
+        "creditCard": "Kredietkaart",
+        "bancontact": "Bancontact",
+        "cashAtPickup": "Betalen bij afhaling",
+        "processing": "Betaling verwerken...",
+        "pleaseWait": "Even geduld...",
+        "statusPaid": "Betaald",
+        "statusPayAtPickup": "Betalen bij afhaling"
+      },
       "placeOrder": "Bestelling plaatsen",
       "placing": "Bezig met plaatsen…",
       "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw.",

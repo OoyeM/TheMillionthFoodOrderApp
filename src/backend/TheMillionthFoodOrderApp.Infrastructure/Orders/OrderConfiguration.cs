@@ -26,6 +26,11 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.OrderType)
             .IsRequired();
 
+        builder.Property(o => o.PaymentMethod)
+            .IsRequired()
+            .HasColumnType("int")
+            .HasDefaultValue(Domain.Orders.PaymentMethod.CashAtPickup);
+
         builder.Property(o => o.StatusName)
             .IsRequired()
             .HasMaxLength(100);
