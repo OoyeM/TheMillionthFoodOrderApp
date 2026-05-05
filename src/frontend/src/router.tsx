@@ -36,7 +36,7 @@ function resolveInitialLocale(): string {
  * the stored language preference are picked up when the user returns to "/".
  */
 function RootRedirect() {
-  return <Navigate to={`/demo/${resolveInitialLocale()}`} replace />;
+  return <Navigate to={`/frietjes/${resolveInitialLocale()}`} replace />;
 }
 
 export const router = createBrowserRouter([
