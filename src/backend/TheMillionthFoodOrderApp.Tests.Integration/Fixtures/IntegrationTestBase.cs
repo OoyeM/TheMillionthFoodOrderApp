@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +71,13 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
         await ProvisionBrandDatabaseAsync(AlphaSlug);
         await ProvisionBrandDatabaseAsync(BetaSlug);
         await ProvisionBrandDatabaseAsync(GammaSlug);
+
+        // Seed Belgian VAT defaults for all brands — done once here so parallel
+        // tests that need tax configuration don't race each other on first write.
+        using var client = Factory.CreateClient();
+        await SeedTaxConfigAsync(client, AlphaSlug);
+        await SeedTaxConfigAsync(client, BetaSlug);
+        await SeedTaxConfigAsync(client, GammaSlug);
     }
 
     public async ValueTask DisposeAsync()
@@ -86,6 +94,21 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
         BrandConnectionStringHelper.DeriveBrandConnectionString(PlatformConnectionString, brandSlug);
 
     // ── Private helpers ───────────────────────────────────────────────────────
+
+    private async Task SeedTaxConfigAsync(HttpClient client, string brandSlug)
+    {
+        var request = new
+        {
+            VatRates = new[]
+            {
+                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
+                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
+            }
+        };
+        var response = await client.PutAsJsonAsync(
+            $"/api/brands/{brandSlug}/tax-configuration", request);
+        response.EnsureSuccessStatusCode();
+    }
 
     private static async Task SeedPlatformBrandsAsync(PlatformDbContext platformDb)
     {

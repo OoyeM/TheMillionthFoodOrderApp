@@ -40,22 +40,6 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
     // ── Setup helpers ─────────────────────────────────────────────────────────
 
-    /// <summary>Seeds Belgian VAT defaults (6% Takeaway, 21% EatIn) for the brand.</summary>
-    private async Task SeedTaxConfigAsync(HttpClient client, string brandSlug)
-    {
-        var request = new
-        {
-            VatRates = new[]
-            {
-                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
-                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
-            }
-        };
-
-        var response = await client.PutAsJsonAsync(TaxConfigUrl(brandSlug), request);
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
-    }
-
     /// <summary>Creates a shop and triggers order lifecycle initialisation.</summary>
     private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
     {
@@ -116,7 +100,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, grossPrice) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje Klein");
 
@@ -173,7 +157,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 5.00m, name: "Frietje Speciaal");
 
@@ -209,7 +193,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.BetaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje Groot");
 
@@ -254,7 +238,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId1, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje");
         var (productId2, _) = await CreateProductAsync(client, brand, price: 1.20m, name: "Saus");
@@ -291,7 +275,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Knakworst");
 
@@ -329,7 +313,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
 
         var request = new
@@ -353,7 +337,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
 
         var request = new
@@ -374,7 +358,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Wafels");
 
@@ -399,7 +383,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Kroket");
 
@@ -451,7 +435,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.50m, name: "Oorspronkelijke Naam");
 
@@ -483,7 +467,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.BetaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Bitterballen");
 
@@ -551,7 +535,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.GammaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 3.00m, name: "Frietje");
         var modifierId = await CreateModifierWithPriceAsync(client, brand, priceAdjustment: 0.50m, modifierName: "Extra groot");
@@ -606,7 +590,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 4.00m, name: "Frietje XL");
 
