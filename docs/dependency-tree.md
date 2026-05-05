@@ -120,7 +120,7 @@ Once ordering works, these streams are **all independent**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-063** | Track current order status | 022, 068 |
+| ✅ | **US-FP-063** | Track current order status | 022, 068 |
 | ⬜ | **US-FP-062** | View order history | 016, 037 |
 | ⬜ | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
 | ⬜ | **US-FP-025** | QR code table ordering | 024, 065 |
