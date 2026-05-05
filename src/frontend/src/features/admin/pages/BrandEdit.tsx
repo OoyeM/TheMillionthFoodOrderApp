@@ -1,19 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useBrand, useUpdateBrand, useConfigureStaffAuth } from '../hooks/useBrands';
-import type { StaffAuthMethod } from '../../../types/common';
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface FormErrors {
-  name?: string;
-  contactEmail?: string;
-}
+import { useConfigureStaffAuth, brandKeys } from '../hooks/useBrands';
+import { useResourceForm } from '../forms/useResourceForm';
+import { brandsApi } from '../../../api/brands';
+import type { UpdateBrandRequest } from '../../../api/brands';
+import { brandEditSchema, type BrandEditFormValues } from './schemas/brandEditSchema';
+import type { Brand, StaffAuthMethod } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -27,76 +20,65 @@ export function BrandEdit() {
     brandId: string;
   }>();
 
-  // brandId is guaranteed by the route definition; guard for type safety
   const resolvedBrandId = brandId ?? '';
 
   const { t } = useTranslation();
-  const { data: brand, isLoading, isError, error } = useBrand(resolvedBrandId);
-  const updateBrand = useUpdateBrand(resolvedBrandId);
-  const configureStaffAuth = useConfigureStaffAuth(resolvedBrandId, brand?.slug ?? '');
 
-  const [name, setName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formInitialized, setFormInitialized] = useState(false);
+  // ---------------------------------------------------------------------------
+  // Main form (name, contactEmail, contactPhone)
+  // Note: slug is read-only after creation and not part of the form schema.
+  // Staff auth method is a separate imperative concern handled below.
+  // ---------------------------------------------------------------------------
+
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    Brand,
+    BrandEditFormValues,
+    UpdateBrandRequest
+  >({
+    queryKey: brandKeys.detail(resolvedBrandId),
+    fetch: () => brandsApi.get(resolvedBrandId),
+    update: (payload) => brandsApi.update(resolvedBrandId, payload),
+    schema: brandEditSchema,
+    defaultValues: { name: '', contactEmail: '', contactPhone: '' },
+    toFormValues: (brand) => ({
+      name: brand.name,
+      contactEmail: brand.contactEmail,
+      contactPhone: brand.contactPhone ?? '',
+    }),
+    toUpdatePayload: (values) => ({
+      name: values.name.trim(),
+      contactEmail: values.contactEmail.trim(),
+      ...(values.contactPhone.trim().length > 0
+        ? { contactPhone: values.contactPhone.trim() }
+        : {}),
+    }),
+    invalidate: [brandKeys.all, brandKeys.detail(resolvedBrandId)],
+    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/brands`),
+  });
+
+  const { register, formState: { errors } } = form;
+
+  // ---------------------------------------------------------------------------
+  // Staff auth method — imperative, separate mutation
+  // ---------------------------------------------------------------------------
+
+  // displayBrand holds read-only fields (slug, isActive, staffAuthMethod, timestamps)
+  // that are not part of the RHF schema. Fetched independently on mount.
+  const [displayBrand, setDisplayBrand] = useState<Brand | null>(null);
   const [pendingAuthMethod, setPendingAuthMethod] = useState<StaffAuthMethod | null>(null);
-
-  // Populate form when brand data arrives
+  const configureStaffAuth = useConfigureStaffAuth(resolvedBrandId, displayBrand?.slug ?? '');
   useEffect(() => {
-    if (brand !== undefined && !formInitialized) {
-      setName(brand.name);
-      setContactEmail(brand.contactEmail);
-      setContactPhone(brand.contactPhone ?? '');
-      setFormInitialized(true);
+    if (resolvedBrandId) {
+      brandsApi.get(resolvedBrandId).then(setDisplayBrand).catch(() => undefined);
     }
-  }, [brand, formInitialized]);
+  }, [resolvedBrandId]);
 
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-
-    if (name.trim().length === 0) {
-      next.name = 'Name is required.';
-    }
-
-    if (contactEmail.trim().length === 0) {
-      next.contactEmail = 'Contact email is required.';
-    } else if (!EMAIL_PATTERN.test(contactEmail)) {
-      next.contactEmail = 'Enter a valid email address.';
-    }
-
-    return next;
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setErrors({});
-    updateBrand.mutate(
-      {
-        name: name.trim(),
-        contactEmail: contactEmail.trim(),
-        ...(contactPhone.trim().length > 0 ? { contactPhone: contactPhone.trim() } : {}),
-      },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/brands`);
-        },
-      },
-    );
-  }
-
-  function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/brands`);
-  }
+  const cancelAuthMethodChange = useCallback(() => {
+    setPendingAuthMethod(null);
+  }, []);
 
   function handleAuthMethodChange(method: StaffAuthMethod) {
-    if (brand && method !== brand.staffAuthMethod) {
+    if (displayBrand && method !== displayBrand.staffAuthMethod) {
       configureStaffAuth.reset();
       setPendingAuthMethod(method);
     }
@@ -105,16 +87,14 @@ export function BrandEdit() {
   function confirmAuthMethodChange() {
     if (pendingAuthMethod) {
       configureStaffAuth.mutate(pendingAuthMethod, {
-        onSuccess: () => setPendingAuthMethod(null),
+        onSuccess: (updated) => {
+          setDisplayBrand(updated);
+          setPendingAuthMethod(null);
+        },
       });
     }
   }
 
-  const cancelAuthMethodChange = useCallback(() => {
-    setPendingAuthMethod(null);
-  }, []);
-
-  // Close confirmation dialog on Escape key
   useEffect(() => {
     if (pendingAuthMethod === null) return;
     function handleKeyDown(e: KeyboardEvent) {
@@ -128,7 +108,11 @@ export function BrandEdit() {
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isLoading) {
+  function handleCancel() {
+    navigate(`/${brandSlug}/${lang}/admin/brands`);
+  }
+
+  if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#6b7280' }}>Loading brand…</p>
@@ -136,24 +120,13 @@ export function BrandEdit() {
     );
   }
 
-  if (isError) {
+  if (fetchError !== null) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
           Failed to load brand:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
         </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
-  if (brand === undefined) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Brand not found.</p>
         <button onClick={handleCancel} style={secondaryButtonStyle}>
           Back to list
         </button>
@@ -171,22 +144,30 @@ export function BrandEdit() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
           Edit Brand
         </h1>
-        <span
-          style={{
-            display: 'inline-block',
-            padding: '0.125rem 0.5rem',
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            background: brand.isActive ? '#d1fae5' : '#fee2e2',
-            color: brand.isActive ? '#065f46' : '#991b1b',
-          }}
-        >
-          {brand.isActive ? 'Active' : 'Inactive'}
-        </span>
+        {displayBrand !== null && (
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '0.125rem 0.5rem',
+              borderRadius: '9999px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              background: displayBrand.isActive ? '#d1fae5' : '#fee2e2',
+              color: displayBrand.isActive ? '#065f46' : '#991b1b',
+            }}
+          >
+            {displayBrand.isActive ? 'Active' : 'Inactive'}
+          </span>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        noValidate
+      >
         {/* Name */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="name">
@@ -195,11 +176,10 @@ export function BrandEdit() {
           <input
             id="name"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register('name')}
             style={inputStyle(!!errors.name)}
           />
-          {errors.name && <FieldError message={errors.name} />}
+          {errors.name?.message && <FieldError message={errors.name.message} />}
         </div>
 
         {/* Slug (read-only after creation) */}
@@ -210,7 +190,7 @@ export function BrandEdit() {
           <input
             id="slug"
             type="text"
-            value={brand.slug}
+            value={displayBrand?.slug ?? ''}
             readOnly
             style={{
               ...inputStyle(false),
@@ -232,11 +212,10 @@ export function BrandEdit() {
           <input
             id="contactEmail"
             type="email"
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            {...register('contactEmail')}
             style={inputStyle(!!errors.contactEmail)}
           />
-          {errors.contactEmail && <FieldError message={errors.contactEmail} />}
+          {errors.contactEmail?.message && <FieldError message={errors.contactEmail.message} />}
         </div>
 
         {/* Contact Phone (optional) */}
@@ -248,52 +227,60 @@ export function BrandEdit() {
           <input
             id="contactPhone"
             type="tel"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
+            {...register('contactPhone')}
             style={inputStyle(false)}
           />
         </div>
 
-        {/* Staff Authentication Method */}
-        <fieldset style={{ border: '1px solid #e5e7eb', borderRadius: '0.375rem', padding: '1rem', marginBottom: '1rem' }}>
-          <legend style={{ fontWeight: 600, fontSize: '0.875rem', padding: '0 0.25rem' }}>
-            {t('admin.staffAuth.title')}
-          </legend>
-          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
-            {t('admin.staffAuth.description')}
-          </p>
-          {(['EmailPassword', 'GoogleSso', 'MicrosoftSso'] as const).map((method) => (
-            <label
-              key={method}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.375rem 0',
-                cursor: configureStaffAuth.isPending ? 'not-allowed' : 'pointer',
-              }}
-            >
-              <input
-                type="radio"
-                name="staffAuthMethod"
-                value={method}
-                checked={brand.staffAuthMethod === method}
-                onChange={() => handleAuthMethodChange(method)}
-                disabled={configureStaffAuth.isPending}
-              />
-              <span style={{ fontSize: '0.875rem' }}>
-                {t(`admin.staffAuth.methods.${method}`)}
-              </span>
-            </label>
-          ))}
-          {configureStaffAuth.isError && (
-            <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-              {configureStaffAuth.error instanceof Error
-                ? configureStaffAuth.error.message
-                : t('admin.staffAuth.error')}
+        {/* Staff Authentication Method — imperative, separate concern */}
+        {displayBrand !== null && (
+          <fieldset
+            style={{
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.375rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+            }}
+          >
+            <legend style={{ fontWeight: 600, fontSize: '0.875rem', padding: '0 0.25rem' }}>
+              {t('admin.staffAuth.title')}
+            </legend>
+            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+              {t('admin.staffAuth.description')}
             </p>
-          )}
-        </fieldset>
+            {(['EmailPassword', 'GoogleSso', 'MicrosoftSso'] as const).map((method) => (
+              <label
+                key={method}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.375rem 0',
+                  cursor: configureStaffAuth.isPending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="staffAuthMethod"
+                  value={method}
+                  checked={displayBrand.staffAuthMethod === method}
+                  onChange={() => handleAuthMethodChange(method)}
+                  disabled={configureStaffAuth.isPending}
+                />
+                <span style={{ fontSize: '0.875rem' }}>
+                  {t(`admin.staffAuth.methods.${method}`)}
+                </span>
+              </label>
+            ))}
+            {configureStaffAuth.isError && (
+              <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                {configureStaffAuth.error instanceof Error
+                  ? configureStaffAuth.error.message
+                  : t('admin.staffAuth.error')}
+              </p>
+            )}
+          </fieldset>
+        )}
 
         {/* Confirmation dialog for auth method change */}
         {pendingAuthMethod !== null && (
@@ -321,7 +308,10 @@ export function BrandEdit() {
                 boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <h3 id="staff-auth-dialog-title" style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              <h3
+                id="staff-auth-dialog-title"
+                style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}
+              >
                 {t('admin.staffAuth.confirmTitle')}
               </h3>
               <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '1.25rem' }}>
@@ -361,16 +351,18 @@ export function BrandEdit() {
         )}
 
         {/* Metadata */}
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          Created: {new Date(brand.createdAt).toLocaleString()} &mdash; Last updated:{' '}
-          {new Date(brand.updatedAt).toLocaleString()}
-        </p>
+        {displayBrand !== null && (
+          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
+            Created: {new Date(displayBrand.createdAt).toLocaleString()} &mdash; Last updated:{' '}
+            {new Date(displayBrand.updatedAt).toLocaleString()}
+          </p>
+        )}
 
         {/* API error */}
-        {updateBrand.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateBrand.error instanceof Error
-              ? updateBrand.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : 'Failed to save changes. Please try again.'}
           </p>
         )}
@@ -378,25 +370,21 @@ export function BrandEdit() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateBrand.isPending}
+            disabled={isSubmitting}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateBrand.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateBrand.isPending ? 0.6 : 1,
+              opacity: isSubmitting ? 0.6 : 1,
             }}
           >
-            {updateBrand.isPending ? 'Saving…' : 'Save Changes'}
+            {isSubmitting ? 'Saving…' : 'Save Changes'}
           </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            style={secondaryButtonStyle}
-          >
+          <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
           </button>
         </div>
