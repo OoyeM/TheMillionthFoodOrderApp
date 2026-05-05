@@ -27,12 +27,21 @@ public sealed class TaxConfigurationService(ITaxConfigurationRepository reposito
         {
             var config = Domain.TaxConfiguration.TaxConfiguration.Create();
             config.UpdateRates(rates);
-            await repository.AddAsync(config, cancellationToken);
-            await repository.SaveChangesAsync(cancellationToken);
-            return MapToResponse(config);
+            try
+            {
+                await repository.AddAsync(config, cancellationToken);
+                await repository.SaveChangesAsync(cancellationToken);
+                return MapToResponse(config);
+            }
+            catch (InvalidOperationException)
+            {
+                // Race condition: a concurrent request created the config between our
+                // GetAsync check and AddAsync. Fall through to update the existing record.
+                existing = await repository.GetAsync(cancellationToken);
+            }
         }
 
-        var updated = await repository.ReplaceRatesAsync(existing.Id, c => c.UpdateRates(rates), cancellationToken);
+        var updated = await repository.ReplaceRatesAsync(existing!.Id, c => c.UpdateRates(rates), cancellationToken);
         return MapToResponse(updated);
     }
 
