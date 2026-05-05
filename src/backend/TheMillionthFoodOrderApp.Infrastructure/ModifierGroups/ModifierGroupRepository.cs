@@ -49,46 +49,49 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext, IMessageBu
         if (group is null)
             return null;
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        // Step 1: delete modifier translations for all modifiers in this group
-        var modifierIds = await dbContext.Modifiers
-            .Where(m => EF.Property<Guid>(m, "ModifierGroupId") == id)
-            .Select(m => m.Id)
-            .ToListAsync(cancellationToken);
-
-        if (modifierIds.Count > 0)
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await dbContext.ModifierTranslations
-                .Where(t => modifierIds.Contains(t.ModifierId))
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            // Step 1: delete modifier translations for all modifiers in this group
+            var modifierIds = await dbContext.Modifiers
+                .Where(m => EF.Property<Guid>(m, "ModifierGroupId") == id)
+                .Select(m => m.Id)
+                .ToListAsync(cancellationToken);
+
+            if (modifierIds.Count > 0)
+            {
+                await dbContext.ModifierTranslations
+                    .Where(t => modifierIds.Contains(t.ModifierId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // Step 2: delete modifiers
+            await dbContext.Modifiers
+                .Where(m => EF.Property<Guid>(m, "ModifierGroupId") == id)
                 .ExecuteDeleteAsync(cancellationToken);
-        }
 
-        // Step 2: delete modifiers
-        await dbContext.Modifiers
-            .Where(m => EF.Property<Guid>(m, "ModifierGroupId") == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            // Step 3: delete group translations
+            await dbContext.ModifierGroupTranslations
+                .Where(t => t.ModifierGroupId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        // Step 3: delete group translations
-        await dbContext.ModifierGroupTranslations
-            .Where(t => t.ModifierGroupId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            // Step 4: apply mutation (re-populates _translations and _modifiers collections)
+            mutate(group);
 
-        // Step 4: apply mutation (re-populates _translations and _modifiers collections)
-        mutate(group);
+            // Step 5: insert new children
+            dbContext.ModifierGroupTranslations.AddRange(group.Translations);
+            foreach (var modifier in group.Modifiers)
+            {
+                dbContext.Modifiers.Add(modifier);
+                dbContext.ModifierTranslations.AddRange(modifier.Translations);
+            }
 
-        // Step 5: insert new children
-        dbContext.ModifierGroupTranslations.AddRange(group.Translations);
-        foreach (var modifier in group.Modifiers)
-        {
-            dbContext.Modifiers.Add(modifier);
-            dbContext.ModifierTranslations.AddRange(modifier.Translations);
-        }
-
-        var events = DomainEventDispatcher.CollectAndClear(dbContext);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        await DomainEventDispatcher.PublishAsync(events, messageBus);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return group;
     }
@@ -134,23 +137,26 @@ public sealed class ModifierGroupRepository(BrandDbContext dbContext, IMessageBu
         IEnumerable<(Guid modifierGroupId, int sortOrder)> assignments,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        // Remove existing assignments for this product
-        await dbContext.ProductModifierGroups
-            .Where(pmg => pmg.ProductId == productId)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        // Add new assignments
-        foreach (var (modifierGroupId, sortOrder) in assignments)
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            var pmg = ProductModifierGroup.Create(productId, modifierGroupId, sortOrder);
-            await dbContext.ProductModifierGroups.AddAsync(pmg, cancellationToken);
-        }
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        var events = DomainEventDispatcher.CollectAndClear(dbContext);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        await DomainEventDispatcher.PublishAsync(events, messageBus);
+            // Remove existing assignments for this product
+            await dbContext.ProductModifierGroups
+                .Where(pmg => pmg.ProductId == productId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // Add new assignments
+            foreach (var (modifierGroupId, sortOrder) in assignments)
+            {
+                var pmg = ProductModifierGroup.Create(productId, modifierGroupId, sortOrder);
+                await dbContext.ProductModifierGroups.AddAsync(pmg, cancellationToken);
+            }
+
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
     }
 }
