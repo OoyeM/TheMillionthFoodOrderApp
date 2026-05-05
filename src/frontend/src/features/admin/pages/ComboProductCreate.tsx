@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useProducts, useCreateComboProduct } from '../hooks/useProducts';
+import { useForm, type UseFormRegister } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { productsApi } from '@api/products';
+import type { CreateComboProductRequest } from '@api/products';
+import { comboProductEditSchema, type ComboProductEditFormValues } from './schemas/comboProductEditSchema';
+import { productKeys, useProducts } from '../hooks/useProducts';
 import type { SupportedLocale, ProductListItem } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
@@ -14,23 +20,23 @@ const LANGUAGES: { code: SupportedLocale; label: string }[] = [
   { code: 'de', label: 'DE' },
 ];
 
-interface TranslationState {
-  name: string;
-  description: string;
-}
+// ---------------------------------------------------------------------------
+// Payload mapper
+// ---------------------------------------------------------------------------
 
-type TranslationsMap = Record<SupportedLocale, TranslationState>;
-
-const emptyTranslations: TranslationsMap = {
-  nl: { name: '', description: '' },
-  fr: { name: '', description: '' },
-  de: { name: '', description: '' },
-};
-
-interface FormErrors {
-  basePrice?: string;
-  nlName?: string;
-  components?: string;
+function toCreatePayload(values: ComboProductEditFormValues): CreateComboProductRequest {
+  return {
+    basePrice: values.basePrice,
+    imageUrl: values.imageUrl.trim() || null,
+    translations: (['nl', 'fr', 'de'] as const)
+      .filter((loc) => values.translations[loc].name.trim().length > 0)
+      .map((loc) => ({
+        languageCode: loc,
+        name: values.translations[loc].name.trim(),
+        description: values.translations[loc].description.trim() || null,
+      })),
+    componentProductIds: values.componentProductIds,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,111 +46,88 @@ interface FormErrors {
 export function ComboProductCreate() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
-  const resolvedBrandSlug = brandSlug ?? '';
-  const createCombo = useCreateComboProduct(resolvedBrandSlug);
-  const { data: allProducts } = useProducts(resolvedBrandSlug);
+  const queryClient = useQueryClient();
+  const { brandSlug = '', lang = '' } = useParams<{ brandSlug: string; lang: string }>();
 
   const [activeTab, setActiveTab] = useState<SupportedLocale>('nl');
-  const [translations, setTranslations] = useState<TranslationsMap>({
-    ...emptyTranslations,
-  });
-  const [basePrice, setBasePrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [selectedComponents, setSelectedComponents] = useState<ProductListItem[]>([]);
-  const [errors, setErrors] = useState<FormErrors>({});
 
+  const { data: allProducts } = useProducts(brandSlug);
   const simpleProducts = allProducts?.filter((p) => p.productType === 'Simple') ?? [];
 
-  function updateTranslation(
-    locale: SupportedLocale,
-    field: keyof TranslationState,
-    value: string,
-  ) {
-    setTranslations((prev) => ({
-      ...prev,
-      [locale]: { ...prev[locale], [field]: value },
-    }));
-  }
-
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-    const price = parseFloat(basePrice);
-    if (!basePrice.trim() || isNaN(price) || price <= 0) {
-      next.basePrice = t('admin.comboProducts.errors.priceRequired');
-    }
-    if (translations.nl.name.trim().length === 0) {
-      next.nlName = t('admin.comboProducts.errors.nlNameRequired');
-    }
-    if (selectedComponents.length < 2) {
-      next.components = t('admin.comboProducts.errors.minComponents');
-    }
-    return next;
-  }
-
-  function handleToggleComponent(product: ProductListItem) {
-    setSelectedComponents((prev) => {
-      const exists = prev.some((p) => p.id === product.id);
-      if (exists) {
-        return prev.filter((p) => p.id !== product.id);
-      }
-      return [...prev, product];
-    });
-  }
-
-  function handleMoveUp(index: number) {
-    if (index === 0) return;
-    setSelectedComponents((prev) => {
-      const next = [...prev];
-      [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
-      return next;
-    });
-  }
-
-  function handleMoveDown(index: number) {
-    setSelectedComponents((prev) => {
-      if (index >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
-      return next;
-    });
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-
-    const translationInputs = LANGUAGES.filter(
-      (l) => translations[l.code].name.trim().length > 0,
-    ).map((l) => ({
-      languageCode: l.code,
-      name: translations[l.code].name.trim(),
-      description: translations[l.code].description.trim() || null,
-    }));
-
-    createCombo.mutate(
-      {
-        basePrice: parseFloat(basePrice),
-        imageUrl: imageUrl.trim() || null,
-        translations: translationInputs,
-        componentProductIds: selectedComponents.map((p) => p.id),
+  const form = useForm<ComboProductEditFormValues>({
+    resolver: zodResolver(comboProductEditSchema),
+    defaultValues: {
+      basePrice: 0,
+      imageUrl: '',
+      translations: {
+        nl: { name: '', description: '' },
+        fr: { name: '', description: '' },
+        de: { name: '', description: '' },
       },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/products`);
-        },
-      },
-    );
-  }
+      componentProductIds: [],
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = form;
+
+  const mutation = useMutation({
+    mutationFn: (payload: CreateComboProductRequest) =>
+      productsApi.createCombo(brandSlug, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
+      navigate('..');
+    },
+  });
+
+  const onSubmit = handleSubmit((values) => {
+    void mutation.mutateAsync(toCreatePayload(values));
+  });
 
   function handleCancel() {
     navigate(`/${brandSlug}/${lang}/admin/products`);
   }
+
+  // Component product selection/reorder — using form.watch + form.setValue
+  const currentComponentIds = watch('componentProductIds');
+
+  function handleToggleComponent(product: ProductListItem) {
+    const exists = currentComponentIds.includes(product.id);
+    if (exists) {
+      setValue('componentProductIds', currentComponentIds.filter((id) => id !== product.id));
+    } else {
+      setValue('componentProductIds', [...currentComponentIds, product.id]);
+    }
+  }
+
+  function handleMoveUp(index: number) {
+    if (index === 0) return;
+    const next = [...currentComponentIds];
+    [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+    setValue('componentProductIds', next);
+  }
+
+  function handleMoveDown(index: number) {
+    if (index >= currentComponentIds.length - 1) return;
+    const next = [...currentComponentIds];
+    [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+    setValue('componentProductIds', next);
+  }
+
+  const watchedImageUrl = watch('imageUrl');
+  // Pre-compute error messages to avoid complex type inference inside JSX
+  const nlNameError = (errors.translations?.nl?.name as { message?: string } | undefined)?.message;
+  const componentIdsError = (errors.componentProductIds as { message?: string } | undefined)?.message;
+
+  // Derive the ordered list of selected product objects from the ID list
+  const selectedProducts = currentComponentIds
+    .map((id) => allProducts?.find((p) => p.id === id))
+    .filter((p): p is ProductListItem => p !== undefined);
 
   return (
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
@@ -152,7 +135,7 @@ export function ComboProductCreate() {
         {t('admin.comboProducts.create')}
       </h1>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={(e) => { e.preventDefault(); void onSubmit(); }} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
@@ -163,12 +146,11 @@ export function ComboProductCreate() {
             type="number"
             min="0.01"
             step="0.01"
-            value={basePrice}
-            onChange={(e) => setBasePrice(e.target.value)}
+            {...register('basePrice', { valueAsNumber: true })}
             style={inputStyle(!!errors.basePrice)}
             placeholder="e.g. 3.50"
           />
-          {errors.basePrice && <FieldError message={errors.basePrice} />}
+          {errors.basePrice?.message && <FieldError message={errors.basePrice.message} />}
         </div>
 
         {/* Image URL */}
@@ -179,14 +161,13 @@ export function ComboProductCreate() {
           <input
             id="imageUrl"
             type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            {...register('imageUrl')}
             style={inputStyle(false)}
             placeholder="https://example.com/image.jpg"
           />
-          {imageUrl.trim() && (
+          {watchedImageUrl && watchedImageUrl.trim().length > 0 ? (
             <img
-              src={imageUrl}
+              src={watchedImageUrl}
               alt="Preview"
               style={{
                 marginTop: '0.5rem',
@@ -199,7 +180,7 @@ export function ComboProductCreate() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          )}
+          ) : null}
         </div>
 
         {/* Translation Tabs */}
@@ -230,40 +211,17 @@ export function ComboProductCreate() {
               }}
             >
               {l.label}
-              {l.code === 'nl' && ' *'}
+              {l.code === 'nl' ? ' *' : null}
             </button>
           ))}
         </div>
 
-        {/* Active tab content */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor={`name-${activeTab}`}>
-            Name {activeTab === 'nl' && <RequiredMark />}
-          </label>
-          <input
-            id={`name-${activeTab}`}
-            type="text"
-            value={translations[activeTab].name}
-            onChange={(e) => updateTranslation(activeTab, 'name', e.target.value)}
-            style={inputStyle(activeTab === 'nl' && !!errors.nlName)}
-            placeholder={`Combo name in ${activeTab.toUpperCase()}`}
-          />
-          {activeTab === 'nl' && errors.nlName && <FieldError message={errors.nlName} />}
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={labelStyle} htmlFor={`desc-${activeTab}`}>
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <textarea
-            id={`desc-${activeTab}`}
-            value={translations[activeTab].description}
-            onChange={(e) => updateTranslation(activeTab, 'description', e.target.value)}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={`Combo description in ${activeTab.toUpperCase()}`}
-          />
-        </div>
+        {/* Translation fields — rendered for all tabs, only the active one is visible */}
+        <TranslationFields
+          activeTab={activeTab}
+          register={register}
+          nlNameError={nlNameError}
+        />
 
         {/* Component Products */}
         <section style={{ marginBottom: '1.5rem' }}>
@@ -274,12 +232,12 @@ export function ComboProductCreate() {
             {t('admin.comboProducts.componentProductsHint')}
           </p>
 
-          {errors.components && <FieldError message={errors.components} />}
+          {componentIdsError && <FieldError message={componentIdsError} />}
 
           {/* Selected components with reorder controls */}
-          {selectedComponents.length > 0 && (
+          {selectedProducts.length > 0 && (
             <div style={{ marginBottom: '0.75rem' }}>
-              {selectedComponents.map((product, index) => (
+              {selectedProducts.map((product, index) => (
                 <div
                   key={product.id}
                   style={{
@@ -297,7 +255,7 @@ export function ComboProductCreate() {
                     {product.name}
                   </span>
                   <span style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>
-                    {'\u20AC'} {product.basePrice.amount.toFixed(2)}
+                    {'€'} {product.basePrice.amount.toFixed(2)}
                   </span>
                   <button
                     type="button"
@@ -314,11 +272,11 @@ export function ComboProductCreate() {
                   <button
                     type="button"
                     onClick={() => handleMoveDown(index)}
-                    disabled={index === selectedComponents.length - 1}
+                    disabled={index === selectedProducts.length - 1}
                     style={{
                       ...reorderButtonStyle,
-                      opacity: index === selectedComponents.length - 1 ? 0.3 : 1,
-                      cursor: index === selectedComponents.length - 1 ? 'not-allowed' : 'pointer',
+                      opacity: index === selectedProducts.length - 1 ? 0.3 : 1,
+                      cursor: index === selectedProducts.length - 1 ? 'not-allowed' : 'pointer',
                     }}
                   >
                     &#9660;
@@ -344,7 +302,7 @@ export function ComboProductCreate() {
           )}
 
           {/* Available products to add */}
-          {simpleProducts.length === 0 && selectedComponents.length === 0 && (
+          {simpleProducts.length === 0 && selectedProducts.length === 0 && (
             <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
               {t('admin.comboProducts.noSimpleProducts')}
             </p>
@@ -359,7 +317,7 @@ export function ComboProductCreate() {
               }}
             >
               {simpleProducts
-                .filter((p) => !selectedComponents.some((s) => s.id === p.id))
+                .filter((p) => !currentComponentIds.includes(p.id))
                 .map((product) => (
                   <div
                     key={product.id}
@@ -383,13 +341,12 @@ export function ComboProductCreate() {
                     <span
                       style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}
                     >
-                      {'\u20AC'} {product.basePrice.amount.toFixed(2)}
+                      {'€'} {product.basePrice.amount.toFixed(2)}
                     </span>
                     <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>+ Add</span>
                   </div>
                 ))}
-              {simpleProducts.filter((p) => !selectedComponents.some((s) => s.id === p.id))
-                .length === 0 && (
+              {simpleProducts.filter((p) => !currentComponentIds.includes(p.id)).length === 0 && (
                 <p style={{ padding: '0.75rem', color: '#9ca3af', fontSize: '0.875rem' }}>
                   {t('admin.comboProducts.allProductsSelected')}
                 </p>
@@ -399,10 +356,10 @@ export function ComboProductCreate() {
         </section>
 
         {/* API error */}
-        {createCombo.isError && (
+        {mutation.error != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {createCombo.error instanceof Error
-              ? createCombo.error.message
+            {mutation.error instanceof Error
+              ? mutation.error.message
               : 'Failed to create combo product. Please try again.'}
           </p>
         )}
@@ -410,19 +367,19 @@ export function ComboProductCreate() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={createCombo.isPending}
+            disabled={isSubmitting || mutation.isPending}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: createCombo.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting || mutation.isPending ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: createCombo.isPending ? 0.6 : 1,
+              opacity: isSubmitting || mutation.isPending ? 0.6 : 1,
             }}
           >
-            {createCombo.isPending ? t('admin.comboProducts.creating') : t('admin.comboProducts.createButton')}
+            {mutation.isPending ? t('admin.comboProducts.creating') : t('admin.comboProducts.createButton')}
           </button>
           <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
@@ -430,6 +387,110 @@ export function ComboProductCreate() {
         </div>
       </form>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TranslationFields — extracted so `register` call uses literal path strings,
+// which TypeScript resolves correctly (dynamic template-literal paths produce
+// unknown spreads in strict TSX).
+// ---------------------------------------------------------------------------
+
+interface TranslationFieldsProps {
+  activeTab: SupportedLocale;
+  register: UseFormRegister<ComboProductEditFormValues>;
+  nlNameError: string | undefined;
+}
+
+function TranslationFields({ activeTab, register, nlNameError }: TranslationFieldsProps) {
+  if (activeTab === 'nl') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-nl">
+            Name <RequiredMark />
+          </label>
+          <input
+            id="name-nl"
+            type="text"
+            {...register('translations.nl.name')}
+            style={inputStyle(!!nlNameError)}
+            placeholder="Combo name in NL"
+          />
+          {nlNameError && <FieldError message={nlNameError} />}
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-nl">
+            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <textarea
+            id="desc-nl"
+            {...register('translations.nl.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder="Combo description in NL"
+          />
+        </div>
+      </>
+    );
+  }
+  if (activeTab === 'fr') {
+    return (
+      <>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle} htmlFor="name-fr">
+            Name
+          </label>
+          <input
+            id="name-fr"
+            type="text"
+            {...register('translations.fr.name')}
+            style={inputStyle(false)}
+            placeholder="Combo name in FR"
+          />
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={labelStyle} htmlFor="desc-fr">
+            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <textarea
+            id="desc-fr"
+            {...register('translations.fr.description')}
+            rows={3}
+            style={{ ...inputStyle(false), resize: 'vertical' }}
+            placeholder="Combo description in FR"
+          />
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={labelStyle} htmlFor="name-de">
+          Name
+        </label>
+        <input
+          id="name-de"
+          type="text"
+          {...register('translations.de.name')}
+          style={inputStyle(false)}
+          placeholder="Combo name in DE"
+        />
+      </div>
+      <div style={{ marginBottom: '0.5rem' }}>
+        <label style={labelStyle} htmlFor="desc-de">
+          Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+        </label>
+        <textarea
+          id="desc-de"
+          {...register('translations.de.description')}
+          rows={3}
+          style={{ ...inputStyle(false), resize: 'vertical' }}
+          placeholder="Combo description in DE"
+        />
+      </div>
+    </>
   );
 }
 
@@ -482,3 +543,4 @@ function FieldError({ message }: { message: string }) {
     <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>{message}</p>
   );
 }
+
