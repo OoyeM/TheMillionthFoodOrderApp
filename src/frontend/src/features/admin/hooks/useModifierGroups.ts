@@ -2,15 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { modifierGroupsApi } from '@api/modifierGroups';
 import type {
   CreateModifierGroupRequest,
-  UpdateModifierGroupRequest,
   SetProductModifierGroupsRequest,
 } from '@api/modifierGroups';
 
-/**
- * Centralized query key factory — scoped by brandSlug for proper cache isolation.
- *
- * @expected-unused — US-FP-008 (Modifier groups) — used by mutations for cache invalidation
- */
 export const modifierGroupKeys = {
   all: (brandSlug: string) => ['modifier-groups', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['modifier-groups', brandSlug, id] as const,
@@ -28,15 +22,6 @@ export function useModifierGroups(brandSlug: string) {
     queryKey: modifierGroupKeys.all(brandSlug),
     queryFn: () => modifierGroupsApi.list(brandSlug),
     enabled: brandSlug.length > 0,
-  });
-}
-
-/** Fetch a single modifier group by id. */
-export function useModifierGroup(brandSlug: string, id: string) {
-  return useQuery({
-    queryKey: modifierGroupKeys.detail(brandSlug, id),
-    queryFn: () => modifierGroupsApi.get(brandSlug, id),
-    enabled: brandSlug.length > 0 && id.length > 0,
   });
 }
 
@@ -62,20 +47,6 @@ export function useCreateModifierGroup(brandSlug: string) {
       modifierGroupsApi.create(brandSlug, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all(brandSlug) });
-    },
-  });
-}
-
-/** Update modifier group details. Invalidates list and detail on success. */
-export function useUpdateModifierGroup(brandSlug: string, id: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateModifierGroupRequest) =>
-      modifierGroupsApi.update(brandSlug, id, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: modifierGroupKeys.all(brandSlug) });
-      void queryClient.invalidateQueries({ queryKey: modifierGroupKeys.detail(brandSlug, id) });
     },
   });
 }

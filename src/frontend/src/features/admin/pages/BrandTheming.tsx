@@ -4,7 +4,7 @@ import { Controller } from 'react-hook-form';
 import { useUploadBrandLogo, brandSettingsKeys } from '../hooks/useBrandSettings';
 import { useResourceForm } from '../forms/useResourceForm';
 import { brandSettingsApi } from '../../../api/brandSettings';
-import type { UpdateBrandThemingRequest } from '../../../api/brandSettings';
+import type { UpdateBrandThemingRequest, UploadBrandLogoResponse } from '../../../api/brandSettings';
 import { PRESET_FONTS } from '../../../types/common';
 import type { BrandSettings } from '../../../types/common';
 import { brandThemingSchema, type BrandThemingFormValues } from './schemas/brandThemingSchema';
@@ -126,7 +126,7 @@ export function BrandTheming() {
     setLogoPreview(objectUrl);
 
     uploadLogo.mutate(file, {
-      onSuccess: (result) => {
+      onSuccess: (result: UploadBrandLogoResponse) => {
         URL.revokeObjectURL(objectUrl);
         setLogoPreview(result.logoUrl);
       },
