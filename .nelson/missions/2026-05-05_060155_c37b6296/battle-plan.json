@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": 1,
+      "name": "PaymentMethod on Order domain and API",
+      "owner": "HMS Kent",
+      "deliverable": "PaymentMethod enum, property on Order aggregate, DTOs updated, EF migration, 12 integration tests passing",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 1,
+      "file_ownership": [
+        "src/backend/TheMillionthFoodOrderApp.Domain/Orders/PaymentMethod.cs",
+        "src/backend/TheMillionthFoodOrderApp.Domain/Orders/Order.cs",
+        "src/backend/TheMillionthFoodOrderApp.Application/Orders/Dtos/CreateOrderRequest.cs",
+        "src/backend/TheMillionthFoodOrderApp.Application/Orders/Dtos/OrderResponse.cs",
+        "src/backend/TheMillionthFoodOrderApp.Application/Orders/OrderService.cs",
+        "src/backend/TheMillionthFoodOrderApp.Api/Endpoints/Orders/CreateOrderEndpoint.cs",
+        "src/backend/TheMillionthFoodOrderApp.Infrastructure/Orders/OrderConfiguration.cs",
+        "src/backend/TheMillionthFoodOrderApp.Infrastructure/Persistence/Migrations/Brand/",
+        "src/backend/TheMillionthFoodOrderApp.Tests.Integration/Orders/PlaceOrderTests.cs"
+      ],
+      "modification_targets": [
+        "Order.Create() factory method",
+        "CreateOrderRequest sealed record",
+        "OrderResponse sealed record",
+        "OrderService.CreateOrderAsync()",
+        "CreateOrderEndpoint local ApiRequest model",
+        "OrderConfiguration EF mapping",
+        "PlaceOrderTests - all 11 existing test request bodies"
+      ],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    },
+    {
+      "id": 2,
+      "name": "Payment selection, mock screen, and confirmation status",
+      "owner": "HMS Lancaster",
+      "deliverable": "Payment radio group in checkout, MockPaymentScreen component, payment status InfoCard on confirmation, i18n keys in nl/fr/de, pnpm build clean",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 1,
+      "file_ownership": [
+        "src/frontend/src/features/storefront/pages/CheckoutPage.tsx",
+        "src/frontend/src/features/storefront/components/MockPaymentScreen.tsx",
+        "src/frontend/src/api/orders.ts",
+        "src/frontend/src/features/storefront/pages/OrderConfirmationPage.tsx",
+        "src/frontend/src/i18n/locales/nl/common.json",
+        "src/frontend/src/i18n/locales/fr/common.json",
+        "src/frontend/src/i18n/locales/de/common.json"
+      ],
+      "modification_targets": [
+        "CheckoutFormValues Zod schema",
+        "CheckoutForm component - replace payment placeholder block",
+        "paymentNotice variable - remove",
+        "CreateOrderRequest TypeScript type in api/orders.ts",
+        "OrderResponse TypeScript type in api/orders.ts",
+        "ordersApi.create() call in useCreateOrder hook",
+        "OrderConfirmationPage info grid - add 5th InfoCard"
+      ],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    }
+  ],
+  "squadron": {
+    "mode": "subagents",
+    "admiral": {
+      "ship_name": "HMS Victory",
+      "model": "sonnet"
+    },
+    "captains": [
+      {
+        "ship_name": "HMS Kent",
+        "ship_class": "frigate",
+        "model": "sonnet",
+        "task_id": 1
+      },
+      {
+        "ship_name": "HMS Lancaster",
+        "ship_class": "frigate",
+        "model": "sonnet",
+        "task_id": 2
+      }
+    ]
+  },
+  "created_at": "2026-05-05T06:36:31Z",
+  "amended_at": null
+}

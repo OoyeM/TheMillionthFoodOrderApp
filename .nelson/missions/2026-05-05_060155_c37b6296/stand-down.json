@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "outcome_achieved": true,
+  "planned_outcome": "Implement mocked payment flow at checkout: method selection, mock processing screen, and confirmation with payment status",
+  "actual_outcome": "PaymentMethod flows end-to-end: enum in Domain, column via migration, POST /orders accepts and returns paymentMethod string, frontend checkout has radio selection + MockPaymentScreen for online methods + confirmation page shows payment status InfoCard",
+  "success_metric_result": "14/14 PlaceOrder integration tests pass; pnpm build clean (0 new errors); all 15 ACs verified",
+  "duration_minutes": 61,
+  "budget": {
+    "tokens_consumed": 116506,
+    "tokens_budgeted": null,
+    "pct_consumed": 58.3
+  },
+  "fleet": {
+    "ships_used": 2,
+    "reliefs": 0,
+    "max_concurrent_ships": 2
+  },
+  "tasks": {
+    "completed": 2,
+    "total": 2,
+    "by_station_tier": {
+      "0": 0,
+      "1": 2,
+      "2": 0,
+      "3": 0
+    }
+  },
+  "quality": {
+    "standing_order_violations": 0,
+    "blockers_raised": 0,
+    "blockers_resolved": 0,
+    "avg_blocker_duration_minutes": null
+  },
+  "open_risks": [],
+  "follow_ups": [],
+  "mentioned_in_despatches": [],
+  "reusable_patterns": {
+    "adopt": [
+      "Splitting backend/frontend into two parallel frigates works cleanly when API contract is fixed in the estimate",
+      "Pre-populated reconnaissance in captain briefs avoids redundant codebase scouting"
+    ],
+    "avoid": [
+      "Reconnaissance identified pre-existing TS build errors - worth documenting these before missions so captains dont spend time investigating them"
+    ]
+  },
+  "created_at": "2026-05-05T07:03:42Z"
+}

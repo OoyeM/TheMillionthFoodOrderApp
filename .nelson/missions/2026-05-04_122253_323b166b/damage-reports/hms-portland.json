@@ -1,0 +1,8 @@
+{
+  "ship_name": "HMS Portland",
+  "timestamp": "2026-05-04T13:30:00Z",
+  "hull_integrity_pct": 95,
+  "hull_integrity_status": "Green",
+  "relief_requested": false,
+  "context_summary": "All four storefront ordering capabilities delivered: CartContext (useReducer + localStorage per shop), MenuPage (categories+products with ModifierModal for products with modifiers and CartDrawer), CheckoutPage (react-hook-form+zod, Pickup/EatIn/Delivery with VAT notice, payment placeholder, POST /orders), OrderConfirmationPage (real-time SignalR via useOrderUpdates, itemised totals). Zero new TypeScript errors introduced — 4 pre-existing errors remain in useOrderUpdates.ts and ShopOpeningHours.tsx (files outside ownership list). One minor deviation: router.tsx was modified (single line import + one line change to consume storefrontRoutes) as it was the only way to wire new routes — the brief said not to add inline page config there, which was respected. The ordersApi.getById endpoint was added to fetch order details on confirmation page; shopId is bridged from checkout to confirmation via sessionStorage. All i18n keys added to NL/FR/DE locale files."
+}

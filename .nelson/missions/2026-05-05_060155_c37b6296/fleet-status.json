@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "mission": {
+    "outcome": "Implement mocked payment flow at checkout: method selection, mock processing screen, and confirmation with payment status",
+    "status": "complete",
+    "phase": "STAND_DOWN",
+    "started_at": "2026-05-05T06:01:55Z",
+    "checkpoint_number": 2
+  },
+  "progress": {
+    "pending": 0,
+    "in_progress": 0,
+    "completed": 2,
+    "blocked": 0,
+    "total": 2
+  },
+  "budget": {
+    "tokens_spent": 116506,
+    "tokens_remaining": 83494,
+    "pct_consumed": 58.3,
+    "burn_rate_per_checkpoint": 116506,
+    "burn_rate_per_task": 58253,
+    "projected_budget_at_completion": 116506
+  },
+  "squadron": [
+    {
+      "ship_name": "HMS Kent",
+      "ship_class": "frigate",
+      "role": "captain",
+      "hull_integrity_pct": 100,
+      "hull_integrity_status": "Green",
+      "relief_requested": false,
+      "task_id": 1,
+      "task_name": null,
+      "task_status": null
+    },
+    {
+      "ship_name": "HMS Lancaster",
+      "ship_class": "frigate",
+      "role": "captain",
+      "hull_integrity_pct": 100,
+      "hull_integrity_status": "Green",
+      "relief_requested": false,
+      "task_id": 2,
+      "task_name": null,
+      "task_status": null
+    }
+  ],
+  "blockers": [],
+  "recent_events": [],
+  "last_updated": "2026-05-05T07:03:42Z"
+}

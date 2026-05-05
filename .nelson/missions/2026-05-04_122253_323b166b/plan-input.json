@@ -1,0 +1,69 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Backend: Order aggregate, repository, service, endpoint, tests",
+      "owner": "HMS Duncan",
+      "deliverable": "POST /orders endpoint with Order aggregate, correct VAT, domain event, TUnit integration tests",
+      "station_tier": 2,
+      "admiralty_action_required": true,
+      "acceptance_criteria": [
+        "Order persists to brand DB with all fields and OrderItem children",
+        "OrderNumber is unique within a shop",
+        "OrderCreatedEvent dispatched via Wolverine/SignalR pipeline",
+        "EF migration runs cleanly against fresh brand DB",
+        "POST /orders returns 201 with populated OrderResponse",
+        "VAT is 6% for Pickup/Delivery and 21% for EatIn",
+        "Client-submitted prices ignored; server resolves current product prices",
+        "Unknown ProductId returns 400",
+        "Missing required fields return 400 with validation errors"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Frontend: Menu, cart context, checkout, order confirmation",
+      "owner": "HMS Portland",
+      "deliverable": "Storefront menu page, CartContext, checkout form, confirmation page with SignalR",
+      "station_tier": 1,
+      "admiralty_action_required": false,
+      "acceptance_criteria": [
+        "Menu renders categories in sortOrder with products",
+        "Adding simple product to cart increments quantity correctly",
+        "Adding product with modifiers prompts modifier selection first",
+        "Cart persists across page refresh (localStorage)",
+        "Cart scoped to shop - navigating to another shop shows empty cart",
+        "Checkout form validates required fields before submit",
+        "EatIn shows 21% VAT notice; Pickup/Delivery shows 6%",
+        "Successful submit navigates to confirmation with correct order number",
+        "Confirmation page receives real-time SignalR status updates",
+        "Payment shows clear deferred placeholder"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Red-cell review: Backend domain model and endpoint",
+      "owner": "HMS Vigilant",
+      "deliverable": "Adversarial review verdict on Order aggregate, VAT logic, EF config, and test coverage",
+      "station_tier": 2,
+      "admiralty_action_required": false,
+      "acceptance_criteria": [
+        "Denormalisation complete (ProductName captured)",
+        "VAT applied per item not per order total",
+        "No client-submitted prices trusted",
+        "EF configuration correctly owns OrderItem",
+        "Integration tests cover both VAT modes and failure cases",
+        "OrderCreatedEvent wired to SignalR pipeline",
+        "No obvious data integrity gaps"
+      ]
+    }
+  ],
+  "squadron": {
+    "admiral": "Admiral",
+    "admiral_model": "sonnet",
+    "captains": [
+      {"name": "HMS Duncan", "class": "destroyer", "model": "sonnet", "task_id": 1},
+      {"name": "HMS Portland", "class": "frigate", "model": "sonnet", "task_id": 2},
+      {"name": "HMS Vigilant", "class": "red-cell", "model": "sonnet", "task_id": 3}
+    ]
+  }
+}
