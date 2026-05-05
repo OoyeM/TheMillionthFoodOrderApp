@@ -1,8 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useBrandSettings, useUpdateBrandTheming, useUploadBrandLogo } from '../hooks/useBrandSettings';
+import { Controller } from 'react-hook-form';
+import { useUploadBrandLogo, brandSettingsKeys } from '../hooks/useBrandSettings';
+import { useResourceForm } from '../forms/useResourceForm';
+import { brandSettingsApi } from '../../../api/brandSettings';
+import type { UpdateBrandThemingRequest } from '../../../api/brandSettings';
 import { PRESET_FONTS } from '../../../types/common';
-import type { BrandColors, BrandTypography } from '../../../types/common';
+import type { BrandSettings } from '../../../types/common';
+import { brandThemingSchema, type BrandThemingFormValues } from './schemas/brandThemingSchema';
 
 // Default theme values — matches backend defaults
 const DEFAULT_PRIMARY = '#111827';
@@ -18,18 +23,8 @@ export function BrandTheming() {
   const { brandSlug } = useParams<{ brandSlug: string; lang: string }>();
   const resolvedSlug = brandSlug ?? '';
 
-  const { data: settings, isLoading, isError, error } = useBrandSettings(resolvedSlug);
-  const updateTheming = useUpdateBrandTheming(resolvedSlug);
+  // Logo upload stays imperative — it is a separate resource / mutation.
   const uploadLogo = useUploadBrandLogo(resolvedSlug);
-
-  // ── Form state ────────────────────────────────────────────────────────────
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY);
-  const [secondaryColor, setSecondaryColor] = useState(DEFAULT_SECONDARY);
-  const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
-  const [headingFont, setHeadingFont] = useState(DEFAULT_FONT);
-  const [bodyFont, setBodyFont] = useState(DEFAULT_FONT);
-  const [customDomain, setCustomDomain] = useState('');
-  const [formInitialized, setFormInitialized] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,72 +37,115 @@ export function BrandTheming() {
     };
   }, [logoPreview]);
 
-  // Populate form when settings data arrives
+  // ---------------------------------------------------------------------------
+  // Main form via useResourceForm (colors, typography, customDomain)
+  // ---------------------------------------------------------------------------
+
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    BrandSettings,
+    BrandThemingFormValues,
+    UpdateBrandThemingRequest
+  >({
+    queryKey: brandSettingsKeys.settings(resolvedSlug),
+    fetch: () => brandSettingsApi.get(resolvedSlug),
+    update: (payload) => brandSettingsApi.updateTheming(resolvedSlug, payload),
+    schema: brandThemingSchema,
+    defaultValues: {
+      colors: {
+        primary: DEFAULT_PRIMARY,
+        secondary: DEFAULT_SECONDARY,
+        accent: DEFAULT_ACCENT,
+      },
+      typography: {
+        headingFont: DEFAULT_FONT,
+        bodyFont: DEFAULT_FONT,
+      },
+      customDomain: '',
+    },
+    toFormValues: (settings) => ({
+      colors: {
+        primary: settings.colors?.primary ?? DEFAULT_PRIMARY,
+        secondary: settings.colors?.secondary ?? DEFAULT_SECONDARY,
+        accent: settings.colors?.accent ?? DEFAULT_ACCENT,
+      },
+      typography: {
+        headingFont: settings.typography?.headingFontFamily ?? DEFAULT_FONT,
+        bodyFont: settings.typography?.bodyFontFamily ?? DEFAULT_FONT,
+      },
+      customDomain: settings.customDomain ?? '',
+    }),
+    toUpdatePayload: (values) => ({
+      colors: {
+        primary: values.colors.primary,
+        secondary: values.colors.secondary,
+        accent: values.colors.accent,
+      },
+      typography: {
+        headingFontFamily: values.typography.headingFont,
+        bodyFontFamily: values.typography.bodyFont,
+      },
+      customDomain: values.customDomain.trim() || null,
+    }),
+    invalidate: [
+      brandSettingsKeys.settings(resolvedSlug),
+      brandSettingsKeys.theme(resolvedSlug),
+    ],
+    onSuccess: (updated) => {
+      // Sync logoPreview with persisted value after a successful save
+      setLogoPreview(updated.logoUrl);
+    },
+  });
+
+  // Seed logoPreview once on first fetch
   useEffect(() => {
-    if (settings !== undefined && !formInitialized) {
-      setPrimaryColor(settings.colors?.primary ?? DEFAULT_PRIMARY);
-      setSecondaryColor(settings.colors?.secondary ?? DEFAULT_SECONDARY);
-      setAccentColor(settings.colors?.accent ?? DEFAULT_ACCENT);
-      setHeadingFont(settings.typography?.headingFontFamily ?? DEFAULT_FONT);
-      setBodyFont(settings.typography?.bodyFontFamily ?? DEFAULT_FONT);
-      setCustomDomain(settings.customDomain ?? '');
-      setLogoPreview(settings.logoUrl);
-      setFormInitialized(true);
+    if (logoPreview === null) {
+      brandSettingsApi
+        .get(resolvedSlug)
+        .then((s) => setLogoPreview(s.logoUrl))
+        .catch(() => undefined);
     }
-  }, [settings, formInitialized]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedSlug]);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  const { register, control, watch } = form;
+  const headingFont = watch('typography.headingFont');
+  const bodyFont = watch('typography.bodyFont');
+  const primaryColor = watch('colors.primary');
+  const secondaryColor = watch('colors.secondary');
+  const accentColor = watch('colors.accent');
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    const colors: BrandColors = {
-      primary: primaryColor,
-      secondary: secondaryColor,
-      accent: accentColor,
-    };
-
-    const typography: BrandTypography = {
-      headingFontFamily: headingFont,
-      bodyFontFamily: bodyFont,
-    };
-
-    updateTheming.mutate({
-      colors,
-      typography,
-      customDomain: customDomain.trim().length > 0 ? customDomain.trim() : null,
-    });
-  }
+  // ---------------------------------------------------------------------------
+  // Logo upload handler
+  // ---------------------------------------------------------------------------
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show a local preview immediately
     const objectUrl = URL.createObjectURL(file);
     setLogoPreview(objectUrl);
 
     uploadLogo.mutate(file, {
       onSuccess: (result) => {
-        // Replace object URL with the persisted server URL
         URL.revokeObjectURL(objectUrl);
         setLogoPreview(result.logoUrl);
       },
       onError: () => {
         URL.revokeObjectURL(objectUrl);
-        setLogoPreview(settings?.logoUrl ?? null);
+        setLogoPreview(null);
       },
     });
 
-    // Reset file input so the same file can be re-selected after an error
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   }
 
-  // ── Loading / error states ────────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
+  // Loading / error states
+  // ---------------------------------------------------------------------------
 
-  if (isLoading) {
+  if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#6b7280' }}>Loading theming settings…</p>
@@ -115,18 +153,20 @@ export function BrandTheming() {
     );
   }
 
-  if (isError) {
+  if (fetchError !== null) {
     return (
       <main style={{ padding: '1.5rem' }}>
         <p style={{ color: '#dc2626' }}>
           Failed to load settings:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
         </p>
       </main>
     );
   }
 
-  // ── Form ──────────────────────────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
+  // Form
+  // ---------------------------------------------------------------------------
 
   return (
     <main style={{ padding: '1.5rem', maxWidth: '48rem' }}>
@@ -138,11 +178,10 @@ export function BrandTheming() {
         Changes take effect immediately — no redeploy needed.
       </p>
 
-      {/* ── Logo ─────────────────────────────────────────────────────── */}
+      {/* ── Logo (imperative — separate upload mutation) ─────────────── */}
       <section style={sectionStyle}>
         <h2 style={sectionHeadingStyle}>Logo</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-          {/* Preview */}
           <div
             style={{
               width: '8rem',
@@ -201,31 +240,61 @@ export function BrandTheming() {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        noValidate
+      >
         {/* ── Colors ───────────────────────────────────────────────────── */}
         <section style={sectionStyle}>
           <h2 style={sectionHeadingStyle}>Colors</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))', gap: '1rem' }}>
-            <ColorField
-              id="primaryColor"
-              label="Primary"
-              description="Main UI elements (buttons, headings)"
-              value={primaryColor}
-              onChange={setPrimaryColor}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))',
+              gap: '1rem',
+            }}
+          >
+            <Controller
+              name="colors.primary"
+              control={control}
+              render={({ field }) => (
+                <ColorField
+                  id="primaryColor"
+                  label="Primary"
+                  description="Main UI elements (buttons, headings)"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
-            <ColorField
-              id="secondaryColor"
-              label="Secondary"
-              description="Supporting UI elements"
-              value={secondaryColor}
-              onChange={setSecondaryColor}
+            <Controller
+              name="colors.secondary"
+              control={control}
+              render={({ field }) => (
+                <ColorField
+                  id="secondaryColor"
+                  label="Secondary"
+                  description="Supporting UI elements"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
-            <ColorField
-              id="accentColor"
-              label="Accent"
-              description="Highlights, links, call-to-actions"
-              value={accentColor}
-              onChange={setAccentColor}
+            <Controller
+              name="colors.accent"
+              control={control}
+              render={({ field }) => (
+                <ColorField
+                  id="accentColor"
+                  label="Accent"
+                  description="Highlights, links, call-to-actions"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
         </section>
@@ -233,21 +302,51 @@ export function BrandTheming() {
         {/* ── Typography ───────────────────────────────────────────────── */}
         <section style={sectionStyle}>
           <h2 style={sectionHeadingStyle}>Typography</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(16rem, 1fr))', gap: '1rem' }}>
-            <FontField
-              id="headingFont"
-              label="Heading Font"
-              description="Applied to h1–h6 elements"
-              value={headingFont}
-              onChange={setHeadingFont}
-            />
-            <FontField
-              id="bodyFont"
-              label="Body Font"
-              description="Applied to body text and UI"
-              value={bodyFont}
-              onChange={setBodyFont}
-            />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(16rem, 1fr))',
+              gap: '1rem',
+            }}
+          >
+            <div>
+              <label htmlFor="headingFont" style={labelStyle}>
+                Heading Font
+              </label>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.375rem' }}>
+                Applied to h1–h6 elements
+              </p>
+              <select
+                id="headingFont"
+                {...register('typography.headingFont')}
+                style={{ ...inputStyle, fontFamily: headingFont === 'System Default' ? 'inherit' : headingFont }}
+              >
+                {PRESET_FONTS.map((font) => (
+                  <option key={font} value={font} style={{ fontFamily: font === 'System Default' ? 'inherit' : font }}>
+                    {font}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="bodyFont" style={labelStyle}>
+                Body Font
+              </label>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.375rem' }}>
+                Applied to body text and UI
+              </p>
+              <select
+                id="bodyFont"
+                {...register('typography.bodyFont')}
+                style={{ ...inputStyle, fontFamily: bodyFont === 'System Default' ? 'inherit' : bodyFont }}
+              >
+                {PRESET_FONTS.map((font) => (
+                  <option key={font} value={font} style={{ fontFamily: font === 'System Default' ? 'inherit' : font }}>
+                    {font}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Live font preview */}
@@ -295,8 +394,7 @@ export function BrandTheming() {
             id="customDomain"
             type="text"
             placeholder="order.yourbrand.com"
-            value={customDomain}
-            onChange={(e) => setCustomDomain(e.target.value)}
+            {...register('customDomain')}
             style={inputStyle}
           />
         </section>
@@ -304,14 +402,7 @@ export function BrandTheming() {
         {/* ── Live preview panel ────────────────────────────────────────── */}
         <section style={sectionStyle}>
           <h2 style={sectionHeadingStyle}>Live Preview</h2>
-          <div
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.5rem',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Mock storefront header */}
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflow: 'hidden' }}>
             <div
               style={{
                 background: primaryColor,
@@ -340,7 +431,6 @@ export function BrandTheming() {
                 </span>
               )}
             </div>
-            {/* Mock content area */}
             <div style={{ padding: '1.5rem', background: '#fff' }}>
               <h3
                 style={{
@@ -382,35 +472,29 @@ export function BrandTheming() {
         </section>
 
         {/* ── Form actions ─────────────────────────────────────────────── */}
-        {updateTheming.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateTheming.error instanceof Error
-              ? updateTheming.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : 'Failed to save theming. Please try again.'}
-          </p>
-        )}
-
-        {updateTheming.isSuccess && (
-          <p style={{ color: '#059669', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            Theming saved successfully.
           </p>
         )}
 
         <button
           type="submit"
-          disabled={updateTheming.isPending}
+          disabled={isSubmitting}
           style={{
             padding: '0.5rem 1.5rem',
             background: '#111827',
             color: '#fff',
             border: 'none',
             borderRadius: '0.375rem',
-            cursor: updateTheming.isPending ? 'not-allowed' : 'pointer',
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
             fontWeight: 600,
-            opacity: updateTheming.isPending ? 0.6 : 1,
+            opacity: isSubmitting ? 0.6 : 1,
           }}
         >
-          {updateTheming.isPending ? 'Saving…' : 'Save Theming'}
+          {isSubmitting ? 'Saving…' : 'Save Theming'}
         </button>
       </form>
     </main>
@@ -440,7 +524,6 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <input
-          id={id}
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -454,6 +537,7 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
           }}
         />
         <input
+          id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -462,46 +546,6 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
           maxLength={7}
         />
       </div>
-    </div>
-  );
-}
-
-interface FontFieldProps {
-  id: string;
-  label: string;
-  description: string;
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function FontField({ id, label, description, value, onChange }: FontFieldProps) {
-  return (
-    <div>
-      <label htmlFor={id} style={labelStyle}>
-        {label}
-      </label>
-      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.375rem' }}>
-        {description}
-      </p>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          ...inputStyle,
-          fontFamily: value === 'System Default' ? 'inherit' : value,
-        }}
-      >
-        {PRESET_FONTS.map((font) => (
-          <option
-            key={font}
-            value={font}
-            style={{ fontFamily: font === 'System Default' ? 'inherit' : font }}
-          >
-            {font}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }
