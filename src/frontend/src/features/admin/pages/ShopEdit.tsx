@@ -5,6 +5,8 @@ import { shopsApi } from '../../../api/shops';
 import type { UpdateShopRequest } from '../../../api/shops';
 import type { Shop } from '../../../types/common';
 import { shopEditSchema, type ShopEditFormValues } from './schemas/shopEditSchema';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ResourceFormShell } from '../forms/ResourceFormShell';
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -84,33 +86,17 @@ export function ShopEdit() {
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isFetching) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Loading shop…</p>
-      </main>
-    );
-  }
-
-  if (fetchError !== null) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>
-          Failed to load shop:{' '}
-          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
-        </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
   // ---------------------------------------------------------------------------
   // Form
   // ---------------------------------------------------------------------------
 
   return (
+    <ResourceFormShell
+      isFetching={isFetching}
+      fetchError={fetchError}
+      resourceName="shop"
+      onCancel={handleCancel}
+    >
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
@@ -344,48 +330,6 @@ export function ShopEdit() {
         </div>
       </form>
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Small style helpers
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-      {message}
-    </p>
+    </ResourceFormShell>
   );
 }

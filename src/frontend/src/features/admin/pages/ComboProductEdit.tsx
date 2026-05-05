@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Controller, type UseFormRegister } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts';
 import {
   useProductModifierGroups,
@@ -19,6 +19,8 @@ import type {
   Product,
 } from '../../../types/common';
 import type { UpdateComboProductRequest } from '../../../api/products';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ComboTranslationFields } from '../forms/ComboTranslationFields';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -375,7 +377,7 @@ export function ComboProductEdit() {
         </div>
 
         {/* Translation fields — rendered for all tabs, only the active one is visible */}
-        <TranslationFields
+        <ComboTranslationFields
           activeTab={activeTab}
           register={register}
           nlNameError={nlNameError}
@@ -750,127 +752,8 @@ export function ComboProductEdit() {
 }
 
 // ---------------------------------------------------------------------------
-// TranslationFields — extracted so `register` call is in a non-hook component
-// context where TypeScript resolves literal path types correctly.
+// Local style helpers not covered by adminFormStyles
 // ---------------------------------------------------------------------------
-
-interface TranslationFieldsProps {
-  activeTab: SupportedLocale;
-  register: UseFormRegister<ComboProductEditFormValues>;
-  nlNameError: string | undefined;
-}
-
-function TranslationFields({ activeTab, register, nlNameError }: TranslationFieldsProps) {
-  if (activeTab === 'nl') {
-    return (
-      <>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor="name-nl">
-            Name <RequiredMark />
-          </label>
-          <input
-            id="name-nl"
-            type="text"
-            {...register('translations.nl.name')}
-            style={inputStyle(!!nlNameError)}
-            placeholder="Combo name in NL"
-          />
-          {nlNameError && <FieldError message={nlNameError} />}
-        </div>
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={labelStyle} htmlFor="desc-nl">
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <textarea
-            id="desc-nl"
-            {...register('translations.nl.description')}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder="Combo description in NL"
-          />
-        </div>
-      </>
-    );
-  }
-  if (activeTab === 'fr') {
-    return (
-      <>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor="name-fr">
-            Name
-          </label>
-          <input
-            id="name-fr"
-            type="text"
-            {...register('translations.fr.name')}
-            style={inputStyle(false)}
-            placeholder="Combo name in FR"
-          />
-        </div>
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={labelStyle} htmlFor="desc-fr">
-            Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <textarea
-            id="desc-fr"
-            {...register('translations.fr.description')}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder="Combo description in FR"
-          />
-        </div>
-      </>
-    );
-  }
-  return (
-    <>
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle} htmlFor="name-de">
-          Name
-        </label>
-        <input
-          id="name-de"
-          type="text"
-          {...register('translations.de.name')}
-          style={inputStyle(false)}
-          placeholder="Combo name in DE"
-        />
-      </div>
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label style={labelStyle} htmlFor="desc-de">
-          Description <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
-        </label>
-        <textarea
-          id="desc-de"
-          {...register('translations.de.description')}
-          rows={3}
-          style={{ ...inputStyle(false), resize: 'vertical' }}
-          placeholder="Combo description in DE"
-        />
-      </div>
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Small style helpers
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
 
 const reorderButtonStyle: React.CSSProperties = {
   padding: '0.125rem 0.4rem',
@@ -880,24 +763,3 @@ const reorderButtonStyle: React.CSSProperties = {
   borderRadius: '0.25rem',
   lineHeight: 1,
 };
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>{message}</p>
-  );
-}

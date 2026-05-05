@@ -13,6 +13,8 @@ import type { UpdateMenuCategoryRequest } from '../../../api/menuCategories';
 import { useResourceForm } from '../forms/useResourceForm';
 import { menuCategoryEditSchema, type MenuCategoryEditFormValues } from './schemas/menuCategoryEditSchema';
 import type { MenuCategory, SupportedLocale, ProductListItem } from '../../../types/common';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ResourceFormShell } from '../forms/ResourceFormShell';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -180,32 +182,6 @@ export function MenuCategoryEdit() {
   }
 
   // ---------------------------------------------------------------------------
-  // Loading / error states
-  // ---------------------------------------------------------------------------
-
-  if (isFetching) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Loading menu category...</p>
-      </main>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>
-          Failed to load menu category:{' '}
-          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
-        </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // Form render
   // ---------------------------------------------------------------------------
 
@@ -221,6 +197,12 @@ export function MenuCategoryEdit() {
   const sortOrderError = errors.sortOrder?.message;
 
   return (
+    <ResourceFormShell
+      isFetching={isFetching}
+      fetchError={fetchError}
+      resourceName="menu category"
+      onCancel={handleCancel}
+    >
     <main style={{ padding: '1.5rem', maxWidth: '48rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         Edit Menu Category
@@ -501,6 +483,7 @@ export function MenuCategoryEdit() {
         )}
       </section>
     </main>
+    </ResourceFormShell>
   );
 }
 
@@ -566,37 +549,6 @@ function TranslationFields({ activeTab, register, nlNameError }: TranslationFiel
   );
 }
 
-// ---------------------------------------------------------------------------
-// Small style helpers
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
 function moveButtonStyle(disabled: boolean): React.CSSProperties {
   return {
     padding: '0.25rem 0.5rem',
@@ -608,14 +560,4 @@ function moveButtonStyle(disabled: boolean): React.CSSProperties {
     opacity: disabled ? 0.3 : 1,
     lineHeight: 1,
   };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>{message}</p>
-  );
 }

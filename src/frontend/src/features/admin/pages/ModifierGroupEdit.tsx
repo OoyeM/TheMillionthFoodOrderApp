@@ -8,6 +8,8 @@ import { modifierGroupsApi } from '@api/modifierGroups';
 import { modifierGroupEditSchema, type ModifierGroupEditFormValues } from './schemas/modifierGroupEditSchema';
 import type { SupportedLocale, ModifierGroupResponse } from '../../../types/common';
 import type { UpdateModifierGroupRequest } from '@api/modifierGroups';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ResourceFormShell } from '../forms/ResourceFormShell';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -146,35 +148,16 @@ export function ModifierGroupEdit() {
   }
 
   // ---------------------------------------------------------------------------
-  // Loading / error states
-  // ---------------------------------------------------------------------------
-
-  if (isFetching) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Loading...</p>
-      </main>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>
-          {fetchError instanceof Error ? fetchError.message : 'Unknown error'}
-        </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // Form
   // ---------------------------------------------------------------------------
 
   return (
+    <ResourceFormShell
+      isFetching={isFetching}
+      fetchError={fetchError}
+      resourceName="modifier group"
+      onCancel={handleCancel}
+    >
     <main style={{ padding: '1.5rem', maxWidth: '48rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         {t('admin.modifierGroups.edit')}
@@ -295,6 +278,7 @@ export function ModifierGroupEdit() {
         </div>
       </form>
     </main>
+    </ResourceFormShell>
   );
 }
 
@@ -518,43 +502,3 @@ function TabBar({ activeTab, onTabChange }: TabBarProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Small style helpers
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>{message}</p>
-  );
-}

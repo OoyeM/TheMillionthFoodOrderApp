@@ -7,6 +7,7 @@ import { shopsApi } from '@api/shops';
 import type { CreateShopRequest } from '@api/shops';
 import { shopCreateSchema, type ShopCreateFormValues } from './schemas/shopCreateSchema';
 import { shopKeys } from '../hooks/useShops';
+import { labelStyle, inputStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -311,36 +312,3 @@ export function ShopCreate() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Small style helpers (avoid repeating inline objects)
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-      {message}
-    </p>
-  );
-}

@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { Product, ProductListItem } from '../types/common';
+import { extractData, toVoid } from './utils';
 
 export interface TranslationInput {
   languageCode: string;
@@ -44,23 +45,23 @@ export interface UpdateComboProductRequest {
  */
 export const productsApi = {
   list: (brandSlug: string): Promise<ProductListItem[]> =>
-    apiClient.get<ProductListItem[]>(`/brands/${brandSlug}/products`).then((r) => r.data),
+    apiClient.get<ProductListItem[]>(`/brands/${brandSlug}/products`).then(extractData),
 
   get: (brandSlug: string, id: string): Promise<Product> =>
-    apiClient.get<Product>(`/brands/${brandSlug}/products/${id}`).then((r) => r.data),
+    apiClient.get<Product>(`/brands/${brandSlug}/products/${id}`).then(extractData),
 
   create: (brandSlug: string, data: CreateProductRequest): Promise<Product> =>
-    apiClient.post<Product>(`/brands/${brandSlug}/products`, data).then((r) => r.data),
+    apiClient.post<Product>(`/brands/${brandSlug}/products`, data).then(extractData),
 
   update: (brandSlug: string, id: string, data: UpdateProductRequest): Promise<Product> =>
-    apiClient.put<Product>(`/brands/${brandSlug}/products/${id}`, data).then((r) => r.data),
+    apiClient.put<Product>(`/brands/${brandSlug}/products/${id}`, data).then(extractData),
 
   remove: (brandSlug: string, id: string): Promise<void> =>
-    apiClient.delete(`/brands/${brandSlug}/products/${id}`).then(() => undefined),
+    apiClient.delete(`/brands/${brandSlug}/products/${id}`).then(toVoid),
 
   createCombo: (brandSlug: string, data: CreateComboProductRequest): Promise<Product> =>
-    apiClient.post<Product>(`/brands/${brandSlug}/combo-products`, data).then((r) => r.data),
+    apiClient.post<Product>(`/brands/${brandSlug}/combo-products`, data).then(extractData),
 
   updateCombo: (brandSlug: string, id: string, data: UpdateComboProductRequest): Promise<Product> =>
-    apiClient.put<Product>(`/brands/${brandSlug}/combo-products/${id}`, data).then((r) => r.data),
+    apiClient.put<Product>(`/brands/${brandSlug}/combo-products/${id}`, data).then(extractData),
 };
