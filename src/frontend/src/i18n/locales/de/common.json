@@ -65,6 +65,13 @@
       "vat": "MwSt. ({{rate}}%)",
       "total": "Gesamt",
       "backToHome": "Zurück zur Startseite"
+    },
+    "tracking": {
+      "title": "Verfolge deine Bestellung",
+      "orderNumber": "Bestellung #",
+      "statusLive": "Live",
+      "backToConfirmation": "Zurück zur Bestätigung",
+      "connecting": "Verbinde..."
     }
   },
   "pos": {

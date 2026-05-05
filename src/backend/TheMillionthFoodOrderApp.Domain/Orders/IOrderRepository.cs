@@ -16,6 +16,12 @@ public interface IOrderRepository
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns the order with all items (including selected modifiers) matching the
+    /// given order number for the specified shop, or null if not found.
+    /// </summary>
+    Task<Order?> GetByOrderNumberAsync(Guid shopId, string orderNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns true if an order with this number already exists for the given shop.
     /// Used to guard against race-condition duplicate order numbers.
     /// </summary>

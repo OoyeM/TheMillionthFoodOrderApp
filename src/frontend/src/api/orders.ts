@@ -57,6 +57,37 @@ export interface OrderResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Order tracking response types (US-FP-063)
+// ---------------------------------------------------------------------------
+
+export interface OrderStatusResponse {
+  id: string;
+  name: string;
+  systemKey: string | null;
+  sortOrder: number;
+  isEnabled: boolean;
+  isTerminal: boolean;
+  colorHex: string | null;
+}
+
+export interface OrderStatusTransitionResponse {
+  id: string;
+  fromStatusId: string;
+  toStatusId: string;
+}
+
+export interface OrderLifecycleResponse {
+  shopId: string;
+  statuses: OrderStatusResponse[];
+  transitions: OrderStatusTransitionResponse[];
+}
+
+export interface OrderTrackingResponse {
+  order: OrderResponse;
+  lifecycle: OrderLifecycleResponse;
+}
+
+// ---------------------------------------------------------------------------
 // API module
 // ---------------------------------------------------------------------------
 
@@ -80,6 +111,28 @@ export const ordersApi = {
     orderId: string,
   ): Promise<OrderResponse> =>
     apiClient
-      .get<OrderResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/${orderId}`)
+      .get<OrderTrackingResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/${orderId}`)
+      .then((r) => r.data.order),
+
+  /** Fetch full tracking response (order + lifecycle) for the tracking page. */
+  getTracking: (
+    brandSlug: string,
+    shopId: string,
+    orderId: string,
+  ): Promise<OrderTrackingResponse> =>
+    apiClient
+      .get<OrderTrackingResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/${orderId}`)
+      .then((r) => r.data),
+
+  /** Look up an order by its human-readable order number. */
+  getByNumber: (
+    brandSlug: string,
+    shopId: string,
+    orderNumber: string,
+  ): Promise<OrderTrackingResponse> =>
+    apiClient
+      .get<OrderTrackingResponse>(
+        `/brands/${brandSlug}/shops/${shopId}/orders/number/${orderNumber}`,
+      )
       .then((r) => r.data),
 };

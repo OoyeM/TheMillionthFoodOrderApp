@@ -60,6 +60,16 @@ public sealed class OrderRepository(BrandDbContext dbContext, IMessageBus messag
     }
 
     /// <inheritdoc/>
+    public async Task<Order?> GetByOrderNumberAsync(
+        Guid shopId,
+        string orderNumber,
+        CancellationToken cancellationToken = default)
+        => await dbContext.Orders
+            .Include(o => o.Items)
+            .ThenInclude(i => i.SelectedModifiers)
+            .SingleOrDefaultAsync(o => o.ShopId == shopId && o.OrderNumber == orderNumber, cancellationToken);
+
+    /// <inheritdoc/>
     public async Task<bool> OrderNumberExistsAsync(
         Guid shopId,
         string orderNumber,

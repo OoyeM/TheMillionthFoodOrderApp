@@ -108,6 +108,23 @@ export function OrderConfirmationPage() {
         <p style={{ color: '#166534', margin: 0, fontSize: '0.9375rem' }}>
           {t('storefront.order.preparing')}
         </p>
+        <div style={{ marginTop: '1rem' }}>
+          <Link
+            to="./track"
+            style={{
+              display: 'inline-block',
+              padding: '0.5rem 1.25rem',
+              background: 'var(--brand-color-primary, #111827)',
+              color: '#fff',
+              borderRadius: '0.5rem',
+              fontWeight: 700,
+              fontSize: '0.9375rem',
+              textDecoration: 'none',
+            }}
+          >
+            {t('storefront.tracking.title')}
+          </Link>
+        </div>
       </div>
 
       {/* Order meta */}

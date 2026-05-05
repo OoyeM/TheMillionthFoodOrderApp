@@ -65,6 +65,13 @@
       "vat": "TVA ({{rate}}%)",
       "total": "Total",
       "backToHome": "Retour à l'accueil"
+    },
+    "tracking": {
+      "title": "Suivez votre commande",
+      "orderNumber": "Commande #",
+      "statusLive": "Live",
+      "backToConfirmation": "Retour à la confirmation",
+      "connecting": "Connexion..."
     }
   },
   "pos": {

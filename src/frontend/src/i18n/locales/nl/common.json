@@ -65,6 +65,13 @@
       "vat": "BTW ({{rate}}%)",
       "total": "Totaal",
       "backToHome": "Terug naar beginpagina"
+    },
+    "tracking": {
+      "title": "Volg uw bestelling",
+      "orderNumber": "Bestelling #",
+      "statusLive": "Live",
+      "backToConfirmation": "Terug naar bevestiging",
+      "connecting": "Verbinden..."
     }
   },
   "pos": {

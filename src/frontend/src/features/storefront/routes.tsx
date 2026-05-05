@@ -18,6 +18,10 @@ const LazyOrderConfirmationPage = lazy(() =>
   import('./pages/OrderConfirmationPage').then((m) => ({ default: m.OrderConfirmationPage })),
 );
 
+const LazyOrderTrackingPage = lazy(() =>
+  import('./pages/OrderTrackingPage').then((m) => ({ default: m.OrderTrackingPage })),
+);
+
 /**
  * Route configuration for the customer-facing storefront.
  * These routes are nested under /:brandSlug/:lang in the main router,
@@ -54,6 +58,15 @@ export const storefrontRoutes: RouteObject[] = [
     element: (
       <SuspenseWrapper>
         <LazyOrderConfirmationPage />
+      </SuspenseWrapper>
+    ),
+  },
+  {
+    // Order tracking page: visual lifecycle stepper with real-time SignalR updates (US-FP-063)
+    path: 'order/:orderId/track',
+    element: (
+      <SuspenseWrapper>
+        <LazyOrderTrackingPage />
       </SuspenseWrapper>
     ),
   },
