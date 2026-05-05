@@ -54,7 +54,7 @@ public sealed class BrandDbContextFactory(
             platformConnectionString, slug);
 
         var options = new DbContextOptionsBuilder<BrandDbContext>()
-            .UseSqlServer(brandConnectionString)
+            .UseSqlServer(brandConnectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())
             .AddInterceptors(auditInterceptor)
             .Options;
 

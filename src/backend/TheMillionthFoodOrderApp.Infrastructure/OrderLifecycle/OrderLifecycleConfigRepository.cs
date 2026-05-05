@@ -28,40 +28,45 @@ public sealed class OrderLifecycleConfigRepository(BrandDbContext dbContext, IMe
 
     public async Task<OrderLifecycleConfig> ReplaceAsync(Guid configId, Action<OrderLifecycleConfig> mutate, CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        OrderLifecycleConfig config = null!;
 
-        // Delete old children in FK order — bypasses EF change tracker entirely.
-        await dbContext.OrderStatusTransitions
-            .Where(t => t.OrderLifecycleConfigId == configId)
-            .ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.OrderStatuses
-            .Where(s => s.OrderLifecycleConfigId == configId)
-            .ExecuteDeleteAsync(cancellationToken);
+            // Delete old children in FK order — bypasses EF change tracker entirely.
+            await dbContext.OrderStatusTransitions
+                .Where(t => t.OrderLifecycleConfigId == configId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        // Clear all tracked entities so the identity map returns a fresh, unsnapshotted
-        // instance below. Without this, FirstAsync would return the stale tracked instance
-        // (loaded with includes by GetByShopIdAsync), and DetectChanges would compare the
-        // new navigation children against the old snapshot — triggering spurious DELETEs or
-        // the Restrict "association severed" error.
-        dbContext.ChangeTracker.Clear();
+            await dbContext.OrderStatuses
+                .Where(s => s.OrderLifecycleConfigId == configId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        // Load config WITHOUT children — EF now has no snapshot of old statuses/transitions.
-        var config = await dbContext.OrderLifecycleConfigs
-            .FirstAsync(c => c.Id == configId, cancellationToken);
+            // Clear all tracked entities so the identity map returns a fresh, unsnapshotted
+            // instance below. Without this, FirstAsync would return the stale tracked instance
+            // (loaded with includes by GetByShopIdAsync), and DetectChanges would compare the
+            // new navigation children against the old snapshot — triggering spurious DELETEs or
+            // the Restrict "association severed" error.
+            dbContext.ChangeTracker.Clear();
 
-        mutate(config);
+            // Load config WITHOUT children — EF now has no snapshot of old statuses/transitions.
+            config = await dbContext.OrderLifecycleConfigs
+                .FirstAsync(c => c.Id == configId, cancellationToken);
 
-        // Explicitly register new children rather than relying on navigation snapshot detection,
-        // which can miss items added to a backing-field collection after the entity was loaded.
-        // Statuses must be Added before Transitions so EF inserts them first (FK ordering).
-        await dbContext.OrderStatuses.AddRangeAsync(config.Statuses, cancellationToken);
-        dbContext.OrderStatusTransitions.AddRange(config.Transitions);
+            mutate(config);
 
-        var events = DomainEventDispatcher.CollectAndClear(dbContext);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        await DomainEventDispatcher.PublishAsync(events, messageBus);
+            // Explicitly register new children rather than relying on navigation snapshot detection,
+            // which can miss items added to a backing-field collection after the entity was loaded.
+            // Statuses must be Added before Transitions so EF inserts them first (FK ordering).
+            await dbContext.OrderStatuses.AddRangeAsync(config.Statuses, cancellationToken);
+            dbContext.OrderStatusTransitions.AddRange(config.Transitions);
+
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return config;
     }

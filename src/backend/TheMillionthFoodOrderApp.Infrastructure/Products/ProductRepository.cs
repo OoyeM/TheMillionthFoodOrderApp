@@ -49,27 +49,30 @@ public sealed class ProductRepository(BrandDbContext dbContext, IMessageBus mess
         // ExecuteDeleteAsync commits immediately and bypasses the change tracker,
         // so without a transaction, a failure in mutate() or SaveChangesAsync()
         // would leave the product with zero translations.
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.ProductTranslations
-            .Where(t => t.ProductId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.ProductTranslations
+                .Where(t => t.ProductId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await dbContext.ComboItems
-            .Where(ci => ci.ComboProductId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.ComboItems
+                .Where(ci => ci.ComboProductId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        mutate(product);
+            mutate(product);
 
-        dbContext.ProductTranslations.AddRange(product.Translations);
+            dbContext.ProductTranslations.AddRange(product.Translations);
 
-        if (product.ComboItems.Count > 0)
-            dbContext.ComboItems.AddRange(product.ComboItems);
+            if (product.ComboItems.Count > 0)
+                dbContext.ComboItems.AddRange(product.ComboItems);
 
-        var events = DomainEventDispatcher.CollectAndClear(dbContext);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        await DomainEventDispatcher.PublishAsync(events, messageBus);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return product;
     }

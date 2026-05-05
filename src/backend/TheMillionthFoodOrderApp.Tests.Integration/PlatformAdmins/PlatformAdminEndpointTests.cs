@@ -9,6 +9,13 @@ namespace TheMillionthFoodOrderApp.Tests.Integration.PlatformAdmins;
 /// Integration tests for platform admin account endpoints.
 /// Runs against a real SQL Server via Testcontainers.
 /// </summary>
+/// <remarks>
+/// All tests carry [NotInParallel("platform-admins")] so they run sequentially with each other.
+/// The platform admin table is shared across all tests in this class (no per-brand isolation),
+/// so parallel execution causes data races — concurrent invitations interfere with the last-admin
+/// guard test, and deactivations in one test can collide with drains in another.
+/// Other test classes (products, shops, etc.) are unaffected and still run in parallel.
+/// </remarks>
 [ClassDataSource<IntegrationTestBase>(Shared = SharedType.PerClass)]
 public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
 {
@@ -24,6 +31,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     // ── List ──────────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task ListPlatformAdmins_Returns200()
     {
         var client = CreateClient();
@@ -38,6 +46,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     // ── Invite ────────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task InvitePlatformAdmin_Returns201_CreatesUser()
     {
         var client = CreateClient();
@@ -57,6 +66,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task InvitePlatformAdmin_ExistingNonAdmin_PromotesToAdmin()
     {
         var client = CreateClient();
@@ -89,6 +99,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task InvitePlatformAdmin_InvalidEmail_Returns400()
     {
         var client = CreateClient();
@@ -102,6 +113,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     // ── Deactivate ────────────────────────────────────────────────────────────
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task DeactivatePlatformAdmin_Returns204()
     {
         var client = CreateClient();
@@ -123,6 +135,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task DeactivatePlatformAdmin_LastAdmin_Returns409()
     {
         var client = CreateClient();
@@ -153,6 +166,7 @@ public sealed class PlatformAdminEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    [NotInParallel("platform-admins")]
     public async Task DeactivatePlatformAdmin_NotFound_Returns404()
     {
         var client = CreateClient();

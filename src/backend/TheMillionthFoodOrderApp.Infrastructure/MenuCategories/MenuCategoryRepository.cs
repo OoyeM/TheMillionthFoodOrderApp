@@ -60,20 +60,23 @@ public sealed class MenuCategoryRepository(BrandDbContext dbContext, IMessageBus
         // ExecuteDeleteAsync commits immediately and bypasses the change tracker,
         // so without a transaction, a failure in mutate() or SaveChangesAsync()
         // would leave the category with zero translations.
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.MenuCategoryTranslations
-            .Where(t => t.MenuCategoryId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.MenuCategoryTranslations
+                .Where(t => t.MenuCategoryId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        mutate(category);
+            mutate(category);
 
-        dbContext.MenuCategoryTranslations.AddRange(category.Translations);
+            dbContext.MenuCategoryTranslations.AddRange(category.Translations);
 
-        var events = DomainEventDispatcher.CollectAndClear(dbContext);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        await DomainEventDispatcher.PublishAsync(events, messageBus);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return category;
     }
