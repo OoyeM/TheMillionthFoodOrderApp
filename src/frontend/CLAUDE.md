@@ -66,8 +66,10 @@ Brand CRUD (list/create/edit), brand theming, shop CRUD (list/create/edit), shop
 
 ## Storefront
 
-- Components: `LanguageSelector` (NL/FR/DE switcher with locale persistence), `ThemeProvider` (brand theming), `ShopStatusBadge`
-- Pages: Home
+- Components: `LanguageSelector` (NL/FR/DE switcher with locale persistence), `ThemeProvider` (brand theming), `ShopStatusBadge`, `OrderStatusStepper` (lifecycle step indicator, brand-coloured, SignalR-driven)
+- Pages: Home, MenuPage (`shops/:shopId/menu`), CheckoutPage (`checkout`), OrderConfirmationPage (`order/:orderId`), OrderTrackingPage (`order/:orderId/track`)
+- Real-time pattern: `useOrderUpdates({ orderId, onStatusChange })` subscribes to SignalR `OrderStatusChanged` events — used on both confirmation and tracking pages
+- `ordersApi.getById` extracts `.order` from `OrderTrackingResponse` internally to preserve its `Promise<OrderResponse>` contract; use `ordersApi.getTracking` when you need the full lifecycle too
 
 ## POS
 

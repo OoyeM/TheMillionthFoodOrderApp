@@ -7,15 +7,12 @@ import { AppVariantLayout } from '@components/AppVariantLayout';
 import { SuspenseWrapper } from '@components/SuspenseWrapper';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { adminRoutes } from '@features/admin/routes';
+import { storefrontRoutes } from '@features/storefront/routes';
 import { ThemeProvider } from '@features/storefront/components/ThemeProvider';
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded feature pages — split into separate chunks by Vite/Rollup
 // ---------------------------------------------------------------------------
-
-const LazyStorefrontHome = lazy(() =>
-  import('@features/storefront/pages/Home').then((m) => ({ default: m.Home })),
-);
 
 const LazyPosDashboard = lazy(() =>
   import('@features/pos/pages/Dashboard').then((m) => ({ default: m.PosDashboard })),
@@ -61,16 +58,7 @@ export const router = createBrowserRouter([
             // ThemeProvider as layout: fetches brand theme, applies CSS custom properties,
             // then renders child routes via <Outlet />.
             element: <ThemeProvider />,
-            children: [
-              {
-                index: true,
-                element: (
-                  <SuspenseWrapper>
-                    <LazyStorefrontHome />
-                  </SuspenseWrapper>
-                ),
-              },
-            ],
+            children: storefrontRoutes,
           },
         ],
       },
