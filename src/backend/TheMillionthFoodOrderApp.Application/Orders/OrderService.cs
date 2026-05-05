@@ -28,9 +28,14 @@ public sealed class OrderService(
         CancellationToken cancellationToken = default)
     {
         // 1. Parse and validate order type
-        if (!Enum.TryParse<OrderType>(request.OrderType, out var orderType) || !Enum.IsDefined(orderType))
+        if (!Enum.TryParse<OrderType>(request.OrderType, ignoreCase: true, out var orderType) || !Enum.IsDefined(orderType))
             throw new ArgumentException(
                 $"Invalid order type: '{request.OrderType}'. Valid values: {string.Join(", ", Enum.GetNames<OrderType>())}.");
+
+        // 1b. Parse and validate payment method
+        if (!Enum.TryParse<PaymentMethod>(request.PaymentMethod, ignoreCase: true, out var paymentMethod) || !Enum.IsDefined(paymentMethod))
+            throw new ArgumentException(
+                $"Invalid payment method: '{request.PaymentMethod}'. Valid values: {string.Join(", ", Enum.GetNames<PaymentMethod>())}.");
 
         if (request.Items.Count == 0)
             throw new ArgumentException("An order must contain at least one item.");
@@ -159,6 +164,7 @@ public sealed class OrderService(
                 request.BrandSlug,
                 orderNumber,
                 orderType,
+                paymentMethod,
                 openingStatus.Name,
                 request.CustomerName,
                 vatRate,
@@ -218,6 +224,7 @@ public sealed class OrderService(
             order.ShopId,
             order.BrandSlug,
             order.OrderType.ToString(),
+            order.PaymentMethod.ToString(),
             order.StatusName,
             order.CustomerName,
             order.Items

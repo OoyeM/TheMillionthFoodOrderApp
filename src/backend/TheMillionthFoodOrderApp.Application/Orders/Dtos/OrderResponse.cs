@@ -24,6 +24,7 @@ public sealed record OrderResponse(
     Guid ShopId,
     string BrandSlug,
     string OrderType,
+    string PaymentMethod,
     string StatusName,
     string? CustomerName,
     IReadOnlyList<OrderItemResponse> Items,

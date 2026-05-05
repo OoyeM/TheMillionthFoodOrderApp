@@ -16,6 +16,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
 
     public OrderType OrderType { get; private set; }
 
+    public PaymentMethod PaymentMethod { get; private set; }
+
     /// <summary>Name of the status the order was placed in (opening lifecycle status).</summary>
     public string StatusName { get; private set; } = string.Empty;
 
@@ -61,6 +63,7 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         string brandSlug,
         string orderNumber,
         OrderType orderType,
+        PaymentMethod paymentMethod,
         string statusName,
         string? customerName,
         decimal vatRatePercent,
@@ -83,6 +86,7 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             BrandSlug = brandSlug,
             OrderNumber = orderNumber,
             OrderType = orderType,
+            PaymentMethod = paymentMethod,
             StatusName = statusName,
             CustomerName = customerName,
             VatRatePercent = vatRatePercent,

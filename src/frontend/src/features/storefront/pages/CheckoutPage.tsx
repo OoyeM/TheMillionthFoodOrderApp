@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useAuth } from '@/auth/useAuth';
 import { CartProvider, useCart } from '../context/CartContext';
 import { useCreateOrder } from '../hooks/useCreateOrder';
+import { MockPaymentScreen } from '../components/MockPaymentScreen';
 import type { OrderType } from '@api/orders';
 
 // ---------------------------------------------------------------------------
@@ -16,6 +17,7 @@ import type { OrderType } from '@api/orders';
 const checkoutSchema = z.object({
   orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
   customerName: z.string().trim().optional(),
+  paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
@@ -36,6 +38,9 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
   const { user } = useAuth();
   const { state, clearCart } = useCart();
   const createOrder = useCreateOrder(brandSlug, shopId);
+
+  const [showMockPayment, setShowMockPayment] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   // Redirect to menu if cart is empty
   useEffect(() => {
@@ -66,15 +71,6 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
         ? t('storefront.checkout.vatTakeaway')
         : null;
 
-  const paymentNotice =
-    orderType === 'EatIn'
-      ? t('storefront.checkout.paymentAtCounter')
-      : orderType === 'Pickup'
-        ? t('storefront.checkout.paymentAtPickup')
-        : orderType === 'Delivery'
-          ? t('storefront.checkout.paymentOnline')
-          : null;
-
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(amount);
   }
@@ -95,16 +91,33 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
       orderType: values.orderType as OrderType,
       customerName: values.customerName ?? null,
       items: orderItems,
+      paymentMethod: values.paymentMethod,
     });
 
     // Save the shopId mapping so OrderConfirmationPage can reconstruct the API route
     sessionStorage.setItem(`order-shop:${brandSlug}:${result.id}`, result.shopId);
     clearCart();
-    void navigate(`/${paramSlug}/${lang}/order/${result.id}`);
+
+    if (values.paymentMethod === 'CashAtPickup') {
+      void navigate(`/${paramSlug}/${lang}/order/${result.id}`);
+    } else {
+      // Online payment methods: show mock processing screen first
+      setPendingOrderId(result.id);
+      setShowMockPayment(true);
+    }
+  }
+
+  function handleMockPaymentComplete() {
+    setShowMockPayment(false);
+    void navigate(`/${paramSlug}/${lang}/order/${pendingOrderId}`);
   }
 
   if (state.items.length === 0) {
     return null; // Redirecting
+  }
+
+  if (showMockPayment && pendingOrderId) {
+    return <MockPaymentScreen orderId={pendingOrderId} onComplete={handleMockPaymentComplete} />;
   }
 
   return (
@@ -297,23 +310,68 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
           </div>
         </div>
 
-        {/* Payment placeholder */}
-        {paymentNotice && (
-          <div
+        {/* Payment method selection */}
+        <fieldset
+          style={{
+            border: 'none',
+            padding: 0,
+            margin: '0 0 1.5rem',
+          }}
+        >
+          <legend
             style={{
-              padding: '0.875rem 1rem',
-              borderRadius: '0.375rem',
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              color: '#166534',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              marginBottom: '1.5rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: '#111827',
+              marginBottom: '0.75rem',
             }}
           >
-            {paymentNotice}
-          </div>
-        )}
+            {t('storefront.checkout.payment.label')}
+            <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+          </legend>
+
+          {errors.paymentMethod && (
+            <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+              {errors.paymentMethod.message}
+            </p>
+          )}
+
+          <Controller
+            name="paymentMethod"
+            control={control}
+            render={({ field }) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {(['CashAtPickup', 'CreditCard', 'Bancontact'] as const).map((method) => (
+                  <label
+                    key={method}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.875rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: `2px solid ${field.value === method ? 'var(--brand-color-primary, #111827)' : '#e5e7eb'}`,
+                      background: field.value === method ? '#f9fafb' : '#fff',
+                      cursor: 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: field.value === method ? 600 : 400,
+                      color: '#111827',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      value={method}
+                      checked={field.value === method}
+                      onChange={() => field.onChange(method)}
+                      style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }}
+                    />
+                    {t(`storefront.checkout.payment.${method === 'CashAtPickup' ? 'cashAtPickup' : method === 'CreditCard' ? 'creditCard' : 'bancontact'}`)}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
+        </fieldset>
 
         {/* Error */}
         {createOrder.isError && (

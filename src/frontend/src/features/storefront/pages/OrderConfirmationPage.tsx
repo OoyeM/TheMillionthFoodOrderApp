@@ -147,6 +147,14 @@ export function OrderConfirmationPage() {
           highlight
           signalRStatus={signalRStatus}
         />
+        <InfoCard
+          label={t('storefront.checkout.payment.label')}
+          value={
+            order.paymentMethod === 'CreditCard' || order.paymentMethod === 'Bancontact'
+              ? t('storefront.checkout.payment.statusPaid')
+              : t('storefront.checkout.payment.statusPayAtPickup')
+          }
+        />
       </div>
 
       {/* Items */}

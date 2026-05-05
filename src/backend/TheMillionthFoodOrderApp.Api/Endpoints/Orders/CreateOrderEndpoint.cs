@@ -13,6 +13,7 @@ public sealed record CreateOrderApiRequest(
     [property: RouteParam] string BrandSlug,
     [property: RouteParam] Guid ShopId,
     string OrderType,
+    string PaymentMethod,
     string? CustomerName,
     List<OrderItemApiInput> Items);
 
@@ -22,8 +23,13 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
     {
         RuleFor(x => x.OrderType)
             .NotEmpty().WithMessage("OrderType is required.")
-            .Must(v => Enum.TryParse<OrderType>(v, out var parsed) && Enum.IsDefined(parsed))
+            .Must(v => Enum.TryParse<OrderType>(v, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed))
             .WithMessage($"OrderType must be one of: {string.Join(", ", Enum.GetNames<OrderType>())}.");
+
+        RuleFor(x => x.PaymentMethod)
+            .NotEmpty().WithMessage("PaymentMethod is required.")
+            .Must(v => Enum.TryParse<Domain.Orders.PaymentMethod>(v, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed))
+            .WithMessage($"PaymentMethod must be one of: {string.Join(", ", Enum.GetNames<Domain.Orders.PaymentMethod>())}.");
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("At least one item is required.");
@@ -75,6 +81,7 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                 req.ShopId,
                 req.BrandSlug,
                 req.OrderType,
+                req.PaymentMethod,
                 req.CustomerName,
                 req.Items
                     .Select(i => new OrderItemInput(

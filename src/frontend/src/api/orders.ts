@@ -12,10 +12,13 @@ export interface OrderItemRequest {
   selectedModifierIds: string[];
 }
 
+export type PaymentMethod = 'CashAtPickup' | 'CreditCard' | 'Bancontact';
+
 export interface CreateOrderRequest {
   orderType: OrderType;
   customerName?: string | null;
   items: OrderItemRequest[];
+  paymentMethod: PaymentMethod;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +57,7 @@ export interface OrderResponse {
   totalNet: number;
   totalGross: number;
   createdAt: string;
+  paymentMethod: string;
 }
 
 // ---------------------------------------------------------------------------

@@ -40,22 +40,6 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
     // ── Setup helpers ─────────────────────────────────────────────────────────
 
-    /// <summary>Seeds Belgian VAT defaults (6% Takeaway, 21% EatIn) for the brand.</summary>
-    private async Task SeedTaxConfigAsync(HttpClient client, string brandSlug)
-    {
-        var request = new
-        {
-            VatRates = new[]
-            {
-                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
-                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
-            }
-        };
-
-        var response = await client.PutAsJsonAsync(TaxConfigUrl(brandSlug), request);
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
-    }
-
     /// <summary>Creates a shop and triggers order lifecycle initialisation.</summary>
     private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
     {
@@ -116,13 +100,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, grossPrice) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje Klein");
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = "Jan Janssen",
             Items = new[]
             {
@@ -141,6 +126,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         await Assert.That(order.ShopId).IsEqualTo(shopId);
         await Assert.That(order.BrandSlug).IsEqualTo(brand);
         await Assert.That(order.OrderType).IsEqualTo("Pickup");
+        await Assert.That(order.PaymentMethod).IsEqualTo("CashAtPickup");
         await Assert.That(order.CustomerName).IsEqualTo("Jan Janssen");
         await Assert.That(order.StatusName).IsNotEmpty();
         await Assert.That(order.VatRatePercent).IsEqualTo(6m);
@@ -171,13 +157,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 5.00m, name: "Frietje Speciaal");
 
         var request = new
         {
             OrderType = "Delivery",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -206,13 +193,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.BetaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje Groot");
 
         var request = new
         {
             OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -250,7 +238,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId1, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje");
         var (productId2, _) = await CreateProductAsync(client, brand, price: 1.20m, name: "Saus");
@@ -258,6 +246,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -286,13 +275,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Knakworst");
 
         var requestBody = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -323,12 +313,13 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -346,12 +337,13 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = Array.Empty<object>()
         };
@@ -366,13 +358,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Wafels");
 
         var request = new
         {
             OrderType = "DineIn",  // Not a valid OrderType value
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -390,13 +383,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Kroket");
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -416,6 +410,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -440,13 +435,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.AlphaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.50m, name: "Oorspronkelijke Naam");
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -471,13 +467,14 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.BetaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Bitterballen");
 
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -538,7 +535,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var client = CreateClient();
         var brand = IntegrationTestBase.GammaSlug;
 
-        await SeedTaxConfigAsync(client, brand);
+
         var shopId = await CreateShopAsync(client, brand);
         var (productId, _) = await CreateProductAsync(client, brand, price: 3.00m, name: "Frietje");
         var modifierId = await CreateModifierWithPriceAsync(client, brand, priceAdjustment: 0.50m, modifierName: "Extra groot");
@@ -546,6 +543,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = (string?)null,
             Items = new[]
             {
@@ -581,5 +579,38 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
         // Modifier PriceAdjustment is still recorded individually for display
         await Assert.That(item.SelectedModifiers[0].PriceAdjustment).IsEqualTo(0.50m);
+    }
+
+    // ── PaymentMethod ─────────────────────────────────────────────────────────
+
+    [Test]
+    public async Task PlaceOrder_WithCreditCard_StoresPaymentMethod()
+    {
+        // Verifies that a non-default payment method is captured on the order and returned in the response.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 4.00m, name: "Frietje XL");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CreditCard",
+            CustomerName = (string?)null,
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.PaymentMethod).IsEqualTo("CreditCard");
     }
 }

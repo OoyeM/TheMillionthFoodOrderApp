@@ -1,0 +1,8 @@
+{
+  "ship_name": "HMS Duncan",
+  "timestamp": "2026-05-04T14:10:00Z",
+  "hull_integrity_pct": 97,
+  "hull_integrity_status": "Green",
+  "relief_requested": false,
+  "context_summary": "All deliverables complete. Created Order aggregate (Order, OrderItem, SelectedModifier value object), OrderCreatedEvent, IOrderRepository, OrderRepository, EF Core configurations for Orders/OrderItems/OrderItemSelectedModifiers, BrandDbContext extended with Order DbSets, OrderService with full VAT logic (6% Pickup/Delivery, 21% EatIn), CreateOrderEndpoint (POST /api/brands/{brandSlug}/shops/{shopId}/orders), Application/Infrastructure DI registrations, OrderCreatedHandler for Wolverine/SignalR pipeline, and EF migration AddOrders. All 154 integration tests pass including 12 PlaceOrderTests covering both VAT modes, multiple items, unique order numbers, unknown product 400, empty items 400, invalid order type 400, zero quantity 400, non-existent brand 404, product name denormalisation, and opening lifecycle status. One minor fix: test format string syntax error (N[..8] -> .ToString('N')[..8]) caught during test run. Open risk: OrderService fetches all modifier groups to look up modifier IDs by iterating in memory; this scales acceptably for small modifier catalogs (MVP) but should be replaced with a direct modifier-by-ID query in a future optimisation."
+}

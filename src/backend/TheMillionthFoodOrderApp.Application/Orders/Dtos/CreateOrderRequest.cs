@@ -7,5 +7,6 @@ public sealed record CreateOrderRequest(
     Guid ShopId,
     string BrandSlug,
     string OrderType,
+    string PaymentMethod,
     string? CustomerName,
     IReadOnlyList<OrderItemInput> Items);

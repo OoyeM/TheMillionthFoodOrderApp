@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-05T07:03:42Z",
+  "pattern_count": 2,
+  "patterns": [
+    {
+      "mission_id": "2026-05-04_122253_323b166b",
+      "completed_at": "2026-05-04T13:38:23Z",
+      "outcome_achieved": true,
+      "planned_outcome": "Implement the order placement flow \u2014 backend Order aggregate + API endpoint + frontend storefront cart and checkout \u2014 so a registered customer can browse a shop menu, build a cart, and place an online order that enters the configured lifecycle",
+      "adopt": [],
+      "avoid": [],
+      "standing_order_violations": [],
+      "damage_control_events": 0,
+      "quality": {
+        "violations": 0,
+        "blockers_raised": 0,
+        "blockers_resolved": 0,
+        "task_completion_rate": 0.0
+      }
+    },
+    {
+      "mission_id": "2026-05-05_060155_c37b6296",
+      "completed_at": "2026-05-05T07:03:42Z",
+      "outcome_achieved": true,
+      "planned_outcome": "Implement mocked payment flow at checkout: method selection, mock processing screen, and confirmation with payment status",
+      "adopt": [
+        "Splitting backend/frontend into two parallel frigates works cleanly when API contract is fixed in the estimate",
+        "Pre-populated reconnaissance in captain briefs avoids redundant codebase scouting"
+      ],
+      "avoid": [
+        "Reconnaissance identified pre-existing TS build errors - worth documenting these before missions so captains dont spend time investigating them"
+      ],
+      "standing_order_violations": [],
+      "damage_control_events": 0,
+      "quality": {
+        "violations": 0,
+        "blockers_raised": 0,
+        "blockers_resolved": 0,
+        "task_completion_rate": 1.0
+      }
+    }
+  ]
+}

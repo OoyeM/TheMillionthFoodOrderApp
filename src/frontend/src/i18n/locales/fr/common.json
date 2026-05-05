@@ -47,6 +47,16 @@
       "paymentAtCounter": "Paiement au comptoir.",
       "paymentAtPickup": "Paiement au retrait.",
       "paymentOnline": "Paiement en ligne bientôt disponible.",
+      "payment": {
+        "label": "Paiement",
+        "creditCard": "Carte de crédit",
+        "bancontact": "Bancontact",
+        "cashAtPickup": "Payer au retrait",
+        "processing": "Traitement du paiement...",
+        "pleaseWait": "Veuillez patienter...",
+        "statusPaid": "Payé",
+        "statusPayAtPickup": "Payer au retrait"
+      },
       "placeOrder": "Passer la commande",
       "placing": "En cours…",
       "submitError": "Échec de la commande. Veuillez réessayer.",
