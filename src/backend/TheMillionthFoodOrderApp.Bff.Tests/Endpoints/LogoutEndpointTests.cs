@@ -10,6 +10,13 @@ namespace TheMillionthFoodOrderApp.Bff.Tests.Endpoints;
 [ClassDataSource<BffTestWebAppFactory>(Shared = SharedType.PerClass)]
 public sealed class LogoutEndpointTests(BffTestWebAppFactory factory)
 {
+    private static HttpRequestMessage LogoutRequest()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bff/logout");
+        request.Headers.Add("X-CSRF", "1");
+        return request;
+    }
+
     [Test]
     public async Task Logout_AfterLogin_Returns200()
     {
@@ -18,7 +25,7 @@ public sealed class LogoutEndpointTests(BffTestWebAppFactory factory)
         await client.GetAsync("/bff/login?mock=brand-admin@frietjes");
 
         // Act
-        var response = await client.PostAsync("/bff/logout", content: null);
+        var response = await client.SendAsync(LogoutRequest());
 
         // Assert
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
@@ -37,7 +44,7 @@ public sealed class LogoutEndpointTests(BffTestWebAppFactory factory)
         await Assert.That(beforeBody.GetProperty("isAuthenticated").GetBoolean()).IsTrue();
 
         // Act
-        await client.PostAsync("/bff/logout", content: null);
+        await client.SendAsync(LogoutRequest());
 
         // Assert — /bff/user must now report anonymous; this is the definitive behavioral check
         // that the session was cleared (regardless of how the cookie header is formatted).
@@ -52,7 +59,8 @@ public sealed class LogoutEndpointTests(BffTestWebAppFactory factory)
         // Arrange — fresh client with no session
         var client = factory.CreateClient(new() { AllowAutoRedirect = false });
 
-        // Act — logout without being logged in should still succeed
+        // Act — logout without being logged in should still succeed.
+        // Anonymous calls bypass the CSRF check (no session to forge against).
         var response = await client.PostAsync("/bff/logout", content: null);
 
         // Assert — 200 OK (SignOutAsync is idempotent)

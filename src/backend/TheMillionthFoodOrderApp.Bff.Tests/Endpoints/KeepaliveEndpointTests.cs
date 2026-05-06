@@ -16,7 +16,9 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         var client = factory.CreateClient(new() { AllowAutoRedirect = false });
 
         // Act
-        var response = await client.PostAsync("/bff/session/keepalive", content: null);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bff/session/keepalive");
+        request.Headers.Add("X-CSRF", "1");
+        var response = await client.SendAsync(request);
 
         // Assert
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
@@ -30,7 +32,9 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         await client.GetAsync("/bff/login?mock=brand-admin@frietjes");
 
         // Act
-        var response = await client.PostAsync("/bff/session/keepalive", content: null);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bff/session/keepalive");
+        request.Headers.Add("X-CSRF", "1");
+        var response = await client.SendAsync(request);
 
         // Assert
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
@@ -48,7 +52,9 @@ public sealed class KeepaliveEndpointTests(BffTestWebAppFactory factory)
         await client.GetAsync($"/bff/login?mock={Uri.EscapeDataString(persona)}");
 
         // Act
-        var response = await client.PostAsync("/bff/session/keepalive", content: null);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bff/session/keepalive");
+        request.Headers.Add("X-CSRF", "1");
+        var response = await client.SendAsync(request);
 
         // Assert
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);

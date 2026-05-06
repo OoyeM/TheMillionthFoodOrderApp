@@ -57,6 +57,33 @@ public static class AuthConstants
     }
 
     // -------------------------------------------------------------------------
+    // Rate-limit policy names
+    // -------------------------------------------------------------------------
+
+    public static class RateLimitPolicies
+    {
+        /// <summary>Per-IP fixed-window limiter applied to <c>GET /bff/login</c>.</summary>
+        public const string Login = "bff-login";
+    }
+
+    // -------------------------------------------------------------------------
+    // Security header names + sentinel values
+    // -------------------------------------------------------------------------
+
+    public static class Headers
+    {
+        /// <summary>
+        /// Custom header sent by the SPA on every state-changing call.
+        /// Browsers cannot send custom headers cross-origin without a CORS
+        /// preflight, so the presence of this header proves same-origin intent.
+        /// </summary>
+        public const string Csrf = "X-CSRF";
+
+        /// <summary>The expected sentinel value for <see cref="Csrf"/>.</summary>
+        public const string CsrfExpectedValue = "1";
+    }
+
+    // -------------------------------------------------------------------------
     // Custom claim type names
     // -------------------------------------------------------------------------
 

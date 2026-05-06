@@ -22,14 +22,18 @@ export function getActiveBrandSlug(): string | null {
  * - baseURL: '/api' — proxied to the .NET BFF by Vite in dev,
  *   and by the reverse proxy (nginx / Azure Front Door) in production.
  * - withCredentials: true — sends cookies for authentication.
- * - X-Brand-Slug header: injected automatically on every request
- *   so the BFF can resolve the correct tenant database.
+ * - X-CSRF: 1 — required by the BFF on every state-changing call.
+ *   Browsers cannot send custom headers cross-origin without a CORS
+ *   preflight, so its presence proves same-origin intent.
+ * - X-Brand-Slug header: legacy hint for non-route paths. The BFF strips
+ *   client-supplied values and re-derives the slug from the user's claims.
  */
 export const apiClient = axios.create({
   baseURL: '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-CSRF': '1',
   },
 });
 
