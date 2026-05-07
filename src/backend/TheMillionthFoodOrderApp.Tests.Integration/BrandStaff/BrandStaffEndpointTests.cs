@@ -182,11 +182,12 @@ public sealed class BrandStaffEndpointTests(IntegrationTestBase fixture)
     }
 
     [Test]
-    [NotInParallel("brand-staff-last-admin")]
     public async Task DeactivateBrandStaff_LastBrandAdmin_Returns409()
     {
         var client = CreateClient();
-        var brandSlug = IntegrationTestBase.AlphaSlug;
+        // Use the dedicated Delta brand so concurrent invite tests on Alpha/Beta
+        // can't slip a new BrandAdmin in between our drain and final deactivate.
+        var brandSlug = IntegrationTestBase.DeltaSlug;
 
         // Invite a fresh anchor so we know exactly which role will be the last
         var anchorEmail = $"last-admin-{Guid.NewGuid():N}@test.com";

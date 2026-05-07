@@ -40,6 +40,9 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
     /// <summary>Slug of a brand that is never written to — used for "empty state" assertions.</summary>
     public const string GammaSlug = "gamma";
 
+    /// <summary>Slug of a brand reserved for tests that need exclusive control over its staff (e.g. last-admin guard).</summary>
+    public const string DeltaSlug = "delta";
+
     public async Task InitializeAsync()
     {
         await _sqlContainer.StartAsync();
@@ -66,10 +69,11 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
         // Seed platform with Alpha and Beta brands so middleware validation passes
         await SeedPlatformBrandsAsync(platformDb);
 
-        // Provision brand databases for alpha, beta, and gamma
+        // Provision brand databases for alpha, beta, gamma, and delta
         await ProvisionBrandDatabaseAsync(AlphaSlug);
         await ProvisionBrandDatabaseAsync(BetaSlug);
         await ProvisionBrandDatabaseAsync(GammaSlug);
+        await ProvisionBrandDatabaseAsync(DeltaSlug);
     }
 
     public async ValueTask DisposeAsync()
@@ -92,8 +96,9 @@ public sealed class IntegrationTestBase : IAsyncInitializer, IAsyncDisposable
         var alpha = Brand.Create("Alpha Brand", AlphaSlug, "alpha@test.com", null);
         var beta = Brand.Create("Beta Brand", BetaSlug, "beta@test.com", null);
         var gamma = Brand.Create("Gamma Brand", GammaSlug, "gamma@test.com", null);
+        var delta = Brand.Create("Delta Brand", DeltaSlug, "delta@test.com", null);
 
-        await platformDb.Brands.AddRangeAsync(alpha, beta, gamma);
+        await platformDb.Brands.AddRangeAsync(alpha, beta, gamma, delta);
         await platformDb.SaveChangesAsync();
     }
 
