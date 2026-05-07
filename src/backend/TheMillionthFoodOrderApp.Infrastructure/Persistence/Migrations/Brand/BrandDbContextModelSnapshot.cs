@@ -345,6 +345,114 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.ToTable("OrderStatusTransitions", (string)null);
                 });
 
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Orders.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BrandSlug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("OrderType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaymentMethod")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StatusName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("SubtotalGross")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalGross")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalNet")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalVatAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("VatRatePercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopId")
+                        .HasDatabaseName("IX_Orders_ShopId");
+
+                    b.HasIndex("ShopId", "OrderNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Orders_ShopId_OrderNumber");
+
+                    b.ToTable("Orders", (string)null);
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Orders.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitGrossPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitNetPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitVatAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems", (string)null);
+                });
+
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -712,6 +820,42 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Orders.OrderItem", b =>
+                {
+                    b.HasOne("TheMillionthFoodOrderApp.Domain.Orders.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("TheMillionthFoodOrderApp.Domain.Orders.SelectedModifier", "SelectedModifiers", b1 =>
+                        {
+                            b1.Property<Guid>("OrderItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("ModifierId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("ModifierName")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)");
+
+                            b1.Property<decimal>("PriceAdjustment")
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.HasKey("OrderItemId", "ModifierId");
+
+                            b1.ToTable("OrderItemSelectedModifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderItemId");
+                        });
+
+                    b.Navigation("SelectedModifiers");
+                });
+
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.ComboItem", b =>
                 {
                     b.HasOne("TheMillionthFoodOrderApp.Domain.Products.Product", null)
@@ -859,6 +1003,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                     b.Navigation("Statuses");
 
                     b.Navigation("Transitions");
+                });
+
+            modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Orders.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("TheMillionthFoodOrderApp.Domain.Products.Product", b =>

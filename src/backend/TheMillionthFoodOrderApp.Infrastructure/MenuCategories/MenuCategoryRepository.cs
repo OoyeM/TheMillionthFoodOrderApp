@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 /// Brand-scoped menu category repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class MenuCategoryRepository(BrandDbContext dbContext) : IMenuCategoryRepository
+public sealed class MenuCategoryRepository(BrandDbContext dbContext, IMessageBus messageBus) : IMenuCategoryRepository
 {
     /// <inheritdoc/>
     public async Task<MenuCategory?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -59,18 +60,24 @@ public sealed class MenuCategoryRepository(BrandDbContext dbContext) : IMenuCate
         // ExecuteDeleteAsync commits immediately and bypasses the change tracker,
         // so without a transaction, a failure in mutate() or SaveChangesAsync()
         // would leave the category with zero translations.
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.MenuCategoryTranslations
-            .Where(t => t.MenuCategoryId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.MenuCategoryTranslations
+                .Where(t => t.MenuCategoryId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        mutate(category);
+            mutate(category);
 
-        dbContext.MenuCategoryTranslations.AddRange(category.Translations);
+            dbContext.MenuCategoryTranslations.AddRange(category.Translations);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
+
         return category;
     }
 
@@ -85,11 +92,18 @@ public sealed class MenuCategoryRepository(BrandDbContext dbContext) : IMenuCate
 
         mutate(category);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return category;
     }
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }

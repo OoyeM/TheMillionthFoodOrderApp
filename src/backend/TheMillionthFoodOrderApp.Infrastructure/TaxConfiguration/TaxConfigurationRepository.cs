@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.TaxConfiguration;
 
-public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxConfigurationRepository
+public sealed class TaxConfigurationRepository(BrandDbContext dbContext, IMessageBus messageBus) : ITaxConfigurationRepository
 {
     public async Task<Domain.TaxConfiguration.TaxConfiguration?> GetAsync(CancellationToken cancellationToken = default)
         => await dbContext.TaxConfigurations
@@ -32,28 +33,39 @@ public sealed class TaxConfigurationRepository(BrandDbContext dbContext) : ITaxC
         Action<Domain.TaxConfiguration.TaxConfiguration> mutate,
         CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        Domain.TaxConfiguration.TaxConfiguration config = null!;
 
-        await dbContext.VatRates
-            .Where(v => v.TaxConfigurationId == configId)
-            .ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Clear tracker so FirstAsync returns a fresh instance without old VatRate snapshots.
-        dbContext.ChangeTracker.Clear();
+            await dbContext.VatRates
+                .Where(v => v.TaxConfigurationId == configId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        var config = await dbContext.TaxConfigurations
-            .FirstAsync(c => c.Id == configId, cancellationToken);
+            // Clear tracker so FirstAsync returns a fresh instance without old VatRate snapshots.
+            dbContext.ChangeTracker.Clear();
 
-        mutate(config);
+            config = await dbContext.TaxConfigurations
+                .FirstAsync(c => c.Id == configId, cancellationToken);
 
-        await dbContext.VatRates.AddRangeAsync(config.VatRates, cancellationToken);
+            mutate(config);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            await dbContext.VatRates.AddRangeAsync(config.VatRates, cancellationToken);
+
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return config;
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }

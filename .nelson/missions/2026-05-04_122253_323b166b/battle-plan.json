@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Backend: Order aggregate, repository, service, endpoint, tests",
+      "owner": "HMS Duncan",
+      "deliverable": "POST /orders endpoint with Order aggregate, correct VAT, domain event, TUnit integration tests",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 2,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": true
+    },
+    {
+      "id": 2,
+      "name": "Frontend: Menu, cart context, checkout, order confirmation",
+      "owner": "HMS Portland",
+      "deliverable": "Storefront menu page, CartContext, checkout form, confirmation page with SignalR",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 1,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    },
+    {
+      "id": 3,
+      "name": "Red-cell review: Backend domain model and endpoint",
+      "owner": "HMS Vigilant",
+      "deliverable": "Adversarial review verdict on Order aggregate, VAT logic, EF config, and test coverage",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 2,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    },
+    {
+      "id": 1,
+      "name": "Backend: Order aggregate, repository, service, endpoint, tests",
+      "owner": "HMS Duncan",
+      "deliverable": "POST /orders endpoint with Order aggregate, correct VAT, domain event, TUnit integration tests",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 2,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    },
+    {
+      "id": 2,
+      "name": "Frontend: Menu, cart context, checkout, order confirmation",
+      "owner": "HMS Portland",
+      "deliverable": "Storefront menu page, CartContext, checkout form, confirmation page with SignalR",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 1,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    },
+    {
+      "id": 3,
+      "name": "Red-cell review: Backend domain model and endpoint",
+      "owner": "HMS Vigilant",
+      "deliverable": "Adversarial review verdict on Order aggregate, VAT logic, EF config, and test coverage",
+      "dependencies": [],
+      "dependents": [],
+      "station_tier": 2,
+      "file_ownership": [],
+      "modification_targets": [],
+      "validation_required": null,
+      "rollback_note_required": false,
+      "admiralty_action_required": false
+    }
+  ],
+  "amended_at": null,
+  "squadron": {
+    "admiral": {
+      "ship_name": "Admiral",
+      "model": "sonnet"
+    },
+    "captains": [
+      {
+        "ship_name": "HMS Duncan",
+        "ship_class": "destroyer",
+        "model": "sonnet",
+        "task_id": 1
+      },
+      {
+        "ship_name": "HMS Portland",
+        "ship_class": "frigate",
+        "model": "sonnet",
+        "task_id": 2
+      },
+      {
+        "ship_name": "HMS Vigilant",
+        "ship_class": "red-cell",
+        "model": "sonnet",
+        "task_id": 3
+      }
+    ]
+  },
+  "created_at": "2026-05-04T13:04:34Z"
+}

@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "fallow@fallow-skills": true
+    "fallow@fallow-skills": true,
+    "nelson@nelson-marketplace": true
   }
 }

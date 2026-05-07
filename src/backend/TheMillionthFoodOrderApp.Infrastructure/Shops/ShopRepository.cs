@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Shops;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Shops;
 /// Brand-scoped shop repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
+public sealed class ShopRepository(BrandDbContext dbContext, IMessageBus messageBus) : IShopRepository
 {
     /// <inheritdoc/>
     public async Task<Shop?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -48,42 +49,57 @@ public sealed class ShopRepository(BrandDbContext dbContext) : IShopRepository
             return null;
 
         mutate(shop);
+
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return shop;
     }
 
     /// <inheritdoc/>
     public async Task<Shop?> ReplaceOpeningHoursAsync(Guid shopId, Action<Shop> mutate, CancellationToken cancellationToken = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        Shop? shop = null;
 
-        await dbContext.OpeningHoursTimeBlocks
-            .Where(b => b.ShopId == shopId)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        // Clear tracker so FirstAsync returns a fresh instance without old block snapshots.
-        dbContext.ChangeTracker.Clear();
-
-        var shop = await dbContext.Shops
-            .FirstOrDefaultAsync(s => s.Id == shopId, cancellationToken);
-
-        if (shop is null)
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return null;
-        }
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        mutate(shop);
+            await dbContext.OpeningHoursTimeBlocks
+                .Where(b => b.ShopId == shopId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await dbContext.OpeningHoursTimeBlocks.AddRangeAsync(shop.OpeningHours, cancellationToken);
+            // Clear tracker so FirstAsync returns a fresh instance without old block snapshots.
+            dbContext.ChangeTracker.Clear();
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            shop = await dbContext.Shops
+                .FirstOrDefaultAsync(s => s.Id == shopId, cancellationToken);
+
+            if (shop is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return;
+            }
+
+            mutate(shop);
+
+            await dbContext.OpeningHoursTimeBlocks.AddRangeAsync(shop.OpeningHours, cancellationToken);
+
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
 
         return shop;
     }
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }

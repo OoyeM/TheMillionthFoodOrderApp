@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "mission": {
+    "outcome": "Implement the order placement flow \u2014 backend Order aggregate + API endpoint + frontend storefront cart and checkout \u2014 so a registered customer can browse a shop menu, build a cart, and place an online order that enters the configured lifecycle",
+    "status": "complete",
+    "phase": "STAND_DOWN",
+    "started_at": "2026-05-04T12:22:53Z",
+    "checkpoint_number": 2
+  },
+  "progress": {
+    "pending": 1,
+    "in_progress": 0,
+    "completed": 2,
+    "blocked": 0,
+    "total": 3
+  },
+  "budget": {
+    "tokens_spent": 256000,
+    "tokens_remaining": 64000,
+    "pct_consumed": 80.0,
+    "burn_rate_per_checkpoint": 256000,
+    "burn_rate_per_task": 128000,
+    "projected_budget_at_completion": 384000
+  },
+  "squadron": [
+    {
+      "ship_name": "HMS Duncan",
+      "ship_class": null,
+      "role": "captain",
+      "hull_integrity_pct": 97,
+      "hull_integrity_status": "Green",
+      "relief_requested": false,
+      "task_id": null,
+      "task_name": null,
+      "task_status": null
+    },
+    {
+      "ship_name": "HMS Portland",
+      "ship_class": null,
+      "role": "captain",
+      "hull_integrity_pct": 95,
+      "hull_integrity_status": "Green",
+      "relief_requested": false,
+      "task_id": null,
+      "task_name": null,
+      "task_status": null
+    }
+  ],
+  "blockers": [],
+  "recent_events": [],
+  "last_updated": "2026-05-04T13:38:23Z"
+}

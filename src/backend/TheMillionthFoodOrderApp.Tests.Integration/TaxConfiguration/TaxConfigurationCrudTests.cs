@@ -249,17 +249,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
     [Test]
     public async Task CalculateTax_Takeaway_ReturnsCorrect6PercentBreakdown()
     {
-        // Arrange — ensure a tax config with 6% Takeaway exists
+        // Arrange — the fixture pre-seeds Belgian defaults (Takeaway 6%, EatIn 21%) for all brands.
+        // No PUT needed here; doing one would cause concurrent write contention with other tests
+        // that also use AlphaSlug, making this test flaky.
         var client = CreateClient();
-
-        await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), new
-        {
-            VatRates = new[]
-            {
-                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
-                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
-            }
-        });
 
         var request = new
         {
@@ -287,17 +280,10 @@ public sealed class TaxConfigurationCrudTests(IntegrationTestBase fixture)
     [Test]
     public async Task CalculateTax_EatIn_ReturnsCorrect21PercentBreakdown()
     {
-        // Arrange — ensure a tax config with 21% EatIn exists
+        // Arrange — the fixture pre-seeds Belgian defaults (Takeaway 6%, EatIn 21%) for all brands.
+        // No PUT needed here; doing one would cause concurrent write contention with other tests
+        // that also use AlphaSlug, making this test flaky.
         var client = CreateClient();
-
-        await client.PutAsJsonAsync(TaxConfigUrl(IntegrationTestBase.AlphaSlug), new
-        {
-            VatRates = new[]
-            {
-                new { ConsumptionMode = "Takeaway", RatePercentage = 6m },
-                new { ConsumptionMode = "EatIn",    RatePercentage = 21m },
-            }
-        });
 
         var request = new
         {

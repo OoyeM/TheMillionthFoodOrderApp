@@ -1,0 +1,142 @@
+import { apiClient } from './client';
+
+// ---------------------------------------------------------------------------
+// Request types
+// ---------------------------------------------------------------------------
+
+export type OrderType = 'Pickup' | 'EatIn' | 'Delivery';
+
+export interface OrderItemRequest {
+  productId: string;
+  quantity: number;
+  selectedModifierIds: string[];
+}
+
+export type PaymentMethod = 'CashAtPickup' | 'CreditCard' | 'Bancontact';
+
+export interface CreateOrderRequest {
+  orderType: OrderType;
+  customerName?: string | null;
+  items: OrderItemRequest[];
+  paymentMethod: PaymentMethod;
+}
+
+// ---------------------------------------------------------------------------
+// Response types
+// ---------------------------------------------------------------------------
+
+export interface OrderModifierResponse {
+  modifierId: string;
+  modifierName: string;
+  priceAdjustment: number;
+}
+
+export interface OrderItemResponse {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitGrossPrice: number;
+  unitNetPrice: number;
+  unitVatAmount: number;
+  lineTotal: number;
+  selectedModifiers: OrderModifierResponse[];
+}
+
+export interface OrderResponse {
+  id: string;
+  orderNumber: string;
+  shopId: string;
+  brandSlug: string;
+  orderType: OrderType;
+  statusName: string;
+  customerName: string | null;
+  items: OrderItemResponse[];
+  vatRatePercent: number;
+  subtotalGross: number;
+  totalVatAmount: number;
+  totalNet: number;
+  totalGross: number;
+  createdAt: string;
+  paymentMethod: string;
+}
+
+// ---------------------------------------------------------------------------
+// Order tracking response types (US-FP-063)
+// ---------------------------------------------------------------------------
+
+export interface OrderStatusResponse {
+  id: string;
+  name: string;
+  systemKey: string | null;
+  sortOrder: number;
+  isEnabled: boolean;
+  isTerminal: boolean;
+  colorHex: string | null;
+}
+
+export interface OrderStatusTransitionResponse {
+  id: string;
+  fromStatusId: string;
+  toStatusId: string;
+}
+
+export interface OrderLifecycleResponse {
+  shopId: string;
+  statuses: OrderStatusResponse[];
+  transitions: OrderStatusTransitionResponse[];
+}
+
+export interface OrderTrackingResponse {
+  order: OrderResponse;
+  lifecycle: OrderLifecycleResponse;
+}
+
+// ---------------------------------------------------------------------------
+// API module
+// ---------------------------------------------------------------------------
+
+/**
+ * API functions for orders (customer storefront).
+ * Routes are brand + shop scoped: /brands/{brandSlug}/shops/{shopId}/orders/...
+ */
+export const ordersApi = {
+  create: (
+    brandSlug: string,
+    shopId: string,
+    data: CreateOrderRequest,
+  ): Promise<OrderResponse> =>
+    apiClient
+      .post<OrderResponse>(`/brands/${brandSlug}/shops/${shopId}/orders`, data)
+      .then((r) => r.data),
+
+  getById: (
+    brandSlug: string,
+    shopId: string,
+    orderId: string,
+  ): Promise<OrderResponse> =>
+    apiClient
+      .get<OrderTrackingResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/${orderId}`)
+      .then((r) => r.data.order),
+
+  /** Fetch full tracking response (order + lifecycle) for the tracking page. */
+  getTracking: (
+    brandSlug: string,
+    shopId: string,
+    orderId: string,
+  ): Promise<OrderTrackingResponse> =>
+    apiClient
+      .get<OrderTrackingResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/${orderId}`)
+      .then((r) => r.data),
+
+  /** Look up an order by its human-readable order number. */
+  getByNumber: (
+    brandSlug: string,
+    shopId: string,
+    orderNumber: string,
+  ): Promise<OrderTrackingResponse> =>
+    apiClient
+      .get<OrderTrackingResponse>(
+        `/brands/${brandSlug}/shops/${shopId}/orders/number/${orderNumber}`,
+      )
+      .then((r) => r.data),
+};

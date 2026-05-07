@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.MenuCategories;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
+using TheMillionthFoodOrderApp.Domain.Orders;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
@@ -9,6 +10,7 @@ using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
 using TheMillionthFoodOrderApp.Infrastructure.ModifierGroups;
 using TheMillionthFoodOrderApp.Infrastructure.OrderLifecycle;
+using TheMillionthFoodOrderApp.Infrastructure.Orders;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Conventions;
 using TheMillionthFoodOrderApp.Infrastructure.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Shops;
@@ -40,6 +42,8 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
     public DbSet<ComboItem> ComboItems => Set<ComboItem>();
     public DbSet<Domain.TaxConfiguration.TaxConfiguration> TaxConfigurations => Set<Domain.TaxConfiguration.TaxConfiguration>();
     public DbSet<VatRate> VatRates => Set<VatRate>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +68,8 @@ public sealed class BrandDbContext(DbContextOptions<BrandDbContext> options) : D
         modelBuilder.ApplyConfiguration(new ComboItemConfiguration());
         modelBuilder.ApplyConfiguration(new TaxConfigurationConfiguration());
         modelBuilder.ApplyConfiguration(new VatRateConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
 
         // Global query filter: soft-deleted entities are excluded by default
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);

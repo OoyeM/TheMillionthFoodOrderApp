@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
+using Wolverine;
 
 namespace TheMillionthFoodOrderApp.Infrastructure.Products;
 
@@ -8,7 +9,7 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Products;
 /// Brand-scoped product repository. Injects <see cref="BrandDbContext"/> directly
 /// (registered as scoped via factory delegate in DI).
 /// </summary>
-public sealed class ProductRepository(BrandDbContext dbContext) : IProductRepository
+public sealed class ProductRepository(BrandDbContext dbContext, IMessageBus messageBus) : IProductRepository
 {
     /// <inheritdoc/>
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -48,25 +49,31 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
         // ExecuteDeleteAsync commits immediately and bypasses the change tracker,
         // so without a transaction, a failure in mutate() or SaveChangesAsync()
         // would leave the product with zero translations.
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.ProductTranslations
-            .Where(t => t.ProductId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.ProductTranslations
+                .Where(t => t.ProductId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await dbContext.ComboItems
-            .Where(ci => ci.ComboProductId == id)
-            .ExecuteDeleteAsync(cancellationToken);
+            await dbContext.ComboItems
+                .Where(ci => ci.ComboProductId == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        mutate(product);
+            mutate(product);
 
-        dbContext.ProductTranslations.AddRange(product.Translations);
+            dbContext.ProductTranslations.AddRange(product.Translations);
 
-        if (product.ComboItems.Count > 0)
-            dbContext.ComboItems.AddRange(product.ComboItems);
+            if (product.ComboItems.Count > 0)
+                dbContext.ComboItems.AddRange(product.ComboItems);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            var events = DomainEventDispatcher.CollectAndClear(dbContext);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await DomainEventDispatcher.PublishAsync(events, messageBus);
+        });
+
         return product;
     }
 
@@ -81,7 +88,10 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
 
         mutate(product);
 
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+
         return product;
     }
 
@@ -124,5 +134,9 @@ public sealed class ProductRepository(BrandDbContext dbContext) : IProductReposi
 
     /// <inheritdoc/>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await dbContext.SaveChangesAsync(cancellationToken);
+    {
+        var events = DomainEventDispatcher.CollectAndClear(dbContext);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await DomainEventDispatcher.PublishAsync(events, messageBus);
+    }
 }
