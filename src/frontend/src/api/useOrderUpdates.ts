@@ -33,7 +33,10 @@ export function useOrderUpdates(
   options: UseOrderUpdatesOptions,
 ): { status: ConnectionStatus } {
   const { shopGroup, orderId, onStatusChange } = options;
-  const { connection, status } = useSignalR({ shopGroup, orderId });
+  const { connection, status } = useSignalR({
+    ...(shopGroup !== undefined ? { shopGroup } : {}),
+    ...(orderId !== undefined ? { orderId } : {}),
+  });
   const callbackRef = useRef(onStatusChange);
   callbackRef.current = onStatusChange;
 

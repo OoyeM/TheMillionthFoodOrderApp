@@ -42,7 +42,8 @@
         "openid",
         "profile",
         "email",
-        "roles"
+        "roles",
+        "offline_access"
       ],
       "fullScopeAllowed": true
     }

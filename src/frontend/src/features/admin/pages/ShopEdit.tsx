@@ -1,21 +1,12 @@
-import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useShop, useUpdateShop } from '../hooks/useShops';
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface FormErrors {
-  name?: string;
-  street?: string;
-  number?: string;
-  city?: string;
-  postalCode?: string;
-  contactEmail?: string;
-}
+import { shopKeys } from '../hooks/useShops';
+import { useResourceForm } from '../forms/useResourceForm';
+import { shopsApi } from '../../../api/shops';
+import type { UpdateShopRequest } from '../../../api/shops';
+import type { Shop } from '../../../types/common';
+import { shopEditSchema, type ShopEditFormValues } from './schemas/shopEditSchema';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ResourceFormShell } from '../forms/ResourceFormShell';
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -30,99 +21,62 @@ export function ShopEdit() {
   }>();
 
   const resolvedBrandSlug = brandSlug ?? '';
-  // shopId is guaranteed by the route definition; guard for type safety
   const resolvedShopId = shopId ?? '';
 
-  const { data: shop, isLoading, isError, error } = useShop(resolvedBrandSlug, resolvedShopId);
-  const updateShop = useUpdateShop(resolvedBrandSlug, resolvedShopId);
+  // ---------------------------------------------------------------------------
+  // Main form via useResourceForm
+  // ---------------------------------------------------------------------------
 
-  const [name, setName] = useState('');
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [city, setCity] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [country, setCountry] = useState('BE');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formInitialized, setFormInitialized] = useState(false);
-
-  // Populate form when shop data arrives
-  useEffect(() => {
-    if (shop !== undefined && !formInitialized) {
-      setName(shop.name);
-      setStreet(shop.address.street);
-      setNumber(shop.address.number);
-      setCity(shop.address.city);
-      setPostalCode(shop.address.postalCode);
-      setCountry(shop.address.country);
-      setContactEmail(shop.contactEmail);
-      setContactPhone(shop.contactPhone ?? '');
-      setFormInitialized(true);
-    }
-  }, [shop, formInitialized]);
-
-  function validate(): FormErrors {
-    const next: FormErrors = {};
-
-    if (name.trim().length === 0) {
-      next.name = 'Name is required.';
-    }
-
-    if (street.trim().length === 0) {
-      next.street = 'Street is required.';
-    }
-
-    if (number.trim().length === 0) {
-      next.number = 'House number is required.';
-    }
-
-    if (city.trim().length === 0) {
-      next.city = 'City is required.';
-    }
-
-    if (postalCode.trim().length === 0) {
-      next.postalCode = 'Postal code is required.';
-    }
-
-    if (contactEmail.trim().length === 0) {
-      next.contactEmail = 'Contact email is required.';
-    } else if (!EMAIL_PATTERN.test(contactEmail)) {
-      next.contactEmail = 'Enter a valid email address.';
-    }
-
-    return next;
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setErrors({});
-    updateShop.mutate(
-      {
-        name: name.trim(),
-        address: {
-          street: street.trim(),
-          number: number.trim(),
-          city: city.trim(),
-          postalCode: postalCode.trim(),
-          country: country.trim() || 'BE',
-        },
-        contactEmail: contactEmail.trim(),
-        ...(contactPhone.trim().length > 0 ? { contactPhone: contactPhone.trim() } : {}),
+  const { form, submit, isSubmitting, isFetching, fetchError, submitError } = useResourceForm<
+    Shop,
+    ShopEditFormValues,
+    UpdateShopRequest
+  >({
+    queryKey: shopKeys.detail(resolvedBrandSlug, resolvedShopId),
+    fetch: () => shopsApi.get(resolvedBrandSlug, resolvedShopId),
+    update: (payload) => shopsApi.update(resolvedBrandSlug, resolvedShopId, payload),
+    schema: shopEditSchema,
+    defaultValues: {
+      name: '',
+      address: { street: '', number: '', city: '', postalCode: '', country: 'BE' },
+      contactEmail: '',
+      contactPhone: '',
+    },
+    toFormValues: (shop) => ({
+      name: shop.name,
+      address: {
+        street: shop.address.street,
+        number: shop.address.number,
+        city: shop.address.city,
+        postalCode: shop.address.postalCode,
+        country: shop.address.country,
       },
-      {
-        onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/shops`);
-        },
+      contactEmail: shop.contactEmail,
+      contactPhone: shop.contactPhone ?? '',
+    }),
+    toUpdatePayload: (values) => ({
+      name: values.name.trim(),
+      address: {
+        street: values.address.street.trim(),
+        number: values.address.number.trim(),
+        city: values.address.city.trim(),
+        postalCode: values.address.postalCode.trim(),
+        country: values.address.country.trim() || 'BE',
       },
-    );
-  }
+      contactEmail: values.contactEmail.trim(),
+      ...(values.contactPhone.trim().length > 0
+        ? { contactPhone: values.contactPhone.trim() }
+        : {}),
+    }),
+    invalidate: [shopKeys.all(resolvedBrandSlug), shopKeys.detail(resolvedBrandSlug, resolvedShopId)],
+    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/shops`),
+  });
+
+  const { register, formState: { errors } } = form;
+
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
 
   function handleCancel() {
     navigate(`/${brandSlug}/${lang}/admin/shops`);
@@ -132,65 +86,31 @@ export function ShopEdit() {
   // Loading / error states
   // ---------------------------------------------------------------------------
 
-  if (isLoading) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Loading shop…</p>
-      </main>
-    );
-  }
-
-  if (isError) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>
-          Failed to load shop:{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
-        </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
-  if (shop === undefined) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>Shop not found.</p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          Back to list
-        </button>
-      </main>
-    );
-  }
-
   // ---------------------------------------------------------------------------
   // Form
   // ---------------------------------------------------------------------------
 
   return (
+    <ResourceFormShell
+      isFetching={isFetching}
+      fetchError={fetchError}
+      resourceName="shop"
+      onCancel={handleCancel}
+    >
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
           Edit Shop
         </h1>
-        <span
-          style={{
-            display: 'inline-block',
-            padding: '0.125rem 0.5rem',
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            background: shop.isActive ? '#d1fae5' : '#fee2e2',
-            color: shop.isActive ? '#065f46' : '#991b1b',
-          }}
-        >
-          {shop.isActive ? 'Active' : 'Inactive'}
-        </span>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        noValidate
+      >
         {/* Name */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="name">
@@ -199,14 +119,13 @@ export function ShopEdit() {
           <input
             id="name"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            {...register('name')}
             style={inputStyle(!!errors.name)}
           />
-          {errors.name && <FieldError message={errors.name} />}
+          {errors.name?.message && <FieldError message={errors.name.message} />}
         </div>
 
-        {/* Slug (read-only after creation) */}
+        {/* Slug (read-only — displayed from fetched data via defaultValues + reset) */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="slug">
             Slug
@@ -214,8 +133,8 @@ export function ShopEdit() {
           <input
             id="slug"
             type="text"
-            value={shop.slug}
             readOnly
+            disabled
             style={{
               ...inputStyle(false),
               background: '#f9fafb',
@@ -242,11 +161,12 @@ export function ShopEdit() {
             <input
               id="street"
               type="text"
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              style={inputStyle(!!errors.street)}
+              {...register('address.street')}
+              style={inputStyle(!!errors.address?.street)}
             />
-            {errors.street && <FieldError message={errors.street} />}
+            {errors.address?.street?.message && (
+              <FieldError message={errors.address.street.message} />
+            )}
           </div>
           <div style={{ flex: 1 }}>
             <label style={labelStyle} htmlFor="number">
@@ -255,11 +175,12 @@ export function ShopEdit() {
             <input
               id="number"
               type="text"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              style={inputStyle(!!errors.number)}
+              {...register('address.number')}
+              style={inputStyle(!!errors.address?.number)}
             />
-            {errors.number && <FieldError message={errors.number} />}
+            {errors.address?.number?.message && (
+              <FieldError message={errors.address.number.message} />
+            )}
           </div>
         </div>
 
@@ -272,11 +193,12 @@ export function ShopEdit() {
             <input
               id="postalCode"
               type="text"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-              style={inputStyle(!!errors.postalCode)}
+              {...register('address.postalCode')}
+              style={inputStyle(!!errors.address?.postalCode)}
             />
-            {errors.postalCode && <FieldError message={errors.postalCode} />}
+            {errors.address?.postalCode?.message && (
+              <FieldError message={errors.address.postalCode.message} />
+            )}
           </div>
           <div style={{ flex: 2 }}>
             <label style={labelStyle} htmlFor="city">
@@ -285,11 +207,12 @@ export function ShopEdit() {
             <input
               id="city"
               type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              style={inputStyle(!!errors.city)}
+              {...register('address.city')}
+              style={inputStyle(!!errors.address?.city)}
             />
-            {errors.city && <FieldError message={errors.city} />}
+            {errors.address?.city?.message && (
+              <FieldError message={errors.address.city.message} />
+            )}
           </div>
         </div>
 
@@ -301,8 +224,7 @@ export function ShopEdit() {
           <input
             id="country"
             type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
+            {...register('address.country')}
             style={inputStyle(false)}
           />
           <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
@@ -318,11 +240,10 @@ export function ShopEdit() {
           <input
             id="contactEmail"
             type="email"
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            {...register('contactEmail')}
             style={inputStyle(!!errors.contactEmail)}
           />
-          {errors.contactEmail && <FieldError message={errors.contactEmail} />}
+          {errors.contactEmail?.message && <FieldError message={errors.contactEmail.message} />}
         </div>
 
         {/* Contact Phone (optional) */}
@@ -334,20 +255,13 @@ export function ShopEdit() {
           <input
             id="contactPhone"
             type="tel"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
+            {...register('contactPhone')}
             style={inputStyle(false)}
           />
         </div>
 
-        {/* Metadata */}
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '1.5rem' }}>
-          Created: {new Date(shop.createdAt).toLocaleString()} &mdash; Last updated:{' '}
-          {new Date(shop.updatedAt).toLocaleString()}
-        </p>
-
         {/* Quick links to shop config pages */}
-        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ marginBottom: '1.5rem', marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={() =>
@@ -385,10 +299,10 @@ export function ShopEdit() {
         </div>
 
         {/* API error */}
-        {updateShop.isError && (
+        {submitError != null && (
           <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {updateShop.error instanceof Error
-              ? updateShop.error.message
+            {submitError instanceof Error
+              ? submitError.message
               : 'Failed to save changes. Please try again.'}
           </p>
         )}
@@ -396,72 +310,26 @@ export function ShopEdit() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             type="submit"
-            disabled={updateShop.isPending}
+            disabled={isSubmitting}
             style={{
               padding: '0.5rem 1.25rem',
               background: '#111827',
               color: '#fff',
               border: 'none',
               borderRadius: '0.375rem',
-              cursor: updateShop.isPending ? 'not-allowed' : 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               fontWeight: 600,
-              opacity: updateShop.isPending ? 0.6 : 1,
+              opacity: isSubmitting ? 0.6 : 1,
             }}
           >
-            {updateShop.isPending ? 'Saving…' : 'Save Changes'}
+            {isSubmitting ? 'Saving…' : 'Save Changes'}
           </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            style={secondaryButtonStyle}
-          >
+          <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
             Cancel
           </button>
         </div>
       </form>
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Small style helpers
-// ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
-
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-      {message}
-    </p>
+    </ResourceFormShell>
   );
 }

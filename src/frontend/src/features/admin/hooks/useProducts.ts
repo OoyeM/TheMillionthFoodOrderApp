@@ -1,17 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@api/products';
-import type {
-  CreateProductRequest,
-  UpdateProductRequest,
-  CreateComboProductRequest,
-  UpdateComboProductRequest,
-} from '@api/products';
 
-/**
- * Centralized query key factory — scoped by brandSlug for proper cache isolation.
- *
- * @expected-unused — US-FP-005 (Product CRUD) — used by mutations for cache invalidation
- */
 export const productKeys = {
   all: (brandSlug: string) => ['products', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['products', brandSlug, id] as const,
@@ -30,43 +19,9 @@ export function useProducts(brandSlug: string) {
   });
 }
 
-/** Fetch a single product by id. */
-export function useProduct(brandSlug: string, id: string) {
-  return useQuery({
-    queryKey: productKeys.detail(brandSlug, id),
-    queryFn: () => productsApi.get(brandSlug, id),
-    enabled: brandSlug.length > 0 && id.length > 0,
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Mutations
 // ---------------------------------------------------------------------------
-
-/** Create a new product under a brand. Invalidates the list on success. */
-export function useCreateProduct(brandSlug: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateProductRequest) => productsApi.create(brandSlug, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
-    },
-  });
-}
-
-/** Update product details. Invalidates list and detail on success. */
-export function useUpdateProduct(brandSlug: string, id: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateProductRequest) => productsApi.update(brandSlug, id, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
-      void queryClient.invalidateQueries({ queryKey: productKeys.detail(brandSlug, id) });
-    },
-  });
-}
 
 /** Delete (soft-delete) a product. Invalidates list on success. */
 export function useDeleteProduct(brandSlug: string) {
@@ -80,31 +35,3 @@ export function useDeleteProduct(brandSlug: string) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Combo product mutations
-// ---------------------------------------------------------------------------
-
-/** Create a new combo product. Invalidates the product list on success. */
-export function useCreateComboProduct(brandSlug: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateComboProductRequest) => productsApi.createCombo(brandSlug, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
-    },
-  });
-}
-
-/** Update combo product details. Invalidates list and detail on success. */
-export function useUpdateComboProduct(brandSlug: string, id: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateComboProductRequest) => productsApi.updateCombo(brandSlug, id, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: productKeys.all(brandSlug) });
-      void queryClient.invalidateQueries({ queryKey: productKeys.detail(brandSlug, id) });
-    },
-  });
-}

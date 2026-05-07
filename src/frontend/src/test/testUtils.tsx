@@ -1,7 +1,3 @@
-// fallow-ignore-file unused-file
-//
-// Generic render-with-providers helpers; consumed once test suites converge on shared setup.
-
 import { type ReactNode } from 'react';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
@@ -10,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 /**
  * Creates a fresh QueryClient with retries disabled (suitable for testing).
  */
-export function createTestQueryClient(): QueryClient {
+function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: { retry: false },

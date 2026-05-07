@@ -5,6 +5,9 @@ import type { BffUserResponse, AuthUser, UserRole } from '@/types/auth';
  * Separate axios instance for BFF session/auth endpoints.
  * - baseURL: '/bff' — Vite proxies this to the BFF host (http://localhost:5261)
  * - withCredentials: true — sends session cookie
+ * - X-CSRF: 1 — required by the BFF on every state-changing call
+ *   (logout, keepalive). Browsers cannot send custom headers cross-origin
+ *   without a successful preflight, so its presence proves same-origin intent.
  * - No X-Brand-Slug interceptor: BFF auth is brand-agnostic at this layer
  *
  * @expected-unused — Lower-level BFF client — public API surface for future consumers
@@ -14,6 +17,7 @@ export const bffClient = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-CSRF': '1',
   },
 });
 

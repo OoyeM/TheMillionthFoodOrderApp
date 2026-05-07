@@ -2,16 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { menuCategoriesApi } from '@api/menuCategories';
 import type {
   CreateMenuCategoryRequest,
-  UpdateMenuCategoryRequest,
   ReorderMenuCategoryRequest,
   ReorderProductsRequest,
 } from '@api/menuCategories';
 
-/**
- * Centralized query key factory — scoped by brandSlug for proper cache isolation.
- *
- * @expected-unused — US-FP-022 (Menu categories) — used by mutations for cache invalidation
- */
 export const menuCategoryKeys = {
   all: (brandSlug: string) => ['menuCategories', brandSlug] as const,
   detail: (brandSlug: string, id: string) => ['menuCategories', brandSlug, id] as const,
@@ -32,15 +26,6 @@ export function useMenuCategories(brandSlug: string) {
   });
 }
 
-/** Fetch a single menu category by id. */
-export function useMenuCategory(brandSlug: string, id: string) {
-  return useQuery({
-    queryKey: menuCategoryKeys.detail(brandSlug, id),
-    queryFn: () => menuCategoriesApi.get(brandSlug, id),
-    enabled: brandSlug.length > 0 && id.length > 0,
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Mutations
 // ---------------------------------------------------------------------------
@@ -54,22 +39,6 @@ export function useCreateMenuCategory(brandSlug: string) {
       menuCategoriesApi.create(brandSlug, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: menuCategoryKeys.all(brandSlug) });
-    },
-  });
-}
-
-/** Update menu category details. Invalidates list and detail on success. */
-export function useUpdateMenuCategory(brandSlug: string, id: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateMenuCategoryRequest) =>
-      menuCategoriesApi.update(brandSlug, id, data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: menuCategoryKeys.all(brandSlug) });
-      void queryClient.invalidateQueries({
-        queryKey: menuCategoryKeys.detail(brandSlug, id),
-      });
     },
   });
 }

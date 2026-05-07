@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { MenuCategory, MenuCategoryListItem, ProductListItem } from '../types/common';
+import { extractData, toVoid } from './utils';
 
 export interface MenuCategoryTranslationInput {
   languageCode: string;
@@ -43,17 +44,17 @@ export const menuCategoriesApi = {
   list: (brandSlug: string): Promise<MenuCategoryListItem[]> =>
     apiClient
       .get<MenuCategoryListItem[]>(`/brands/${brandSlug}/menu-categories`)
-      .then((r) => r.data),
+      .then(extractData),
 
   get: (brandSlug: string, id: string): Promise<MenuCategory> =>
     apiClient
       .get<MenuCategory>(`/brands/${brandSlug}/menu-categories/${id}`)
-      .then((r) => r.data),
+      .then(extractData),
 
   create: (brandSlug: string, data: CreateMenuCategoryRequest): Promise<MenuCategory> =>
     apiClient
       .post<MenuCategory>(`/brands/${brandSlug}/menu-categories`, data)
-      .then((r) => r.data),
+      .then(extractData),
 
   update: (
     brandSlug: string,
@@ -62,12 +63,12 @@ export const menuCategoriesApi = {
   ): Promise<MenuCategory> =>
     apiClient
       .put<MenuCategory>(`/brands/${brandSlug}/menu-categories/${id}`, data)
-      .then((r) => r.data),
+      .then(extractData),
 
   remove: (brandSlug: string, id: string): Promise<void> =>
     apiClient
       .delete(`/brands/${brandSlug}/menu-categories/${id}`)
-      .then(() => undefined),
+      .then(toVoid),
 
   reorder: (
     brandSlug: string,
@@ -76,7 +77,7 @@ export const menuCategoriesApi = {
   ): Promise<void> =>
     apiClient
       .patch<void>(`/brands/${brandSlug}/menu-categories/${id}/sort-order`, data)
-      .then(() => undefined),
+      .then(toVoid),
 
   assignProduct: (
     brandSlug: string,
@@ -84,12 +85,12 @@ export const menuCategoriesApi = {
   ): Promise<void> =>
     apiClient
       .post<void>(`/brands/${brandSlug}/menu-categories/assign-product`, data)
-      .then(() => undefined),
+      .then(toVoid),
 
   listProducts: (brandSlug: string, categoryId: string): Promise<ProductListItem[]> =>
     apiClient
       .get<ProductListItem[]>(`/brands/${brandSlug}/menu-categories/${categoryId}/products`)
-      .then((r) => r.data),
+      .then(extractData),
 
   reorderProducts: (
     brandSlug: string,
@@ -101,5 +102,5 @@ export const menuCategoriesApi = {
         `/brands/${brandSlug}/menu-categories/${categoryId}/products/order`,
         data,
       )
-      .then(() => undefined),
+      .then(toVoid),
 };

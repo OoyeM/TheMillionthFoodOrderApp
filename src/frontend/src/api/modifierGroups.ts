@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { ModifierGroupListItem, ModifierGroupResponse, ProductModifierGroupResponse } from '../types/common';
+import { extractData, toVoid } from './utils';
 
 // ---------------------------------------------------------------------------
 // Request types
@@ -44,17 +45,17 @@ export const modifierGroupsApi = {
   list: (brandSlug: string): Promise<ModifierGroupListItem[]> =>
     apiClient
       .get<ModifierGroupListItem[]>(`/brands/${brandSlug}/modifier-groups`)
-      .then((r) => r.data),
+      .then(extractData),
 
   get: (brandSlug: string, id: string): Promise<ModifierGroupResponse> =>
     apiClient
       .get<ModifierGroupResponse>(`/brands/${brandSlug}/modifier-groups/${id}`)
-      .then((r) => r.data),
+      .then(extractData),
 
   create: (brandSlug: string, data: CreateModifierGroupRequest): Promise<ModifierGroupResponse> =>
     apiClient
       .post<ModifierGroupResponse>(`/brands/${brandSlug}/modifier-groups`, data)
-      .then((r) => r.data),
+      .then(extractData),
 
   update: (
     brandSlug: string,
@@ -63,12 +64,12 @@ export const modifierGroupsApi = {
   ): Promise<ModifierGroupResponse> =>
     apiClient
       .put<ModifierGroupResponse>(`/brands/${brandSlug}/modifier-groups/${id}`, data)
-      .then((r) => r.data),
+      .then(extractData),
 
   remove: (brandSlug: string, id: string): Promise<void> =>
     apiClient
       .delete(`/brands/${brandSlug}/modifier-groups/${id}`)
-      .then(() => undefined),
+      .then(toVoid),
 
   getProductModifierGroups: (
     brandSlug: string,
@@ -78,7 +79,7 @@ export const modifierGroupsApi = {
       .get<ProductModifierGroupResponse[]>(
         `/brands/${brandSlug}/products/${productId}/modifier-groups`,
       )
-      .then((r) => r.data),
+      .then(extractData),
 
   setProductModifierGroups: (
     brandSlug: string,
@@ -90,5 +91,5 @@ export const modifierGroupsApi = {
         `/brands/${brandSlug}/products/${productId}/modifier-groups`,
         data,
       )
-      .then(() => undefined),
+      .then(toVoid),
 };

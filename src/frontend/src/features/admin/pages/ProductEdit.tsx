@@ -20,6 +20,8 @@ import {
   DIETARY_TAG_KEYS,
 } from '../../../types/common';
 import type { SupportedLocale, ProductModifierGroupResponse, Product } from '../../../types/common';
+import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { ResourceFormShell } from '../forms/ResourceFormShell';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -218,32 +220,6 @@ export function ProductEdit() {
   }
 
   // ---------------------------------------------------------------------------
-  // Loading / error states
-  // ---------------------------------------------------------------------------
-
-  if (isFetching) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#6b7280' }}>{t('admin.products.loadingProduct')}</p>
-      </main>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <main style={{ padding: '1.5rem' }}>
-        <p style={{ color: '#dc2626' }}>
-          {t('admin.products.loadError')}{' '}
-          {fetchError instanceof Error ? fetchError.message : t('error')}
-        </p>
-        <button onClick={handleCancel} style={secondaryButtonStyle}>
-          {t('admin.products.backToList')}
-        </button>
-      </main>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // Form render
   // ---------------------------------------------------------------------------
 
@@ -259,6 +235,12 @@ export function ProductEdit() {
   const nlNameError = (errors.translations?.nl?.name as { message?: string } | undefined)?.message;
 
   return (
+    <ResourceFormShell
+      isFetching={isFetching}
+      fetchError={fetchError}
+      resourceName="product"
+      onCancel={handleCancel}
+    >
     <main style={{ padding: '1.5rem', maxWidth: '40rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         {t('admin.products.edit')}
@@ -653,6 +635,7 @@ export function ProductEdit() {
         </button>
       </section>
     </main>
+    </ResourceFormShell>
   );
 }
 
@@ -765,24 +748,8 @@ function TranslationFields({ activeTab, register, nlNameError, t }: TranslationF
 }
 
 // ---------------------------------------------------------------------------
-// Small style helpers
+// Local style helpers (reorderButtonStyle is unique to this page)
 // ---------------------------------------------------------------------------
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  marginBottom: '0.25rem',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1.25rem',
-  background: '#fff',
-  color: '#374151',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-};
 
 const reorderButtonStyle: React.CSSProperties = {
   padding: '0.125rem 0.4rem',
@@ -793,23 +760,3 @@ const reorderButtonStyle: React.CSSProperties = {
   lineHeight: 1,
 };
 
-function inputStyle(hasError: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${hasError ? '#dc2626' : '#d1d5db'}`,
-    borderRadius: '0.375rem',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-  };
-}
-
-function RequiredMark() {
-  return <span style={{ color: '#dc2626' }}>*</span>;
-}
-
-function FieldError({ message }: { message: string }) {
-  return (
-    <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>{message}</p>
-  );
-}

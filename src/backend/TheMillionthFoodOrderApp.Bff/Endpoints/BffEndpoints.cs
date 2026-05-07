@@ -12,7 +12,8 @@ public static class BffEndpoints
 {
     public static IEndpointRouteBuilder MapBffEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/bff/login",               (Delegate)HandleLogin);
+        app.MapGet("/bff/login",               (Delegate)HandleLogin)
+           .RequireRateLimiting(AuthConstants.RateLimitPolicies.Login);
         app.MapPost("/bff/logout",             (Delegate)HandleLogout);
         app.MapGet("/bff/user",               (Delegate)HandleUser);
         app.MapPost("/bff/session/keepalive", (Delegate)HandleKeepalive);
