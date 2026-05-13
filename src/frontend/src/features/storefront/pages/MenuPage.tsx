@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProductListItem } from '@/types/common';
@@ -6,28 +6,48 @@ import { CartProvider, useCart, type CartModifier } from '../context/CartContext
 import { ProductCard } from '../components/ProductCard';
 import { ModifierModal } from '../components/ModifierModal';
 import { CartDrawer } from '../components/CartDrawer';
+import { MenuFilters } from '../components/MenuFilters';
 import { useStorefrontCategories, useStorefrontCategoryProducts } from '../hooks/useStorefrontMenu';
+import {
+  EMPTY_FILTERS,
+  isFilterActive,
+  matchesFilters,
+  type MenuFilterState,
+} from '../utils/menuFilters';
 import { modifierGroupsApi } from '@api/modifierGroups';
 
 // ---------------------------------------------------------------------------
-// Category section — fetches its own products
+// Category section — fetches its own products and reports filtered match count
 // ---------------------------------------------------------------------------
 
 interface CategorySectionProps {
   brandSlug: string;
   categoryId: string;
   categoryName: string;
+  filters: MenuFilterState;
   onAddProduct: (product: ProductListItem) => void;
+  onMatchCountChange: (categoryId: string, count: number) => void;
 }
 
 function CategorySection({
   brandSlug,
   categoryId,
   categoryName,
+  filters,
   onAddProduct,
+  onMatchCountChange,
 }: CategorySectionProps) {
   const { t } = useTranslation('common');
   const { data: products, isLoading, isError } = useStorefrontCategoryProducts(brandSlug, categoryId);
+
+  const filteredProducts = useMemo(
+    () => (products ?? []).filter((p) => matchesFilters(p, filters)),
+    [products, filters],
+  );
+
+  useEffect(() => {
+    if (products) onMatchCountChange(categoryId, filteredProducts.length);
+  }, [products, filteredProducts.length, categoryId, onMatchCountChange]);
 
   if (isLoading) {
     return (
@@ -51,7 +71,7 @@ function CategorySection({
     );
   }
 
-  if (!products || products.length === 0) return null;
+  if (filteredProducts.length === 0) return null;
 
   return (
     <section style={{ marginBottom: '2.5rem' }}>
@@ -67,7 +87,7 @@ function CategorySection({
       >
         {categoryName}
       </h2>
-      {products.map((product) => (
+      {filteredProducts.map((product) => (
         <ProductCard key={product.id} product={product} onAdd={onAddProduct} />
       ))}
     </section>
@@ -88,11 +108,14 @@ function MenuContent({ brandSlug }: MenuContentProps) {
 
   const [cartOpen, setCartOpen] = useState(false);
   const [modifierProduct, setModifierProduct] = useState<ProductListItem | null>(null);
+  const [filters, setFilters] = useState<MenuFilterState>(EMPTY_FILTERS);
+  const [matchCounts, setMatchCounts] = useState<Record<string, number>>({});
 
   const { data: categories, isLoading, isError } = useStorefrontCategories(brandSlug);
 
-  // Pre-fetch modifier groups for all visible products' modifier count check
-  // (We check whether a product has modifier groups by fetching once the user clicks Add)
+  const handleMatchCountChange = useCallback((categoryId: string, count: number) => {
+    setMatchCounts((prev) => (prev[categoryId] === count ? prev : { ...prev, [categoryId]: count }));
+  }, []);
 
   async function checkProductHasModifiers(product: ProductListItem): Promise<boolean> {
     try {
@@ -129,6 +152,11 @@ function MenuContent({ brandSlug }: MenuContentProps) {
     });
     setModifierProduct(null);
   }
+
+  const totalMatches = Object.values(matchCounts).reduce((sum, n) => sum + n, 0);
+  const filterActive = isFilterActive(filters);
+  const showNoMatches =
+    filterActive && categories && categories.length > 0 && totalMatches === 0;
 
   return (
     <main style={{ maxWidth: '48rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
@@ -183,6 +211,8 @@ function MenuContent({ brandSlug }: MenuContentProps) {
         {t('storefront.menu.title')}
       </h1>
 
+      <MenuFilters filters={filters} onChange={setFilters} />
+
       {isLoading && <p style={{ color: '#6b7280' }}>{t('loading')}</p>}
       {isError && <p style={{ color: '#ef4444' }}>{t('error')}</p>}
 
@@ -196,9 +226,17 @@ function MenuContent({ brandSlug }: MenuContentProps) {
           brandSlug={brandSlug}
           categoryId={category.id}
           categoryName={category.name}
+          filters={filters}
           onAddProduct={(product) => { void handleAddProduct(product); }}
+          onMatchCountChange={handleMatchCountChange}
         />
       ))}
+
+      {showNoMatches && (
+        <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem 0' }}>
+          {t('storefront.menu.filters.noMatches')}
+        </p>
+      )}
 
       {/* Modifier modal */}
       {modifierProduct && (
