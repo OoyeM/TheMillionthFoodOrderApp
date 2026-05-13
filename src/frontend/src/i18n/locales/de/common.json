@@ -85,7 +85,25 @@
     }
   },
   "pos": {
-    "description": "Kassensystem für den Laden."
+    "description": "Kassensystem für den Laden.",
+    "kitchen": {
+      "title": "Küchendisplay",
+      "empty": "Keine aktiven Bestellungen.",
+      "customer": "Kunde: {{name}}",
+      "table": "Tisch {{number}}",
+      "timeSlot": "Zeitfenster: {{value}}",
+      "orderType": {
+        "Pickup": "Abholung",
+        "EatIn": "Vor Ort",
+        "Delivery": "Lieferung"
+      },
+      "connection": {
+        "connected": "Live",
+        "connecting": "Verbinden…",
+        "reconnecting": "Wiederverbinden…",
+        "disconnected": "Offline"
+      }
+    }
   },
   "allergens": {
     "Gluten": "Gluten",

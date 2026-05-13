@@ -111,7 +111,7 @@ Once ordering works, these streams are **all independent**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-027** | View order on kitchen display | 022, 068 |
+| ✅ | **US-FP-027** | View order on kitchen display | 022, 068 |
 | ⬜ | **US-FP-023** | Update order status (kitchen) | 022, 027 |
 | ⬜ | **US-FP-028** | Print order ticket | 022 |
 | ⬜ | **US-FP-026** | Configure order notifications | 022 |

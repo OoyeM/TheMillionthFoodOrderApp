@@ -58,6 +58,14 @@ export interface OrderResponse {
   totalGross: number;
   createdAt: string;
   paymentMethod: string;
+  // Forward-compatibility — server only sends these once the corresponding stories ship
+  // (US-FP-024 for tableNumber; scheduled-time-slot orders are not yet on any story).
+  tableNumber?: string | null;
+  timeSlot?: string | null;
+}
+
+export interface ListActiveOrdersResponse {
+  orders: OrderResponse[];
 }
 
 // ---------------------------------------------------------------------------
@@ -139,4 +147,10 @@ export const ordersApi = {
         `/brands/${brandSlug}/shops/${shopId}/orders/number/${orderNumber}`,
       )
       .then((r) => r.data),
+
+  /** List active (non-terminal) orders for a shop — backs the kitchen display (US-FP-027). */
+  listActive: (brandSlug: string, shopId: string): Promise<OrderResponse[]> =>
+    apiClient
+      .get<ListActiveOrdersResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/active`)
+      .then((r) => r.data.orders),
 };

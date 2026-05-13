@@ -76,4 +76,27 @@ public sealed class OrderRepository(BrandDbContext dbContext, IMessageBus messag
         CancellationToken cancellationToken = default)
         => await dbContext.Orders
             .AnyAsync(o => o.ShopId == shopId && o.OrderNumber == orderNumber, cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<Order>> GetActiveByShopAsync(
+        Guid shopId,
+        CancellationToken cancellationToken = default)
+    {
+        // Orders only store the status name (denormalised); terminal flag lives on
+        // OrderStatus inside the shop's lifecycle config. Materialize the small list
+        // of terminal names first, then filter orders by NOT IN that set.
+        var terminalStatusNames = await dbContext.OrderLifecycleConfigs
+            .Where(c => c.ShopId == shopId)
+            .SelectMany(c => c.Statuses)
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Name)
+            .ToListAsync(cancellationToken);
+
+        return await dbContext.Orders
+            .Include(o => o.Items)
+            .ThenInclude(i => i.SelectedModifiers)
+            .Where(o => o.ShopId == shopId && !terminalStatusNames.Contains(o.StatusName))
+            .OrderBy(o => o.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

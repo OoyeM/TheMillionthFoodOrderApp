@@ -18,6 +18,7 @@ internal static class OrderTrackingMapper
             order.ShopId,
             order.BrandSlug,
             order.OrderType.ToString(),
+            order.PaymentMethod.ToString(),
             order.StatusName,
             order.CustomerName,
             order.Items
