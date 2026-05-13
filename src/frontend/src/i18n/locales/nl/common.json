@@ -17,7 +17,16 @@
       "closeModal": "Sluiten",
       "noCategories": "Geen menu-categorieën beschikbaar.",
       "loadingModifiers": "Opties laden…",
-      "noModifiers": "Geen aanpassingen beschikbaar."
+      "noModifiers": "Geen aanpassingen beschikbaar.",
+      "contains": "Bevat {{name}}",
+      "filters": {
+        "title": "Filters",
+        "excludeAllergens": "Allergenen uitsluiten",
+        "requireDietary": "Dieetvereisten",
+        "clearAll": "Alles wissen",
+        "active": "{{count}} actief",
+        "noMatches": "Geen producten voldoen aan uw filters."
+      }
     },
     "cart": {
       "title": "Winkelwagen",

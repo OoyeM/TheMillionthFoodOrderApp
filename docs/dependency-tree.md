@@ -125,7 +125,7 @@ Once ordering works, these streams are **all independent**.
 | ⬜ | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
 | ⬜ | **US-FP-025** | QR code table ordering | 024, 065 |
 | ⬜ | **US-FP-019** | Select time slot at checkout | 016, 020 |
-| ⬜ | **US-FP-064** | Browse menu with allergen/dietary filters | 008 |
+| ✅ | **US-FP-064** | Browse menu with allergen/dietary filters | 008 |
 | ⬜ | **US-FP-059** | Place a delivery order (POC) | 016 |
 
 ### Stream G: Shop Product Management

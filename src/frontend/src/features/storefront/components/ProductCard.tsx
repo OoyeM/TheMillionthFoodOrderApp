@@ -1,4 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import {
+  Allergen,
+  DietaryTag,
+  ALLERGEN_KEYS,
+  DIETARY_TAG_KEYS,
+} from '@/types/common';
 import type { ProductListItem } from '@/types/common';
 
 interface ProductCardProps {
@@ -6,9 +12,42 @@ interface ProductCardProps {
   onAdd: (product: ProductListItem) => void;
 }
 
+const ALLERGEN_KEY_BY_VALUE = new Map<number, (typeof ALLERGEN_KEYS)[number]>(
+  ALLERGEN_KEYS.map((key) => [Allergen[key], key] as const),
+);
+
+const DIETARY_KEY_BY_VALUE = new Map<number, (typeof DIETARY_TAG_KEYS)[number]>(
+  DIETARY_TAG_KEYS.map((key) => [DietaryTag[key], key] as const),
+);
+
+const chipBase: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.1875rem',
+  padding: '0.125rem 0.5rem',
+  borderRadius: '9999px',
+  fontSize: '0.6875rem',
+  fontWeight: 600,
+  lineHeight: 1.3,
+};
+
+const allergenChipStyle: React.CSSProperties = {
+  ...chipBase,
+  background: '#fef3c7',
+  color: '#92400e',
+  border: '1px solid #fde68a',
+};
+
+const dietaryChipStyle: React.CSSProperties = {
+  ...chipBase,
+  background: '#dcfce7',
+  color: '#166534',
+  border: '1px solid #bbf7d0',
+};
+
 /**
  * Displays a single product in the storefront menu.
- * Shows the product name, formatted price, and an "Add" button.
+ * Shows the product name, formatted price, allergen and dietary chips, and an "Add" button.
  *
  * For products with modifier groups, the parent (MenuPage) opens a ModifierModal
  * when the add button is clicked.
@@ -20,6 +59,8 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
     style: 'currency',
     currency: product.basePrice.currency || 'EUR',
   }).format(product.basePrice.amount);
+
+  const hasTags = product.allergens.length > 0 || product.dietaryTags.length > 0;
 
   return (
     <div
@@ -71,11 +112,57 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
         >
           {formattedPrice}
         </p>
+
+        {hasTags && (
+          <div
+            style={{
+              marginTop: '0.375rem',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.25rem',
+            }}
+            data-testid="product-tags"
+          >
+            {product.dietaryTags.map((value) => {
+              const key = DIETARY_KEY_BY_VALUE.get(value);
+              if (!key) return null;
+              const label = t(`dietaryTags.${key}`);
+              return (
+                <span
+                  key={`dietary-${String(value)}`}
+                  style={dietaryChipStyle}
+                  title={label}
+                  aria-label={label}
+                >
+                  <span aria-hidden="true">✓</span>
+                  {label}
+                </span>
+              );
+            })}
+            {product.allergens.map((value) => {
+              const key = ALLERGEN_KEY_BY_VALUE.get(value);
+              if (!key) return null;
+              const label = t(`allergens.${key}`);
+              const containsLabel = t('storefront.menu.contains', { name: label });
+              return (
+                <span
+                  key={`allergen-${String(value)}`}
+                  style={allergenChipStyle}
+                  title={containsLabel}
+                  aria-label={containsLabel}
+                >
+                  <span aria-hidden="true">⚠</span>
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <button
         type="button"
-        onClick={() => onAdd(product)}
+        onClick={() => { onAdd(product); }}
         aria-label={t('storefront.menu.addItem', { name: product.name })}
         style={{
           flexShrink: 0,

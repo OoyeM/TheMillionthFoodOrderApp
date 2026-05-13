@@ -17,7 +17,16 @@
       "closeModal": "Schließen",
       "noCategories": "Keine Menükategorien verfügbar.",
       "loadingModifiers": "Optionen werden geladen…",
-      "noModifiers": "Keine Anpassungen verfügbar."
+      "noModifiers": "Keine Anpassungen verfügbar.",
+      "contains": "Enthält {{name}}",
+      "filters": {
+        "title": "Filter",
+        "excludeAllergens": "Allergene ausschließen",
+        "requireDietary": "Ernährungsvorgaben",
+        "clearAll": "Alle zurücksetzen",
+        "active": "{{count}} aktiv",
+        "noMatches": "Keine Produkte entsprechen Ihren Filtern."
+      }
     },
     "cart": {
       "title": "Warenkorb",

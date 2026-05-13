@@ -17,7 +17,16 @@
       "closeModal": "Fermer",
       "noCategories": "Aucune catégorie de menu disponible.",
       "loadingModifiers": "Chargement des options…",
-      "noModifiers": "Aucune personnalisation disponible."
+      "noModifiers": "Aucune personnalisation disponible.",
+      "contains": "Contient {{name}}",
+      "filters": {
+        "title": "Filtres",
+        "excludeAllergens": "Exclure les allergènes",
+        "requireDietary": "Préférences alimentaires",
+        "clearAll": "Tout effacer",
+        "active": "{{count}} actif(s)",
+        "noMatches": "Aucun produit ne correspond à vos filtres."
+      }
     },
     "cart": {
       "title": "Panier",
