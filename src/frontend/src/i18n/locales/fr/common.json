@@ -85,7 +85,25 @@
     }
   },
   "pos": {
-    "description": "Système de caisse en magasin."
+    "description": "Système de caisse en magasin.",
+    "kitchen": {
+      "title": "Écran de cuisine",
+      "empty": "Aucune commande active.",
+      "customer": "Client : {{name}}",
+      "table": "Table {{number}}",
+      "timeSlot": "Créneau : {{value}}",
+      "orderType": {
+        "Pickup": "À emporter",
+        "EatIn": "Sur place",
+        "Delivery": "Livraison"
+      },
+      "connection": {
+        "connected": "En direct",
+        "connecting": "Connexion…",
+        "reconnecting": "Reconnexion…",
+        "disconnected": "Hors ligne"
+      }
+    }
   },
   "allergens": {
     "Gluten": "Gluten",

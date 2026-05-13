@@ -85,7 +85,25 @@
     }
   },
   "pos": {
-    "description": "Kassasysteem voor in de winkel."
+    "description": "Kassasysteem voor in de winkel.",
+    "kitchen": {
+      "title": "Keukendisplay",
+      "empty": "Geen actieve bestellingen.",
+      "customer": "Klant: {{name}}",
+      "table": "Tafel {{number}}",
+      "timeSlot": "Tijdslot: {{value}}",
+      "orderType": {
+        "Pickup": "Afhalen",
+        "EatIn": "Ter plaatse",
+        "Delivery": "Bezorging"
+      },
+      "connection": {
+        "connected": "Live",
+        "connecting": "Verbinden…",
+        "reconnecting": "Opnieuw verbinden…",
+        "disconnected": "Verbinding verbroken"
+      }
+    }
   },
   "allergens": {
     "Gluten": "Gluten",

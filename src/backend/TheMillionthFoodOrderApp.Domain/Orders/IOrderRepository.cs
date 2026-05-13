@@ -26,4 +26,12 @@ public interface IOrderRepository
     /// Used to guard against race-condition duplicate order numbers.
     /// </summary>
     Task<bool> OrderNumberExistsAsync(Guid shopId, string orderNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the active orders for a shop — those whose status is not a terminal
+    /// status in the shop's <c>OrderLifecycleConfig</c> — ordered by <c>CreatedAt</c>
+    /// ascending. Items and selected modifiers are included so kitchen-side callers
+    /// can render line details without a second round-trip.
+    /// </summary>
+    Task<IReadOnlyList<Order>> GetActiveByShopAsync(Guid shopId, CancellationToken cancellationToken = default);
 }

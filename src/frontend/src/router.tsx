@@ -18,6 +18,10 @@ const LazyPosDashboard = lazy(() =>
   import('@features/pos/pages/Dashboard').then((m) => ({ default: m.PosDashboard })),
 );
 
+const LazyKitchenDisplay = lazy(() =>
+  import('@features/pos/pages/KitchenDisplay').then((m) => ({ default: m.KitchenDisplay })),
+);
+
 /**
  * Resolves the initial locale for the root redirect.
  * Priority: explicit user preference (localStorage) → browser language → 'nl' (fallback).
@@ -76,6 +80,16 @@ export const router = createBrowserRouter([
             element: (
               <SuspenseWrapper>
                 <LazyPosDashboard />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            // Kitchen display screen (US-FP-027) — shop-scoped because each store
+            // has its own pass and the staff member is at a single station.
+            path: 'shops/:shopId/kitchen',
+            element: (
+              <SuspenseWrapper>
+                <LazyKitchenDisplay />
               </SuspenseWrapper>
             ),
           },
