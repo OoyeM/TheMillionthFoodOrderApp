@@ -17,6 +17,8 @@ export type PaymentMethod = 'CashAtPickup' | 'CreditCard' | 'Bancontact';
 export interface CreateOrderRequest {
   orderType: OrderType;
   customerName?: string | null;
+  /** Required when orderType is EatIn; null/undefined for Pickup and Delivery. */
+  tableNumber?: string | null;
   items: OrderItemRequest[];
   paymentMethod: PaymentMethod;
 }

@@ -13,7 +13,8 @@ public sealed record OrderCreatedEvent(
     string BrandSlug,
     string OrderNumber,
     string StatusName,
-    string? CustomerName) : IDomainEvent
+    string? CustomerName,
+    string? TableNumber) : IDomainEvent
 {
     public DateTimeOffset OccurredOn { get; } = DateTimeOffset.UtcNow;
 }

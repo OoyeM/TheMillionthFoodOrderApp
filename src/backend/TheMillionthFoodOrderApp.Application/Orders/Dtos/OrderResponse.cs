@@ -33,4 +33,5 @@ public sealed record OrderResponse(
     decimal TotalVatAmount,
     decimal TotalNet,
     decimal TotalGross,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? TableNumber = null);

@@ -168,7 +168,8 @@ public sealed class OrderService(
                 openingStatus.Name,
                 request.CustomerName,
                 vatRate,
-                orderItems);
+                orderItems,
+                request.TableNumber);
 
             try
             {
@@ -247,5 +248,6 @@ public sealed class OrderService(
             order.TotalVatAmount,
             order.TotalNet,
             order.TotalGross,
-            order.CreatedAt);
+            order.CreatedAt,
+            order.TableNumber);
 }

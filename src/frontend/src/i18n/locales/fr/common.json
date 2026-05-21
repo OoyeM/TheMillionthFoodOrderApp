@@ -95,6 +95,41 @@
   },
   "pos": {
     "description": "Système de caisse en magasin.",
+    "dashboard": {
+      "title": "Tableau de bord POS",
+      "selectShop": "Sélectionnez un magasin pour commencer.",
+      "noShops": "Aucun magasin actif disponible.",
+      "openOrdering": "Passer une commande",
+      "openKitchen": "Ouvrir l'écran de cuisine",
+      "backToDashboard": "Retour au tableau de bord"
+    },
+    "order": {
+      "title": "Nouvelle commande",
+      "ticket": "Ticket",
+      "empty": "Ajoutez des produits au ticket.",
+      "orderType": "Type de commande",
+      "tableNumberLabel": "Numéro de table",
+      "tableNumberPlaceholder": "ex. T-12 ou 5",
+      "customerNameLabel": "Nom du client",
+      "customerNamePlaceholder": "Optionnel",
+      "subtotal": "Sous-total",
+      "placeOrder": "Passer la commande",
+      "placing": "En cours…",
+      "addToOrder": "Ajouter au ticket",
+      "submitError": "Échec de la commande. Veuillez réessayer."
+    },
+    "confirmation": {
+      "title": "Commande passée !",
+      "orderNumber": "Numéro de commande",
+      "orderType": "Type de commande",
+      "tableNumber": "Table",
+      "customerName": "Nom du client",
+      "total": "Total",
+      "newOrder": "Nouvelle commande",
+      "printReceipt": "Imprimer le reçu",
+      "printReceiptTooltip": "Imprimante de reçus disponible dans US-FP-028",
+      "autoRedirect": "Redirection automatique dans {{seconds}} secondes…"
+    },
     "kitchen": {
       "title": "Écran de cuisine",
       "empty": "Aucune commande active.",

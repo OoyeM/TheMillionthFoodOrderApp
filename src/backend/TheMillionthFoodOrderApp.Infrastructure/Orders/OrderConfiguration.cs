@@ -38,6 +38,11 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CustomerName)
             .HasMaxLength(200);
 
+        // Nullable; required only for eat-in orders (enforced at the API/validation layer).
+        // String type supports alphanumeric table labels such as "T-12" and "Bar-3".
+        builder.Property(o => o.TableNumber)
+            .HasMaxLength(20);
+
         builder.Property(o => o.VatRatePercent)
             .HasColumnType("decimal(5,2)")
             .IsRequired();

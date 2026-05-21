@@ -581,6 +581,125 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         await Assert.That(item.SelectedModifiers[0].PriceAdjustment).IsEqualTo(0.50m);
     }
 
+    // ── TableNumber / EatIn ───────────────────────────────────────────────────
+
+    [Test]
+    public async Task PlaceOrder_EatIn_WithTableNumber_PersistsAndReturnsIt()
+    {
+        // EatIn with a table number should return 201 and echo the table number back.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje EatIn");
+
+        var request = new
+        {
+            OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            TableNumber = "T-12",
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.TableNumber).IsEqualTo("T-12");
+        await Assert.That(order.OrderType).IsEqualTo("EatIn");
+    }
+
+    [Test]
+    public async Task PlaceOrder_EatIn_WithoutTableNumber_Returns400()
+    {
+        // EatIn without a table number must be rejected by the API validator.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.BetaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Frietje NoTable");
+
+        var request = new
+        {
+            OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            // TableNumber intentionally omitted
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+    }
+
+    [Test]
+    public async Task PlaceOrder_Pickup_WithoutTableNumber_Returns201()
+    {
+        // Pickup orders do not require a table number.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.GammaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Frietje Pickup");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            // TableNumber intentionally omitted
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.TableNumber).IsNull();
+    }
+
+    [Test]
+    public async Task PlaceOrder_EatIn_TableNumberTooLong_Returns400()
+    {
+        // A table number exceeding 20 characters should be rejected.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Frietje LongTable");
+
+        var request = new
+        {
+            OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            TableNumber = new string('A', 21), // 21 characters — exceeds max of 20
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+    }
+
     // ── PaymentMethod ─────────────────────────────────────────────────────────
 
     [Test]

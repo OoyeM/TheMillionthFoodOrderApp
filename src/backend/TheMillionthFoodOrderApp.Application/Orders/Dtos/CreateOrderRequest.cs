@@ -9,4 +9,5 @@ public sealed record CreateOrderRequest(
     string OrderType,
     string PaymentMethod,
     string? CustomerName,
-    IReadOnlyList<OrderItemInput> Items);
+    IReadOnlyList<OrderItemInput> Items,
+    string? TableNumber = null);

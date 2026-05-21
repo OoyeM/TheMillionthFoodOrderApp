@@ -95,6 +95,41 @@
   },
   "pos": {
     "description": "Kassasysteem voor in de winkel.",
+    "dashboard": {
+      "title": "POS Dashboard",
+      "selectShop": "Selecteer een winkel om te beginnen.",
+      "noShops": "Geen actieve winkels beschikbaar.",
+      "openOrdering": "Bestelling plaatsen",
+      "openKitchen": "Keukendisplay openen",
+      "backToDashboard": "Terug naar dashboard"
+    },
+    "order": {
+      "title": "Nieuwe bestelling",
+      "ticket": "Bon",
+      "empty": "Voeg producten toe aan de bon.",
+      "orderType": "Besteltype",
+      "tableNumberLabel": "Tafelnummer",
+      "tableNumberPlaceholder": "bijv. T-12 of 5",
+      "customerNameLabel": "Klantnaam",
+      "customerNamePlaceholder": "Optioneel",
+      "subtotal": "Subtotaal",
+      "placeOrder": "Bestelling plaatsen",
+      "placing": "Bezig…",
+      "addToOrder": "Toevoegen aan bon",
+      "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw."
+    },
+    "confirmation": {
+      "title": "Bestelling geplaatst!",
+      "orderNumber": "Bestelnummer",
+      "orderType": "Besteltype",
+      "tableNumber": "Tafel",
+      "customerName": "Klantnaam",
+      "total": "Totaal",
+      "newOrder": "Nieuwe bestelling",
+      "printReceipt": "Bon afdrukken",
+      "printReceiptTooltip": "Bonprinter beschikbaar in US-FP-028",
+      "autoRedirect": "Automatisch doorgestuurd over {{seconds}} seconden…"
+    },
     "kitchen": {
       "title": "Keukendisplay",
       "empty": "Geen actieve bestellingen.",

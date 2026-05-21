@@ -32,11 +32,16 @@ describe('App smoke test', () => {
 
   it('renders the POS dashboard without crashing', async () => {
     const { PosDashboard } = await import('@features/pos/pages/Dashboard');
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
 
     render(
-      <MemoryRouter>
-        <PosDashboard />
-      </MemoryRouter>,
+      <QueryClientProvider client={client}>
+        <MemoryRouter>
+          <PosDashboard />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByRole('heading', { name: 'POS Dashboard' })).toBeInTheDocument();

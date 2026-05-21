@@ -1,26 +1,13 @@
-import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { extractPrimaryLocale } from '@/types/common';
 import { LANGUAGE_PREF_KEY } from '@features/storefront/components/LanguageSelector';
 import { AppShell } from '@components/AppShell';
 import { AppVariantLayout } from '@components/AppVariantLayout';
-import { SuspenseWrapper } from '@components/SuspenseWrapper';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { adminRoutes } from '@features/admin/routes';
 import { storefrontRoutes } from '@features/storefront/routes';
 import { ThemeProvider } from '@features/storefront/components/ThemeProvider';
-
-// ---------------------------------------------------------------------------
-// Lazy-loaded feature pages — split into separate chunks by Vite/Rollup
-// ---------------------------------------------------------------------------
-
-const LazyPosDashboard = lazy(() =>
-  import('@features/pos/pages/Dashboard').then((m) => ({ default: m.PosDashboard })),
-);
-
-const LazyKitchenDisplay = lazy(() =>
-  import('@features/pos/pages/KitchenDisplay').then((m) => ({ default: m.KitchenDisplay })),
-);
+import { posRoutes } from '@features/pos/routes';
 
 /**
  * Resolves the initial locale for the root redirect.
@@ -74,26 +61,7 @@ export const router = createBrowserRouter([
             <AppVariantLayout variant="pos" />
           </RequireAuth>
         ),
-        children: [
-          {
-            index: true,
-            element: (
-              <SuspenseWrapper>
-                <LazyPosDashboard />
-              </SuspenseWrapper>
-            ),
-          },
-          {
-            // Kitchen display screen (US-FP-027) — shop-scoped because each store
-            // has its own pass and the staff member is at a single station.
-            path: 'shops/:shopId/kitchen',
-            element: (
-              <SuspenseWrapper>
-                <LazyKitchenDisplay />
-              </SuspenseWrapper>
-            ),
-          },
-        ],
+        children: posRoutes,
       },
       // ── Admin ────────────────────────────────────────────────────────────
       {

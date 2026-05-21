@@ -95,6 +95,41 @@
   },
   "pos": {
     "description": "Kassensystem für den Laden.",
+    "dashboard": {
+      "title": "POS-Dashboard",
+      "selectShop": "Wählen Sie ein Geschäft aus, um zu beginnen.",
+      "noShops": "Keine aktiven Geschäfte verfügbar.",
+      "openOrdering": "Bestellung aufnehmen",
+      "openKitchen": "Küchendisplay öffnen",
+      "backToDashboard": "Zurück zum Dashboard"
+    },
+    "order": {
+      "title": "Neue Bestellung",
+      "ticket": "Bon",
+      "empty": "Produkte zum Bon hinzufügen.",
+      "orderType": "Bestellart",
+      "tableNumberLabel": "Tischnummer",
+      "tableNumberPlaceholder": "z.B. T-12 oder 5",
+      "customerNameLabel": "Kundenname",
+      "customerNamePlaceholder": "Optional",
+      "subtotal": "Zwischensumme",
+      "placeOrder": "Bestellung aufgeben",
+      "placing": "Wird aufgegeben…",
+      "addToOrder": "Zum Bon hinzufügen",
+      "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "confirmation": {
+      "title": "Bestellung aufgegeben!",
+      "orderNumber": "Bestellnummer",
+      "orderType": "Bestellart",
+      "tableNumber": "Tisch",
+      "customerName": "Kundenname",
+      "total": "Gesamt",
+      "newOrder": "Neue Bestellung",
+      "printReceipt": "Bon drucken",
+      "printReceiptTooltip": "Bondrucker verfügbar in US-FP-028",
+      "autoRedirect": "Automatische Weiterleitung in {{seconds}} Sekunden…"
+    },
     "kitchen": {
       "title": "Küchendisplay",
       "empty": "Keine aktiven Bestellungen.",

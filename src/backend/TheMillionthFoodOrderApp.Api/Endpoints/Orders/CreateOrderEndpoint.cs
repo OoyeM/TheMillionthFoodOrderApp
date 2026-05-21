@@ -15,7 +15,8 @@ public sealed record CreateOrderApiRequest(
     string OrderType,
     string PaymentMethod,
     string? CustomerName,
-    List<OrderItemApiInput> Items);
+    List<OrderItemApiInput> Items,
+    string? TableNumber = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -47,6 +48,17 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
         RuleFor(x => x.CustomerName)
             .MaximumLength(200)
             .When(x => x.CustomerName is not null);
+
+        // TableNumber: optional globally, but required when order type is EatIn.
+        // Alphanumeric labels (e.g. "T-12") are valid — max 20 chars.
+        RuleFor(x => x.TableNumber)
+            .MaximumLength(20)
+            .When(x => x.TableNumber is not null);
+
+        RuleFor(x => x.TableNumber)
+            .NotEmpty()
+            .When(x => string.Equals(x.OrderType, "EatIn", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("TableNumber is required for eat-in orders.");
     }
 }
 
@@ -89,7 +101,8 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                         i.Quantity,
                         (i.SelectedModifierIds ?? []).AsReadOnly()))
                     .ToList()
-                    .AsReadOnly());
+                    .AsReadOnly(),
+                req.TableNumber);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 

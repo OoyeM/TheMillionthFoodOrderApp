@@ -240,4 +240,41 @@ public sealed class ListActiveOrdersTests(IntegrationTestBase fixture)
             $"/api/brands/non-existent-brand/shops/{Guid.NewGuid()}/orders/active");
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
+
+    [Test]
+    public async Task ListActive_EatInOrderWithTableNumber_ReturnsTableNumberInResponse()
+    {
+        // Proves the kitchen display will see the table number once an eat-in POS order is placed.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+        var shopId = await CreateShopAsync(client, brand);
+        var productId = await CreateProductAsync(client, brand, "POS Frietje");
+
+        // Place an eat-in order with a table number (simulates counter staff using the POS)
+        var request = new
+        {
+            OrderType = "EatIn",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            TableNumber = "T-7",
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var placeResponse = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+        await Assert.That(placeResponse.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        // Fetch active orders (kitchen display endpoint) and confirm table number is present
+        var activeResponse = await client.GetAsync(ActiveOrdersUrl(brand, shopId));
+        await Assert.That(activeResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var body = await activeResponse.Content.ReadFromJsonAsync<ListActiveOrdersResponse>();
+        await Assert.That(body).IsNotNull();
+
+        var eatInOrder = body!.Orders.FirstOrDefault(o => o.OrderType == "EatIn");
+        await Assert.That(eatInOrder).IsNotNull();
+        await Assert.That(eatInOrder!.TableNumber).IsEqualTo("T-7");
+    }
 }

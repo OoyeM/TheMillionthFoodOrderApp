@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-04-09
+> Last updated: 2026-05-21
 
 ## Progress Legend
 
@@ -99,7 +99,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ✅ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
 | ✅ | **US-FP-058** | Complete payment flow (mocked) | 016 |
 | ⬜ | **US-FP-017** | Place an order as a guest | 016 |
-| ⬜ | **US-FP-018** | Place an in-store order (POS) | 016 |
+| ✅ | **US-FP-018** | Place an in-store order (POS) | 016 |
 
 ---
 

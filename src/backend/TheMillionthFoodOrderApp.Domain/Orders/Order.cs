@@ -24,6 +24,14 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     /// <summary>Optional customer name for display on kitchen displays and receipts.</summary>
     public string? CustomerName { get; private set; }
 
+    /// <summary>
+    /// Optional table number for eat-in orders. Stored as a string to support
+    /// alphanumeric labels (e.g. "T-12", "Bar-3"). Validated at the API layer
+    /// when OrderType is EatIn. Domain layer accepts null to allow future
+    /// eat-in-without-table scenarios (US-FP-066).
+    /// </summary>
+    public string? TableNumber { get; private set; }
+
     /// <summary>VAT rate applied to this order (6 for Pickup/Delivery, 21 for EatIn).</summary>
     public decimal VatRatePercent { get; private set; }
 
@@ -67,11 +75,17 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         string statusName,
         string? customerName,
         decimal vatRatePercent,
-        IEnumerable<OrderItem> items)
+        IEnumerable<OrderItem> items,
+        string? tableNumber = null)
     {
         var itemList = items.ToList();
         if (itemList.Count == 0)
             throw new ArgumentException("An order must contain at least one item.", nameof(items));
+
+        // Trim and length-cap the table number — alphanumeric labels like "T-12" are valid
+        var trimmedTableNumber = tableNumber?.Trim();
+        if (trimmedTableNumber is { Length: > 20 })
+            throw new ArgumentException("TableNumber must not exceed 20 characters.", nameof(tableNumber));
 
         var subtotalGross = itemList.Sum(i => i.LineTotal);
         var totalVatAmount = itemList.Sum(i => i.UnitVatAmount * i.Quantity);
@@ -89,6 +103,7 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             PaymentMethod = paymentMethod,
             StatusName = statusName,
             CustomerName = customerName,
+            TableNumber = trimmedTableNumber,
             VatRatePercent = vatRatePercent,
             SubtotalGross = Math.Round(subtotalGross, 2, MidpointRounding.AwayFromZero),
             TotalVatAmount = Math.Round(totalVatAmount, 2, MidpointRounding.AwayFromZero),
@@ -107,7 +122,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             brandSlug,
             orderNumber,
             statusName,
-            customerName));
+            customerName,
+            trimmedTableNumber));
 
         return order;
     }
