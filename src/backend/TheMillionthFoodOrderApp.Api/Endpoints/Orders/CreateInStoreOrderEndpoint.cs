@@ -26,6 +26,9 @@ public sealed class CreateInStoreOrderRequestValidator : Validator<CreateInStore
             .Must(v => Enum.TryParse<OrderType>(v, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed))
             .WithMessage($"OrderType must be one of: {string.Join(", ", Enum.GetNames<OrderType>())}.");
 
+        // PaymentMethod is validated for enum-syntax only.
+        // OrderService.CreateInStoreOrderAsync will override it to CashAtPickup server-side
+        // regardless of the client-submitted value — the field is accepted for API symmetry.
         RuleFor(x => x.PaymentMethod)
             .NotEmpty().WithMessage("PaymentMethod is required.")
             .Must(v => Enum.TryParse<Domain.Orders.PaymentMethod>(v, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed))

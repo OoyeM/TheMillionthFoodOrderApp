@@ -2,8 +2,12 @@
  * t-11 — OrderType toggle switches Pickup/EatIn and shows/hides the table input [AC3]
  * t-12 — EatIn with empty table blocks submit; with a table it proceeds [AC4]
  */
+// Import i18n config before components so that t() resolves to NL translations (fallback)
+import '@/i18n/config';
+
 import { describe, it, expect } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { useTranslation } from 'react-i18next';
 import { renderWithProviders } from '@/test/testUtils';
 import { PosOrderProvider, useOrderState } from '../context/PosOrderContext';
 import { PosOrderPanel } from '../components/PosOrderPanel';
@@ -78,8 +82,12 @@ describe('PosOrderPanel — table number input (t-12 precondition)', () => {
 /**
  * Minimal wrapper that exposes PosOrderPanel + a submit button to test the
  * EatIn-without-table blocking behaviour from Dashboard.
+ *
+ * Uses i18n keys for display strings so the test reflects the same keys
+ * used by the real Dashboard component and isn't brittle to translation changes.
  */
 function SubmitGuardWrapper() {
+  const { t } = useTranslation('common');
   const { state } = useOrderState();
 
   const isEatInMissingTable = state.orderType === 'EatIn' && !state.tableNumber;
@@ -90,11 +98,12 @@ function SubmitGuardWrapper() {
       <PosOrderPanel />
       {isEatInMissingTable && state.items.length > 0 && (
         <p role="alert" data-testid="table-error">
-          Tafelnummer ontbreekt
+          {/* Mirrors Dashboard.tsx: t('pos.order.tableNumber') + t('error') */}
+          {t('pos.order.tableNumber')} {t('error')}
         </p>
       )}
       <button type="button" disabled={!canSubmit} data-testid="place-order-btn">
-        Bestelling plaatsen
+        {t('pos.order.submit')}
       </button>
     </div>
   );

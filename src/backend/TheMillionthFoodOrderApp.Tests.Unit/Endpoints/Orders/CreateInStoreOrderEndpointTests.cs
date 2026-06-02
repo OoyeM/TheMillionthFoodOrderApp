@@ -260,8 +260,10 @@ public sealed class CreateInStoreOrderEndpointTests
     public async Task HandleAsync_ClientSubmitsCreditCard_EndpointPassesThroughToService()
     {
         // The endpoint does NOT force PaymentMethod — the service layer does.
-        // This test verifies the endpoint passes whatever the client sent to the service DTO.
-        // PaymentMethod enforcement is covered by service-level unit/integration tests.
+        // This test verifies the endpoint passes whatever the client sent to the service DTO
+        // unchanged; it does NOT test the force logic itself.
+        // PaymentMethod enforcement (override to CashAtPickup) is verified at the service layer in:
+        //   CreateInStoreOrderServiceTests.CreateInStoreOrder_PaymentMethodForcedToCashAtPickup
         var shopId = Guid.NewGuid();
         var staffId = Guid.NewGuid();
 
