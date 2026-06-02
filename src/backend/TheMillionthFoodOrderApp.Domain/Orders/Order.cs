@@ -24,6 +24,18 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     /// <summary>Optional customer name for display on kitchen displays and receipts.</summary>
     public string? CustomerName { get; private set; }
 
+    /// <summary>
+    /// Table number for eat-in orders placed by counter staff.
+    /// Null for online/pickup/delivery orders.
+    /// </summary>
+    public int? TableNumber { get; private set; }
+
+    /// <summary>
+    /// The identity (sub claim) of the counter staff member who created this order.
+    /// Null for customer-facing online orders. Set server-side from the authenticated user.
+    /// </summary>
+    public Guid? CreatedByStaffId { get; private set; }
+
     /// <summary>VAT rate applied to this order (6 for Pickup/Delivery, 21 for EatIn).</summary>
     public decimal VatRatePercent { get; private set; }
 
@@ -57,6 +69,12 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     /// Pre-generated order ID. Must be the same Guid used when creating the order items
     /// via <see cref="OrderItem.Create"/> so that the FK relationship is consistent.
     /// </param>
+    /// <param name="tableNumber">
+    /// Optional table number for eat-in in-store orders. When provided, must be greater than zero.
+    /// </param>
+    /// <param name="createdByStaffId">
+    /// Optional staff member ID (from the authenticated user's sub claim). Set server-side only.
+    /// </param>
     public static Order Create(
         Guid orderId,
         Guid shopId,
@@ -67,8 +85,13 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         string statusName,
         string? customerName,
         decimal vatRatePercent,
-        IEnumerable<OrderItem> items)
+        IEnumerable<OrderItem> items,
+        int? tableNumber = null,
+        Guid? createdByStaffId = null)
     {
+        if (tableNumber.HasValue && tableNumber.Value <= 0)
+            throw new ArgumentException("TableNumber must be greater than zero when provided.", nameof(tableNumber));
+
         var itemList = items.ToList();
         if (itemList.Count == 0)
             throw new ArgumentException("An order must contain at least one item.", nameof(items));
@@ -89,6 +112,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             PaymentMethod = paymentMethod,
             StatusName = statusName,
             CustomerName = customerName,
+            TableNumber = tableNumber,
+            CreatedByStaffId = createdByStaffId,
             VatRatePercent = vatRatePercent,
             SubtotalGross = Math.Round(subtotalGross, 2, MidpointRounding.AwayFromZero),
             TotalVatAmount = Math.Round(totalVatAmount, 2, MidpointRounding.AwayFromZero),

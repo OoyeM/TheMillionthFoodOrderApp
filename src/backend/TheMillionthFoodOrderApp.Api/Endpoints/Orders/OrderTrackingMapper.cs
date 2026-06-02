@@ -41,5 +41,7 @@ internal static class OrderTrackingMapper
             order.TotalVatAmount,
             order.TotalNet,
             order.TotalGross,
-            order.CreatedAt);
+            order.CreatedAt,
+            order.TableNumber,
+            order.CreatedByStaffId);
 }

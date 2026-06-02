@@ -40,35 +40,110 @@ public sealed class OrderService(
         if (request.Items.Count == 0)
             throw new ArgumentException("An order must contain at least one item.");
 
-        // 2. Determine consumption mode for VAT calculation
+        return await CreateOrderCoreAsync(
+            request.ShopId,
+            request.BrandSlug,
+            orderType,
+            paymentMethod,
+            request.CustomerName,
+            tableNumber: null,
+            createdByStaffId: null,
+            request.Items,
+            cancellationToken);
+    }
+
+    public async Task<OrderResponse> CreateInStoreOrderAsync(
+        CreateInStoreOrderRequest request,
+        Guid? createdByStaffId,
+        CancellationToken cancellationToken = default)
+    {
+        // 1. Parse and validate order type
+        if (!Enum.TryParse<OrderType>(request.OrderType, ignoreCase: true, out var orderType) || !Enum.IsDefined(orderType))
+            throw new ArgumentException(
+                $"Invalid order type: '{request.OrderType}'. Valid values: {string.Join(", ", Enum.GetNames<OrderType>())}.");
+
+        // 1b. Parse and validate payment method (for enum validity only — will be forced to CashAtPickup)
+        if (!Enum.TryParse<PaymentMethod>(request.PaymentMethod, ignoreCase: true, out _) ||
+            !Enum.IsDefined(Enum.Parse<PaymentMethod>(request.PaymentMethod, ignoreCase: true)))
+            throw new ArgumentException(
+                $"Invalid payment method: '{request.PaymentMethod}'. Valid values: {string.Join(", ", Enum.GetNames<PaymentMethod>())}.");
+
+        if (request.Items.Count == 0)
+            throw new ArgumentException("An order must contain at least one item.");
+
+        // 2. EatIn requires a valid table number
+        if (orderType == OrderType.EatIn)
+        {
+            if (request.TableNumber is null)
+                throw new ArgumentException("TableNumber is required for EatIn orders.");
+            if (request.TableNumber.Value <= 0)
+                throw new ArgumentException("TableNumber must be greater than zero.");
+        }
+
+        // 3. Force payment method to CashAtPickup for in-store orders
+        var paymentMethod = PaymentMethod.CashAtPickup;
+
+        // 4. createdByStaffId is supplied by the caller (endpoint extracts it from claims)
+        //    and is never read from the request DTO to prevent client-trust issues.
+        return await CreateOrderCoreAsync(
+            request.ShopId,
+            request.BrandSlug,
+            orderType,
+            paymentMethod,
+            request.CustomerName,
+            request.TableNumber,
+            createdByStaffId,
+            request.Items,
+            cancellationToken);
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Shared order-creation core: resolves VAT, shop, lifecycle, products, modifiers,
+    /// builds order items, and persists with retry logic. Both the public and in-store
+    /// endpoints delegate here so pricing/VAT/modifier logic is never duplicated.
+    /// </summary>
+    private async Task<OrderResponse> CreateOrderCoreAsync(
+        Guid shopId,
+        string brandSlug,
+        OrderType orderType,
+        PaymentMethod paymentMethod,
+        string? customerName,
+        int? tableNumber,
+        Guid? createdByStaffId,
+        IReadOnlyList<OrderItemInput> items,
+        CancellationToken cancellationToken)
+    {
+        // 1. Determine consumption mode for VAT calculation
         var consumptionMode = orderType == OrderType.EatIn
             ? ConsumptionMode.EatIn
             : ConsumptionMode.Takeaway;
 
-        // 3. Load tax configuration and resolve VAT rate
+        // 2. Load tax configuration and resolve VAT rate
         var taxConfig = await taxConfigurationRepository.GetAsync(cancellationToken)
             ?? throw new InvalidOperationException("No tax configuration has been set up for this brand.");
 
         var vatRate = taxConfig.GetRateForMode(consumptionMode);
 
-        // 4. Validate that the shop exists in this brand's database
-        var shop = await shopRepository.GetByIdAsync(request.ShopId, cancellationToken);
+        // 3. Validate that the shop exists in this brand's database
+        var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
         if (shop is null)
-            throw new KeyNotFoundException($"Shop with id '{request.ShopId}' was not found.");
+            throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
 
-        // 5. Load order lifecycle config to determine opening status (lazy-init default if missing)
-        var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(request.ShopId, cancellationToken);
+        // 4. Load order lifecycle config to determine opening status (lazy-init default if missing)
+        var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken);
         if (lifecycleConfig is null)
         {
-            lifecycleConfig = OrderLifecycleConfig.CreateDefault(request.ShopId);
+            lifecycleConfig = OrderLifecycleConfig.CreateDefault(shopId);
             await orderLifecycleConfigRepository.AddAsync(lifecycleConfig, cancellationToken);
             await orderLifecycleConfigRepository.SaveChangesAsync(cancellationToken);
         }
 
         var openingStatus = GetOpeningStatus(lifecycleConfig);
 
-        // 6. Resolve products from DB (never trust client-submitted prices)
-        var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
+        // 5. Resolve products from DB (never trust client-submitted prices)
+        var productIds = items.Select(i => i.ProductId).Distinct().ToList();
         var products = await productRepository.GetByIdsAsync(productIds, cancellationToken);
 
         if (products.Count != productIds.Count)
@@ -80,8 +155,8 @@ public sealed class OrderService(
 
         var productLookup = products.ToDictionary(p => p.Id);
 
-        // 7. Resolve all requested modifier IDs
-        var allModifierIds = request.Items
+        // 6. Resolve all requested modifier IDs
+        var allModifierIds = items
             .SelectMany(i => i.SelectedModifierIds)
             .Distinct()
             .ToList();
@@ -104,12 +179,12 @@ public sealed class OrderService(
                     $"Modifier(s) not found: {string.Join(", ", missingModifierIds)}.");
         }
 
-        // 8. Build order items with denormalised prices and modifiers
+        // 7. Build order items with denormalised prices and modifiers
         // Pre-generate the order ID so item FKs and the order aggregate share the same value.
         var orderId = Guid.CreateVersion7();
         var orderItems = new List<OrderItem>();
 
-        foreach (var itemInput in request.Items)
+        foreach (var itemInput in items)
         {
             var product = productLookup[itemInput.ProductId];
 
@@ -144,7 +219,7 @@ public sealed class OrderService(
             orderItems.Add(orderItem);
         }
 
-        // 9. Generate a unique order number and persist, retrying on the rare race condition
+        // 8. Generate a unique order number and persist, retrying on the rare race condition
         //    where two concurrent requests pass the exists-check simultaneously and one
         //    hits the UX_Orders_ShopId_OrderNumber unique index on INSERT.
         //    OrderRepository.SaveChangesAsync detects the SQL unique-constraint error (2601/2627)
@@ -155,20 +230,22 @@ public sealed class OrderService(
 
         for (var saveAttempt = 0; saveAttempt < maxSaveAttempts; saveAttempt++)
         {
-            var orderNumber = await GenerateUniqueOrderNumberAsync(request.ShopId, cancellationToken);
+            var orderNumber = await GenerateUniqueOrderNumberAsync(shopId, cancellationToken);
 
-            // 10. Create the order aggregate with the candidate number
+            // 9. Create the order aggregate with the candidate number
             order = Order.Create(
                 orderId,
-                request.ShopId,
-                request.BrandSlug,
+                shopId,
+                brandSlug,
                 orderNumber,
                 orderType,
                 paymentMethod,
                 openingStatus.Name,
-                request.CustomerName,
+                customerName,
                 vatRate,
-                orderItems);
+                orderItems,
+                tableNumber,
+                createdByStaffId);
 
             try
             {
@@ -189,8 +266,6 @@ public sealed class OrderService(
 
         return MapToResponse(order!);
     }
-
-    // ── Private helpers ──────────────────────────────────────────────────────
 
     private static Domain.OrderLifecycle.OrderStatus GetOpeningStatus(OrderLifecycleConfig config)
     {
@@ -247,5 +322,7 @@ public sealed class OrderService(
             order.TotalVatAmount,
             order.TotalNet,
             order.TotalGross,
-            order.CreatedAt);
+            order.CreatedAt,
+            order.TableNumber,
+            order.CreatedByStaffId);
 }
