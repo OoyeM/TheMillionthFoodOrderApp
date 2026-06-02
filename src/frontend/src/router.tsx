@@ -8,15 +8,12 @@ import { SuspenseWrapper } from '@components/SuspenseWrapper';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { adminRoutes } from '@features/admin/routes';
 import { storefrontRoutes } from '@features/storefront/routes';
+import { posRoutes } from '@features/pos/routes';
 import { ThemeProvider } from '@features/storefront/components/ThemeProvider';
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded feature pages — split into separate chunks by Vite/Rollup
 // ---------------------------------------------------------------------------
-
-const LazyPosDashboard = lazy(() =>
-  import('@features/pos/pages/Dashboard').then((m) => ({ default: m.PosDashboard })),
-);
 
 const LazyKitchenDisplay = lazy(() =>
   import('@features/pos/pages/KitchenDisplay').then((m) => ({ default: m.KitchenDisplay })),
@@ -75,14 +72,8 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
         children: [
-          {
-            index: true,
-            element: (
-              <SuspenseWrapper>
-                <LazyPosDashboard />
-              </SuspenseWrapper>
-            ),
-          },
+          // POS routes (index -> Dashboard, confirmation) live in features/pos/routes.
+          ...posRoutes,
           {
             // Kitchen display screen (US-FP-027) — shop-scoped because each store
             // has its own pass and the staff member is at a single station.

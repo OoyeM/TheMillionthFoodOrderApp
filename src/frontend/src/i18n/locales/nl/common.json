@@ -112,6 +112,30 @@
         "reconnecting": "Opnieuw verbinden…",
         "disconnected": "Verbinding verbroken"
       }
+    },
+    "menu": {
+      "title": "Menu",
+      "modifierIndicator": "+ opties"
+    },
+    "order": {
+      "title": "Bestelling",
+      "orderType": "Besteltype",
+      "pickup": "Afhalen",
+      "eatIn": "Ter plaatse",
+      "tableNumber": "Tafelnummer",
+      "tableNumberPlaceholder": "bijv. 5",
+      "submit": "Bestelling plaatsen",
+      "subtotal": "Subtotaal",
+      "vat": "BTW ({{rate}}%)",
+      "total": "Totaal"
+    },
+    "error": {
+      "submit": "Bestelling plaatsen mislukt. Probeer opnieuw."
+    },
+    "confirmation": {
+      "title": "Bestelling geplaatst!",
+      "orderNumber": "Bestelnummer: {{number}}",
+      "back": "Terug naar menu"
     }
   },
   "allergens": {

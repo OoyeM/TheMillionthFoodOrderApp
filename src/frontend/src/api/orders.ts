@@ -58,14 +58,29 @@ export interface OrderResponse {
   totalGross: number;
   createdAt: string;
   paymentMethod: string;
-  // Forward-compatibility — server only sends these once the corresponding stories ship
-  // (US-FP-024 for tableNumber; scheduled-time-slot orders are not yet on any story).
-  tableNumber?: string | null;
+  // Forward-compatibility — server only sends timeSlot once that story ships.
   timeSlot?: string | null;
+  /** Present on in-store EatIn orders. */
+  tableNumber?: number;
+  /** Staff member who created the order (set by the server from the auth token). */
+  createdByStaffId?: string;
 }
 
 export interface ListActiveOrdersResponse {
   orders: OrderResponse[];
+}
+
+/**
+ * Request body for creating an in-store order (POS, staff only).
+ * Route: POST /brands/{brandSlug}/shops/{shopId}/orders/in-store
+ */
+export interface CreateInStoreOrderRequest {
+  orderType: OrderType;
+  paymentMethod: PaymentMethod;
+  customerName?: string;
+  /** Required when orderType === 'EatIn'. */
+  tableNumber?: number;
+  items: OrderItemRequest[];
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +119,7 @@ export interface OrderTrackingResponse {
 // ---------------------------------------------------------------------------
 
 /**
- * API functions for orders (customer storefront).
+ * API functions for orders (customer storefront + POS).
  * Routes are brand + shop scoped: /brands/{brandSlug}/shops/{shopId}/orders/...
  */
 export const ordersApi = {
@@ -153,4 +168,20 @@ export const ordersApi = {
     apiClient
       .get<ListActiveOrdersResponse>(`/brands/${brandSlug}/shops/${shopId}/orders/active`)
       .then((r) => r.data.orders),
+
+  /**
+   * Create an in-store order via the POS interface (staff-only).
+   * Route: POST /brands/{brandSlug}/shops/{shopId}/orders/in-store
+   */
+  createInStore: (
+    brandSlug: string,
+    shopId: string,
+    data: CreateInStoreOrderRequest,
+  ): Promise<OrderResponse> =>
+    apiClient
+      .post<OrderResponse>(
+        `/brands/${brandSlug}/shops/${shopId}/orders/in-store`,
+        data,
+      )
+      .then((r) => r.data),
 };

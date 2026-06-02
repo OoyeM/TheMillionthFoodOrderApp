@@ -112,6 +112,30 @@
         "reconnecting": "Wiederverbinden…",
         "disconnected": "Offline"
       }
+    },
+    "menu": {
+      "title": "Menü",
+      "modifierIndicator": "+ Optionen"
+    },
+    "order": {
+      "title": "Bestellung",
+      "orderType": "Bestellart",
+      "pickup": "Abholung",
+      "eatIn": "Vor Ort",
+      "tableNumber": "Tischnummer",
+      "tableNumberPlaceholder": "z.B. 5",
+      "submit": "Bestellung aufgeben",
+      "subtotal": "Zwischensumme",
+      "vat": "MwSt. ({{rate}}%)",
+      "total": "Gesamt"
+    },
+    "error": {
+      "submit": "Bestellung fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "confirmation": {
+      "title": "Bestellung aufgegeben!",
+      "orderNumber": "Bestellnummer: {{number}}",
+      "back": "Zurück zum Menü"
     }
   },
   "allergens": {
