@@ -337,7 +337,13 @@ export interface ModifierGroupListItem {
 }
 
 /**
- * Modifier group assigned to a product, including its modifiers and sort order on the product.
+ * Modifier group assigned to a product, including its modifiers and sort order.
+ *
+ * NOTE: the admin assignment endpoint (`GET .../products/:id/modifier-groups`)
+ * returns ONLY `{ modifierGroupId, sortOrder }` — `name`/`modifiers` are absent
+ * there, and `ProductEdit` resolves them from the modifier-group list
+ * (useModifierGroups). The storefront/POS menu endpoints DO populate `name` +
+ * `modifiers`, so the fields stay required here for those (typed) consumers.
  */
 export interface ProductModifierGroupResponse {
   modifierGroupId: string;

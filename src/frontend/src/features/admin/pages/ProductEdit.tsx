@@ -492,7 +492,13 @@ export function ProductEdit() {
           </p>
         ) : (
           <div style={{ marginBottom: '1rem' }}>
-            {assignedGroups.map((group, index) => (
+            {assignedGroups.map((group, index) => {
+              // The assignment endpoint returns only { modifierGroupId, sortOrder };
+              // resolve the display name + modifier count from the full group list.
+              const info = allModifierGroups?.find((g) => g.id === group.modifierGroupId);
+              const groupName = info?.name ?? group.name ?? '';
+              const modifierCount = info?.modifierCount ?? group.modifiers?.length ?? 0;
+              return (
               <div
                 key={group.modifierGroupId}
                 style={{
@@ -507,10 +513,10 @@ export function ProductEdit() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{group.name}</span>
-                  {group.modifiers.length > 0 && (
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{groupName}</span>
+                  {modifierCount > 0 && (
                     <span style={{ color: '#6b7280', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
-                      {group.modifiers.length} {t('admin.modifierGroups.modifiers').toLowerCase()}
+                      {modifierCount} {t('admin.modifierGroups.modifiers').toLowerCase()}
                     </span>
                   )}
                 </div>
@@ -554,7 +560,8 @@ export function ProductEdit() {
                   {t('admin.modifierGroups.removeModifier')}
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
