@@ -5,6 +5,10 @@ public interface IShopRepository
     Task<Shop?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Shop?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Shop>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Returns only active shops, ordered by name, with opening hours included.</summary>
+    Task<IReadOnlyList<Shop>> GetActiveAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(Shop shop, CancellationToken cancellationToken = default);
 
     /// <summary>

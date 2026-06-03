@@ -8,4 +8,10 @@ public interface IShopService
     Task ActivateShopAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ShopResponse> GetShopAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ShopResponse>> GetShopsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns only active shops, enriched with real-time open/closed status.
+    /// Intended for the public storefront — does not expose admin-only fields.
+    /// </summary>
+    Task<IReadOnlyList<StorefrontShopResponse>> GetActiveShopsAsync(CancellationToken cancellationToken = default);
 }
