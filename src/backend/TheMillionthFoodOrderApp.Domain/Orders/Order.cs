@@ -24,6 +24,12 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     /// <summary>Optional customer name for display on kitchen displays and receipts.</summary>
     public string? CustomerName { get; private set; }
 
+    /// <summary>Optional customer email address for digital receipts (US-FP-017).</summary>
+    public string? CustomerEmail { get; private set; }
+
+    /// <summary>Optional customer phone number (US-FP-017).</summary>
+    public string? CustomerPhone { get; private set; }
+
     /// <summary>
     /// Table number for eat-in orders placed by counter staff.
     /// Null for online/pickup/delivery orders.
@@ -87,7 +93,9 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         decimal vatRatePercent,
         IEnumerable<OrderItem> items,
         int? tableNumber = null,
-        Guid? createdByStaffId = null)
+        Guid? createdByStaffId = null,
+        string? customerEmail = null,
+        string? customerPhone = null)
     {
         if (tableNumber.HasValue && tableNumber.Value <= 0)
             throw new ArgumentException("TableNumber must be greater than zero when provided.", nameof(tableNumber));
@@ -112,6 +120,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             PaymentMethod = paymentMethod,
             StatusName = statusName,
             CustomerName = customerName,
+            CustomerEmail = string.IsNullOrWhiteSpace(customerEmail) ? null : customerEmail.Trim(),
+            CustomerPhone = string.IsNullOrWhiteSpace(customerPhone) ? null : customerPhone.Trim(),
             TableNumber = tableNumber,
             CreatedByStaffId = createdByStaffId,
             VatRatePercent = vatRatePercent,

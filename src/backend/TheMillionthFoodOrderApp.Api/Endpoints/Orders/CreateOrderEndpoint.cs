@@ -15,7 +15,9 @@ public sealed record CreateOrderApiRequest(
     string OrderType,
     string PaymentMethod,
     string? CustomerName,
-    List<OrderItemApiInput> Items);
+    List<OrderItemApiInput> Items,
+    string? CustomerEmail = null,
+    string? CustomerPhone = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -47,6 +49,15 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
         RuleFor(x => x.CustomerName)
             .MaximumLength(200)
             .When(x => x.CustomerName is not null);
+
+        RuleFor(x => x.CustomerEmail)
+            .EmailAddress().WithMessage("CustomerEmail must be a valid email address.")
+            .MaximumLength(320).WithMessage("CustomerEmail must not exceed 320 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.CustomerEmail));
+
+        RuleFor(x => x.CustomerPhone)
+            .MaximumLength(32).WithMessage("CustomerPhone must not exceed 32 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.CustomerPhone));
     }
 }
 
@@ -89,7 +100,9 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                         i.Quantity,
                         (i.SelectedModifierIds ?? []).AsReadOnly()))
                     .ToList()
-                    .AsReadOnly());
+                    .AsReadOnly(),
+                req.CustomerEmail,
+                req.CustomerPhone);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 

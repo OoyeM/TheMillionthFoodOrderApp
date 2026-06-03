@@ -613,4 +613,99 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         await Assert.That(order).IsNotNull();
         await Assert.That(order!.PaymentMethod).IsEqualTo("CreditCard");
     }
+
+    // ── Guest contact fields (US-FP-017) ─────────────────────────────────────
+
+    [Test]
+    public async Task PlaceOrder_WithEmailAndPhone_PersistsAndReturnsContactFields()
+    {
+        // Verifies that optional CustomerEmail and CustomerPhone are stored and returned.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 2.50m, name: "Friet met email");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = "Lieselot Pieters",
+            CustomerEmail = "lieselot@example.com",
+            CustomerPhone = "+32 478 12 34 56",
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.CustomerName).IsEqualTo("Lieselot Pieters");
+        await Assert.That(order.CustomerEmail).IsEqualTo("lieselot@example.com");
+        await Assert.That(order.CustomerPhone).IsEqualTo("+32 478 12 34 56");
+    }
+
+    [Test]
+    public async Task PlaceOrder_WithoutEmailAndPhone_StillSucceeds()
+    {
+        // Regression: ensures that omitting email and phone does not break order placement.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.BetaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 3.00m, name: "Friet zonder contact");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            // CustomerEmail and CustomerPhone intentionally omitted
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
+        await Assert.That(order).IsNotNull();
+        await Assert.That(order!.CustomerEmail).IsNull();
+        await Assert.That(order.CustomerPhone).IsNull();
+    }
+
+    [Test]
+    public async Task PlaceOrder_WithInvalidEmail_Returns400()
+    {
+        // Verifies that a malformed email address is rejected by the FluentValidation rule.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.GammaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 2.00m, name: "Friet ongeldig email");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = (string?)null,
+            CustomerEmail = "not-a-valid-email",
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+    }
 }

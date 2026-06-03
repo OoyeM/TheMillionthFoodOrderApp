@@ -49,7 +49,9 @@ public sealed class OrderService(
             tableNumber: null,
             createdByStaffId: null,
             request.Items,
-            cancellationToken);
+            cancellationToken,
+            request.CustomerEmail,
+            request.CustomerPhone);
     }
 
     public async Task<OrderResponse> CreateInStoreOrderAsync(
@@ -113,7 +115,9 @@ public sealed class OrderService(
         int? tableNumber,
         Guid? createdByStaffId,
         IReadOnlyList<OrderItemInput> items,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? customerEmail = null,
+        string? customerPhone = null)
     {
         // 1. Determine consumption mode for VAT calculation
         var consumptionMode = orderType == OrderType.EatIn
@@ -245,7 +249,9 @@ public sealed class OrderService(
                 vatRate,
                 orderItems,
                 tableNumber,
-                createdByStaffId);
+                createdByStaffId,
+                customerEmail,
+                customerPhone);
 
             try
             {
@@ -324,5 +330,7 @@ public sealed class OrderService(
             order.TotalGross,
             order.CreatedAt,
             order.TableNumber,
-            order.CreatedByStaffId);
+            order.CreatedByStaffId,
+            order.CustomerEmail,
+            order.CustomerPhone);
 }

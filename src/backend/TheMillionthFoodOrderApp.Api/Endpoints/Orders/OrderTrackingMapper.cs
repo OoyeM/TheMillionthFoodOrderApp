@@ -43,5 +43,7 @@ internal static class OrderTrackingMapper
             order.TotalGross,
             order.CreatedAt,
             order.TableNumber,
-            order.CreatedByStaffId);
+            order.CreatedByStaffId,
+            order.CustomerEmail,
+            order.CustomerPhone);
 }
