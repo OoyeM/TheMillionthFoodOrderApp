@@ -51,7 +51,8 @@ public sealed class OrderService(
             request.Items,
             cancellationToken,
             request.CustomerEmail,
-            request.CustomerPhone);
+            request.CustomerPhone,
+            enforceOpeningHours: true);
     }
 
     public async Task<OrderResponse> CreateInStoreOrderAsync(
@@ -117,7 +118,8 @@ public sealed class OrderService(
         IReadOnlyList<OrderItemInput> items,
         CancellationToken cancellationToken,
         string? customerEmail = null,
-        string? customerPhone = null)
+        string? customerPhone = null,
+        bool enforceOpeningHours = false)
     {
         // 1. Determine consumption mode for VAT calculation
         var consumptionMode = orderType == OrderType.EatIn
@@ -134,6 +136,12 @@ public sealed class OrderService(
         var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
+
+        // 3b. Online customer orders are rejected when the shop is currently closed (US-FP-071 / #127).
+        //     In-store staff orders are exempt — staff are physically present at the counter.
+        if (enforceOpeningHours && !shop.IsOpenAt(DateTimeOffset.UtcNow))
+            throw new InvalidOperationException(
+                "This shop is currently closed and is not accepting online orders.");
 
         // 4. Load order lifecycle config to determine opening status (lazy-init default if missing)
         var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken);

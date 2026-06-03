@@ -40,9 +40,10 @@ interface CheckoutFormProps {
   brandSlug: string;
   shopId: string;
   shopSlug: string;
+  shopIsOpen: boolean;
 }
 
-function CheckoutForm({ brandSlug, shopId, shopSlug }: CheckoutFormProps) {
+function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormProps) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { brandSlug: paramSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
@@ -92,6 +93,9 @@ function CheckoutForm({ brandSlug, shopId, shopSlug }: CheckoutFormProps) {
   }, 0);
 
   async function onSubmit(values: CheckoutFormValues) {
+    // Guard: a closed shop does not accept online orders (mirrors the backend check).
+    if (!shopIsOpen) return;
+
     const orderItems = state.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
@@ -136,6 +140,23 @@ function CheckoutForm({ brandSlug, shopId, shopSlug }: CheckoutFormProps) {
       <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', marginBottom: '1.5rem' }}>
         {t('storefront.checkout.title')}
       </h1>
+
+      {!shopIsOpen && (
+        <div
+          role="alert"
+          style={{
+            padding: '0.75rem 1rem',
+            borderRadius: '0.375rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            fontSize: '0.875rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {t('storefront.checkout.shopClosed')}
+        </div>
+      )}
 
       <form onSubmit={(e) => { void handleSubmit(onSubmit)(e); }} noValidate>
         {/* Order type selection */}
@@ -480,7 +501,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug }: CheckoutFormProps) {
         {/* Submit */}
         <button
           type="submit"
-          disabled={isSubmitting || createOrder.isPending}
+          disabled={isSubmitting || createOrder.isPending || !shopIsOpen}
           style={{
             width: '100%',
             padding: '0.875rem',
@@ -490,8 +511,8 @@ function CheckoutForm({ brandSlug, shopId, shopSlug }: CheckoutFormProps) {
             color: '#fff',
             fontWeight: 700,
             fontSize: '1rem',
-            cursor: isSubmitting || createOrder.isPending ? 'not-allowed' : 'pointer',
-            opacity: isSubmitting || createOrder.isPending ? 0.7 : 1,
+            cursor: isSubmitting || createOrder.isPending || !shopIsOpen ? 'not-allowed' : 'pointer',
+            opacity: isSubmitting || createOrder.isPending || !shopIsOpen ? 0.7 : 1,
           }}
         >
           {isSubmitting || createOrder.isPending
@@ -531,6 +552,7 @@ export function CheckoutPage() {
         brandSlug={resolvedBrandSlug}
         shopId={shop.id}
         shopSlug={shop.slug}
+        shopIsOpen={shop.isOpen}
       />
     </CartProvider>
   );

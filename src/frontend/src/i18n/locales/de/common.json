@@ -80,7 +80,8 @@
       "placeOrder": "Bestellung aufgeben",
       "placing": "Wird aufgegeben…",
       "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen.",
-      "cartEmpty": "Ihr Warenkorb ist leer."
+      "cartEmpty": "Ihr Warenkorb ist leer.",
+      "shopClosed": "Dieser Shop ist derzeit geschlossen und nimmt keine Online-Bestellungen an."
     },
     "order": {
       "confirmed": "Bestellung bestätigt!",

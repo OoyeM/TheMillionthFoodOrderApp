@@ -80,7 +80,8 @@
       "placeOrder": "Bestelling plaatsen",
       "placing": "Bezig met plaatsen…",
       "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw.",
-      "cartEmpty": "Uw winkelwagen is leeg."
+      "cartEmpty": "Uw winkelwagen is leeg.",
+      "shopClosed": "Deze winkel is momenteel gesloten en accepteert geen online bestellingen."
     },
     "order": {
       "confirmed": "Bestelling bevestigd!",
