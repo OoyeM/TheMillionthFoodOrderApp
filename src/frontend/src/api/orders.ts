@@ -17,6 +17,8 @@ export type PaymentMethod = 'CashAtPickup' | 'CreditCard' | 'Bancontact';
 export interface CreateOrderRequest {
   orderType: OrderType;
   customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
   items: OrderItemRequest[];
   paymentMethod: PaymentMethod;
 }
@@ -50,6 +52,10 @@ export interface OrderResponse {
   orderType: OrderType;
   statusName: string;
   customerName: string | null;
+  /** Optional email for digital receipt (US-FP-017). */
+  customerEmail?: string | null;
+  /** Optional phone number (US-FP-017). */
+  customerPhone?: string | null;
   items: OrderItemResponse[];
   vatRatePercent: number;
   subtotalGross: number;

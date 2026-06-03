@@ -1,5 +1,21 @@
 import { apiClient } from './client';
-import type { Shop } from '../types/common';
+import type { Shop, ShopAddress } from '../types/common';
+
+// ---------------------------------------------------------------------------
+// Storefront-only shop DTO (returned by GET /brands/:brandSlug/shops/active)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lightweight shop response used by the storefront chooser.
+ * Mirrors the backend StorefrontShopResponse DTO.
+ */
+export interface StorefrontShop {
+  id: string;
+  name: string;
+  slug: string;
+  address: ShopAddress;
+  isOpen: boolean;
+}
 
 export interface CreateShopRequest {
   name: string;
@@ -55,4 +71,14 @@ export const shopsApi = {
     apiClient
       .post<void>(`/brands/${brandSlug}/shops/${id}/activate`)
       .then(() => undefined),
+
+  /**
+   * Lists all active shops for a brand, including real-time isOpen status.
+   * Used by the storefront shop chooser (US-FP-071).
+   * Endpoint: GET /api/brands/:brandSlug/shops/active
+   */
+  listActive: (brandSlug: string): Promise<StorefrontShop[]> =>
+    apiClient
+      .get<StorefrontShop[]>(`/brands/${brandSlug}/shops/active`)
+      .then((r) => r.data),
 };

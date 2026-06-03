@@ -1,9 +1,12 @@
-// Storefront route module. Wired up by US-FP-016 + US-FP-017 (online + guest ordering).
+// Storefront route module. Updated by US-FP-071 to add slug-based shop routing.
 
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 import { SuspenseWrapper } from '@components/SuspenseWrapper';
-import { Home } from './pages/Home';
+import { ShopChooserPage } from './pages/ShopChooserPage';
+import { LegacyShopIdRedirect } from './pages/LegacyShopIdRedirect';
+import { ShopResolver } from './context/ShopContext';
 
 // Lazy-load heavy storefront pages for code-splitting
 const LazyMenuPage = lazy(() =>
@@ -28,46 +31,77 @@ const LazyOrderTrackingPage = lazy(() =>
  * inside the ThemeProvider layout route.
  *
  * ThemeProvider is applied as a layout route in router.tsx — do NOT wrap again here.
+ *
+ * Route tree:
+ *   index                         → redirect to shops
+ *   shops                         → ShopChooserPage (lists active shops)
+ *   shops/:shopId/menu            → LegacyShopIdRedirect (back-compat GUID route)
+ *   :shopSlug                     → ShopResolver (layout route, resolves slug → shop)
+ *     :shopSlug/menu              → MenuPage
+ *     :shopSlug/checkout          → CheckoutPage
+ *     :shopSlug/order/:orderId    → OrderConfirmationPage
+ *     :shopSlug/order/:orderId/track → OrderTrackingPage
  */
 export const storefrontRoutes: RouteObject[] = [
   {
+    // Index: redirect to the shop chooser.
+    // ShopChooserPage will auto-redirect to the menu if only one shop exists.
     index: true,
-    element: <Home />,
+    element: <Navigate to="shops" replace />,
   },
   {
-    // Menu page for a specific shop: browse categories and products, add to cart
+    // Shop chooser: display all active shops as selectable cards.
+    path: 'shops',
+    element: <ShopChooserPage />,
+  },
+  {
+    // Back-compat: old GUID-based route used before US-FP-071.
+    // Looks up the shop slug by id and redirects to the slug route.
     path: 'shops/:shopId/menu',
-    element: (
-      <SuspenseWrapper>
-        <LazyMenuPage />
-      </SuspenseWrapper>
-    ),
+    element: <LegacyShopIdRedirect />,
   },
   {
-    // Checkout page: review cart, select order type, submit order
-    path: 'checkout',
-    element: (
-      <SuspenseWrapper>
-        <LazyCheckoutPage />
-      </SuspenseWrapper>
-    ),
-  },
-  {
-    // Order confirmation page: show order details and real-time status via SignalR
-    path: 'order/:orderId',
-    element: (
-      <SuspenseWrapper>
-        <LazyOrderConfirmationPage />
-      </SuspenseWrapper>
-    ),
-  },
-  {
-    // Order tracking page: visual lifecycle stepper with real-time SignalR updates (US-FP-063)
-    path: 'order/:orderId/track',
-    element: (
-      <SuspenseWrapper>
-        <LazyOrderTrackingPage />
-      </SuspenseWrapper>
-    ),
+    // ShopResolver layout route: resolves :shopSlug param to a shop object
+    // and makes it available to all children via ShopContext.
+    path: ':shopSlug',
+    element: <ShopResolver />,
+    children: [
+      {
+        // Menu page: browse categories and products, add to cart
+        path: 'menu',
+        element: (
+          <SuspenseWrapper>
+            <LazyMenuPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        // Checkout: review cart, select order type, submit
+        path: 'checkout',
+        element: (
+          <SuspenseWrapper>
+            <LazyCheckoutPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        // Order confirmation: show order details and real-time status via SignalR
+        path: 'order/:orderId',
+        element: (
+          <SuspenseWrapper>
+            <LazyOrderConfirmationPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        // Order tracking: visual lifecycle stepper with real-time SignalR updates
+        path: 'order/:orderId/track',
+        element: (
+          <SuspenseWrapper>
+            <LazyOrderTrackingPage />
+          </SuspenseWrapper>
+        ),
+      },
+    ],
   },
 ];

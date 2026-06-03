@@ -4,6 +4,12 @@
   "error": "Er is iets misgegaan",
   "storefront": {
     "description": "Bekijk ons menu en plaats uw bestelling.",
+    "shopChooser": {
+      "title": "Kies een vestiging",
+      "subtitle": "Selecteer de vestiging waar u wilt bestellen.",
+      "noShops": "Er zijn momenteel geen vestigingen beschikbaar.",
+      "selectShop": "Selecteer {{name}}"
+    },
     "languageSelector": {
       "ariaLabel": "Taal selecteren"
     },
@@ -48,6 +54,11 @@
       },
       "customerNameLabel": "Naam",
       "customerNamePlaceholder": "Uw naam (optioneel)",
+      "customerEmailLabel": "E-mailadres",
+      "customerEmailPlaceholder": "uw@email.be",
+      "customerEmailHelper": "Vul uw e-mailadres in voor een digitale bon.",
+      "customerPhoneLabel": "Telefoonnummer",
+      "customerPhonePlaceholder": "bijv. +32 478 12 34 56",
       "optional": "optioneel",
       "orderSummary": "Besteloverzicht",
       "subtotal": "Subtotaal",

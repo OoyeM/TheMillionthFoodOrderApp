@@ -4,6 +4,12 @@
   "error": "Ein Fehler ist aufgetreten",
   "storefront": {
     "description": "Sehen Sie unsere Speisekarte und geben Sie Ihre Bestellung auf.",
+    "shopChooser": {
+      "title": "Filiale auswählen",
+      "subtitle": "Wählen Sie die Filiale aus, bei der Sie bestellen möchten.",
+      "noShops": "Derzeit sind keine Filialen verfügbar.",
+      "selectShop": "{{name}} auswählen"
+    },
     "languageSelector": {
       "ariaLabel": "Sprache wählen"
     },
@@ -48,6 +54,11 @@
       },
       "customerNameLabel": "Name",
       "customerNamePlaceholder": "Ihr Name (optional)",
+      "customerEmailLabel": "E-Mail-Adresse",
+      "customerEmailPlaceholder": "ihre@email.be",
+      "customerEmailHelper": "Geben Sie Ihre E-Mail-Adresse für einen digitalen Kassenbon ein.",
+      "customerPhoneLabel": "Telefonnummer",
+      "customerPhonePlaceholder": "z.B. +32 478 12 34 56",
       "optional": "optional",
       "orderSummary": "Bestellübersicht",
       "subtotal": "Zwischensumme",

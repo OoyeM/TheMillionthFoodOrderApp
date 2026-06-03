@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ProductListItem } from '@/types/common';
 import { CartProvider, useCart, type CartModifier } from '../context/CartContext';
+import { useResolvedShop } from '../hooks/useResolvedShop';
 import { ProductCard } from '../components/ProductCard';
 import { ModifierModal } from '../components/ModifierModal';
 import { CartDrawer } from '../components/CartDrawer';
@@ -255,18 +256,20 @@ function MenuContent({ brandSlug }: MenuContentProps) {
 }
 
 // ---------------------------------------------------------------------------
-// MenuPage — wraps content in CartProvider
+// MenuPage — wraps content in CartProvider, reads shop from ShopContext
 // ---------------------------------------------------------------------------
 
 export function MenuPage() {
-  const { brandSlug, shopId } = useParams<{ brandSlug: string; shopId: string }>();
+  const { brandSlug } = useParams<{ brandSlug: string }>();
+  // shopId comes from the resolved ShopContext (set by ShopResolver layout route).
+  const shop = useResolvedShop();
 
-  if (!brandSlug || !shopId) {
-    return <p>Invalid route: brandSlug and shopId are required.</p>;
+  if (!brandSlug) {
+    return <p>Invalid route: brandSlug is required.</p>;
   }
 
   return (
-    <CartProvider brandSlug={brandSlug} shopId={shopId}>
+    <CartProvider brandSlug={brandSlug} shopId={shop.id}>
       <MenuContent brandSlug={brandSlug} />
     </CartProvider>
   );
