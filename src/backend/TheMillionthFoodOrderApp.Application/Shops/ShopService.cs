@@ -70,6 +70,13 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
         return shops.Select(MapToResponse).ToList().AsReadOnly();
     }
 
+    public async Task<IReadOnlyList<StorefrontShopResponse>> GetActiveShopsAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var shops = await shopRepository.GetActiveAsync(cancellationToken);
+        return shops.Select(s => MapToStorefrontResponse(s, now)).ToList().AsReadOnly();
+    }
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
     private static Address MapToAddress(AddressRequest req) =>
@@ -91,4 +98,17 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             shop.IsActive,
             shop.CreatedAt,
             shop.UpdatedAt);
+
+    private static StorefrontShopResponse MapToStorefrontResponse(Shop shop, DateTimeOffset now) =>
+        new(
+            shop.Id,
+            shop.Name,
+            shop.Slug,
+            new AddressResponse(
+                shop.Address.Street,
+                shop.Address.Number,
+                shop.Address.City,
+                shop.Address.PostalCode,
+                shop.Address.Country),
+            shop.IsOpenAt(now));
 }

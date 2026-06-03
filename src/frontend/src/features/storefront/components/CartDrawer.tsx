@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCart, type CartItem } from '../context/CartContext';
+import { useResolvedShop } from '../hooks/useResolvedShop';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -16,10 +17,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { brandSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const navigate = useNavigate();
   const { state, updateQuantity, removeItem, cartTotal, cartItemCount, getModifierKey } = useCart();
+  // shopSlug comes from the ShopResolver layout route above MenuPage
+  const shop = useResolvedShop();
 
   function handleGoToCheckout() {
     onClose();
-    void navigate(`/${brandSlug}/${lang}/checkout`);
+    void navigate(`/${brandSlug}/${lang}/${shop.slug}/checkout`);
   }
 
   function formatCurrency(amount: number): string {

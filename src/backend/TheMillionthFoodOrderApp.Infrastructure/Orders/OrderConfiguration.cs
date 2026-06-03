@@ -38,6 +38,12 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CustomerName)
             .HasMaxLength(200);
 
+        builder.Property(o => o.CustomerEmail)
+            .HasMaxLength(320);
+
+        builder.Property(o => o.CustomerPhone)
+            .HasMaxLength(32);
+
         builder.Property(o => o.VatRatePercent)
             .HasColumnType("decimal(5,2)")
             .IsRequired();

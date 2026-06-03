@@ -31,6 +31,14 @@ public sealed class ShopRepository(BrandDbContext dbContext, IMessageBus message
             .ToListAsync(cancellationToken);
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<Shop>> GetActiveAsync(CancellationToken cancellationToken = default)
+        => await dbContext.Shops
+            .Include(s => s.OpeningHours)
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.Name)
+            .ToListAsync(cancellationToken);
+
+    /// <inheritdoc/>
     public async Task AddAsync(Shop shop, CancellationToken cancellationToken = default)
         => await dbContext.Shops.AddAsync(shop, cancellationToken);
 

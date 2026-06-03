@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-04-09
+> Last updated: 2026-06-03 (statuses reconciled against GitHub issue acceptance criteria — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -13,13 +13,39 @@
 
 ---
 
+## Status Accuracy & AC Verification (2026-06-03)
+
+> **Tracking caveat:** GitHub issues are *not* closed when work merges, and this tree had drifted. Statuses below were re-verified on 2026-06-03 by checking each open issue's **acceptance-criteria checklist** against the actual code (backend + frontend). Treat the issue tracker's open/closed state as unreliable on its own — verify against ACs.
+
+**⚠ Online-ordering journey has NO entry point (found 2026-06-03).** The storefront landing page (`Home.tsx`) is a stub — no shop list, no menu link. The menu only renders at `…/shops/{shopId}/menu` where `shopId` is a **database GUID**, and nothing in the storefront ever links there (only `CartDrawer`→`/checkout` and a checkout-empty redirect back). `shopId` is then carried through checkout/confirmation via `localStorage`/`sessionStorage` hacks (see the "For now" TODO in `OrderConfirmationPage.tsx`). **A real customer cannot reach the order flow.** Therefore **US-FP-016 / 038 / 058 / 063 are component-complete but NOT user-reachable** — downgraded from ✅ to 🚧; do NOT close their issues. Missing work: a storefront entry / shop-discovery page (list the brand's shops → link to menu), human-readable shop slugs instead of GUIDs, and `shopId` carried in the route rather than storage. **Now tracked as US-FP-071 (#127)** — a shop-selection page at `/{brand}/{lang}/shops` plus shop-slug-scoped storefront routes (`{shopSlug}/menu` → checkout/order), removing the localStorage shopId hack. This is the top-priority gap for the entire online channel.
+
+**Changed this session (2026-06-03):**
+- **US-FP-018** → ✅ done. Functionally complete; ticket-printer scope reclassified to US-FP-028. GitHub #18 closed.
+- **US-FP-017** → email + phone at checkout implemented and **build-verified** (working tree, uncommitted; migration `AddCustomerContactToOrder`). Its own ACs are now met, but it shares the entry-point blocker — stays 🚧 until US-FP-071 (#127) lands.
+
+**Partial (🚧) — specific remaining gaps:**
+- **US-FP-069** — per-endpoint RBAC not enforced (62 endpoints `AllowAnonymous`; roles only checked at the BFF proxy). ⚠ security hardening needed before production.
+- **US-FP-023** — keystone. SignalR/tracking plumbing all exists; missing only the status-advance endpoint + kitchen-card button (today just a dev-only Simulate endpoint).
+- **US-FP-024** — table-number capture + 21% VAT done; missing `Shop.IsEatInEnabled` gating + group-kitchen-cards-by-table.
+- **US-FP-037** — mock auth + BFF login work; customer self-registration not implemented.
+- **US-FP-039** — session timeout configurable; missing dynamic per-brand login UI, role-based redirect, failed-login errors.
+- **US-FP-055** — static manifest only; needs per-brand manifest (logo/colors/icons).
+- **US-FP-056** — app shell cached; needs menu-data caching + stale-data banner.
+- **US-FP-059** — order type + 6% VAT done; missing delivery address capture/storage + per-shop delivery fee.
+- **US-FP-060** — brand CRUD done; missing shop-count metrics + true platform-level dashboard.
+- **US-FP-067** — custom-domain field stored; missing DNS instructions, SSL provisioning, host→brand routing.
+
+**Everything else not marked ✅/🚧 below is not started** (33 stories).
+
+---
+
 ## Layer 0 — Foundation (sequential)
 
 These are prerequisites for everything else. Must be done in order.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ✅ | **US-FP-069** | REST API backbone (FastEndpoints, BFF, YARP) | — |
+| 🚧 | **US-FP-069** | REST API backbone (FastEndpoints, BFF, YARP) — ⚠ per-endpoint RBAC not enforced | — |
 | ✅ | **US-FP-061** | Platform admin accounts | — |
 | ✅ | **US-FP-001** | Create and manage brands | 069 |
 | ✅ | **US-FP-070** | Database-per-brand provisioning | 001 |
@@ -58,7 +84,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ✅ | **US-FP-003** | Assign brand-level staff auth method | 001 |
 | 🚧 | **US-FP-037** | Customer registration and login | 001 |
 | ✅ | **US-FP-032** | Manage staff accounts | 001, 003 |
-| ⬜ | **US-FP-039** | Staff login with configured auth method | 003, 032 |
+| 🚧 | **US-FP-039** | Staff login with configured auth method | 003, 032 |
 
 **Notes:**
 - 003: Full-stack complete — domain, endpoint, frontend config UI with confirmation dialog and i18n
@@ -84,7 +110,7 @@ Once brands + shops exist, these streams are **independent of each other**.
 | ✅ | **US-FP-029** | Configure brand theming | 001 |
 | ✅ | **US-FP-030** | Provide translations for product catalog | 005 |
 | ✅ | **US-FP-031** | Select language on the storefront | 030 |
-| ⬜ | **US-FP-067** | Configure custom domain for brand | 029 |
+| 🚧 | **US-FP-067** | Configure custom domain for brand | 029 |
 
 > **Note:** 030 and 031 depend on products (Stream A), so they can start once 005 is done.
 
@@ -96,10 +122,11 @@ Once brands + shops exist, these streams are **independent of each other**.
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-046** | Apply Belgian VAT rates | 022 |
 | ✅ | **US-FP-068** | Real-time updates (SignalR/SSE) | — (infra, can start in L1) |
-| ✅ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
-| ✅ | **US-FP-058** | Complete payment flow (mocked) | 016 |
-| ⬜ | **US-FP-017** | Place an order as a guest | 016 |
-| ⬜ | **US-FP-018** | Place an in-store order (POS) | 016 |
+| 🚧 | **US-FP-016** | Place an online order — ⚠ no storefront entry point (shop discovery missing) | 005, 006, 007, 014, 022, 046 |
+| 🚧 | **US-FP-071** | Shop selection + shop-scoped routes (`/shops` chooser → `{shopSlug}/menu` → checkout/order) — #127 — implemented on branch `feat/us-fp-071-shop-selection`; FE build verified, BE compiles (per review); runtime NOT yet verified | 002, 005 |
+| 🚧 | **US-FP-058** | Complete payment flow (mocked) — built but unreachable (blocked by 016 entry point) | 016 |
+| 🚧 | **US-FP-017** | Place an order as a guest | 016 |
+| ✅ | **US-FP-018** | Place an in-store order (POS) | 016 |
 
 ---
 
@@ -112,21 +139,21 @@ Once ordering works, these streams are **all independent**.
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-027** | View order on kitchen display | 022, 068 |
-| ⬜ | **US-FP-023** | Update order status (kitchen) | 022, 027 |
-| ⬜ | **US-FP-028** | Print order ticket | 022 |
+| 🚧 | **US-FP-023** | Update order status (kitchen) | 022, 027 |
+| ⬜ | **US-FP-028** | Print order ticket (incl. in-store POS ticket, reclassified from US-FP-018) | 022 |
 | ⬜ | **US-FP-026** | Configure order notifications | 022 |
 
 ### Stream F: Customer Experience
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ✅ | **US-FP-063** | Track current order status | 022, 068 |
+| 🚧 | **US-FP-063** | Track current order status — built but unreachable (blocked by 016 entry point) | 022, 068 |
 | ⬜ | **US-FP-062** | View order history | 016, 037 |
-| ⬜ | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
+| 🚧 | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
 | ⬜ | **US-FP-025** | QR code table ordering | 024, 065 |
 | ⬜ | **US-FP-019** | Select time slot at checkout | 016, 020 |
 | ✅ | **US-FP-064** | Browse menu with allergen/dietary filters | 008 |
-| ⬜ | **US-FP-059** | Place a delivery order (POC) | 016 |
+| 🚧 | **US-FP-059** | Place a delivery order (POC) | 016 |
 
 ### Stream G: Shop Product Management
 
@@ -177,8 +204,8 @@ Once ordering works, these streams are **all independent**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-055** | Install storefront as PWA | 029 |
-| ⬜ | **US-FP-056** | Offline caching of menu data | 055 |
+| 🚧 | **US-FP-055** | Install storefront as PWA | 029 |
+| 🚧 | **US-FP-056** | Offline caching of menu data | 055 |
 | ⬜ | **US-FP-057** | Push notifications for order status | 055, 063 |
 
 ### Stream M: Staff Scheduling
@@ -196,20 +223,20 @@ Once ordering works, these streams are **all independent**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-060** | Platform admin dashboard | 001, reporting |
+| 🚧 | **US-FP-060** | Platform admin dashboard | 001, reporting |
 | ⬜ | **US-FP-045** | View inventory signals | 012, 013 |
-| ⬜ | **US-FP-038** | Guest checkout (refinement) | 017 |
+| 🚧 | **US-FP-038** | Guest checkout (refinement) — built but unreachable (blocked by 016 entry point) | 017 |
 
 ---
 
 ## Visual Summary
 
 ```
-L0: [069✅] → [061✅] → [001✅] → [070✅] → [004✅] → [002✅]
+L0: [069🚧] → [061✅] → [001✅] → [070✅] → [004✅] → [002✅]
 
 L1: [A: Products✅]  [B: Auth/Staff🚧]  [C: Shop Config🚧]  [D: Branding✅]  ← 4 parallel
          │                │                  │
-L2: [046✅ VAT] [068✅ Realtime] → [016✅ Ordering] → [058/017/018]            ← ordering core
+L2: [046✅ VAT] [068✅ Realtime] → [016🚧 ⚠no entry point] → [058🚧 018✅ 017🚧]   ← ordering core
                                         │
 L3: [E: Kitchen] [F: Customer] [G: Shop Mgmt] [H: Loyalty] [I: Reports]      ← 5 parallel
          │            │

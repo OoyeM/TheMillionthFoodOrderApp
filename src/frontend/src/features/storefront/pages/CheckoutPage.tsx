@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/auth/useAuth';
 import { CartProvider, useCart } from '../context/CartContext';
+import { useResolvedShop } from '../hooks/useResolvedShop';
 import { useCreateOrder } from '../hooks/useCreateOrder';
 import { MockPaymentScreen } from '../components/MockPaymentScreen';
 import type { OrderType } from '@api/orders';
@@ -17,6 +18,15 @@ import type { OrderType } from '@api/orders';
 const checkoutSchema = z.object({
   orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
   customerName: z.string().trim().optional(),
+  customerEmail: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (v) => !v || z.string().email().safeParse(v).success,
+      { message: 'Please enter a valid email address.' },
+    ),
+  customerPhone: z.string().trim().optional(),
   paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
 });
 
@@ -29,9 +39,11 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 interface CheckoutFormProps {
   brandSlug: string;
   shopId: string;
+  shopSlug: string;
+  shopIsOpen: boolean;
 }
 
-function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
+function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormProps) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { brandSlug: paramSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
@@ -45,9 +57,9 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
   // Redirect to menu if cart is empty
   useEffect(() => {
     if (state.items.length === 0) {
-      void navigate(`/${paramSlug}/${lang}/shops/${shopId}/menu`, { replace: true });
+      void navigate(`/${paramSlug}/${lang}/${shopSlug}/menu`, { replace: true });
     }
-  }, [state.items.length, navigate, paramSlug, lang, shopId]);
+  }, [state.items.length, navigate, paramSlug, lang, shopSlug]);
 
   const {
     register,
@@ -81,6 +93,9 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
   }, 0);
 
   async function onSubmit(values: CheckoutFormValues) {
+    // Guard: a closed shop does not accept online orders (mirrors the backend check).
+    if (!shopIsOpen) return;
+
     const orderItems = state.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
@@ -90,16 +105,16 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
     const result = await createOrder.mutateAsync({
       orderType: values.orderType as OrderType,
       customerName: values.customerName ?? null,
+      customerEmail: values.customerEmail || null,
+      customerPhone: values.customerPhone || null,
       items: orderItems,
       paymentMethod: values.paymentMethod,
     });
 
-    // Save the shopId mapping so OrderConfirmationPage can reconstruct the API route
-    sessionStorage.setItem(`order-shop:${brandSlug}:${result.id}`, result.shopId);
     clearCart();
 
     if (values.paymentMethod === 'CashAtPickup') {
-      void navigate(`/${paramSlug}/${lang}/order/${result.id}`);
+      void navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${result.id}`);
     } else {
       // Online payment methods: show mock processing screen first
       setPendingOrderId(result.id);
@@ -109,7 +124,7 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
 
   function handleMockPaymentComplete() {
     setShowMockPayment(false);
-    void navigate(`/${paramSlug}/${lang}/order/${pendingOrderId}`);
+    void navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${pendingOrderId}`);
   }
 
   if (state.items.length === 0) {
@@ -125,6 +140,23 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
       <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', marginBottom: '1.5rem' }}>
         {t('storefront.checkout.title')}
       </h1>
+
+      {!shopIsOpen && (
+        <div
+          role="alert"
+          style={{
+            padding: '0.75rem 1rem',
+            borderRadius: '0.375rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            fontSize: '0.875rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {t('storefront.checkout.shopClosed')}
+        </div>
+      )}
 
       <form onSubmit={(e) => { void handleSubmit(onSubmit)(e); }} noValidate>
         {/* Order type selection */}
@@ -229,6 +261,82 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
             type="text"
             {...register('customerName')}
             placeholder={t('storefront.checkout.customerNamePlaceholder')}
+            style={{
+              width: '100%',
+              padding: '0.625rem 0.875rem',
+              borderRadius: '0.375rem',
+              border: '1px solid #d1d5db',
+              fontSize: '0.9375rem',
+              color: '#111827',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        {/* Customer email (optional, for digital receipt) */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label
+            htmlFor="customerEmail"
+            style={{
+              display: 'block',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.375rem',
+            }}
+          >
+            {t('storefront.checkout.customerEmailLabel')}
+            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: '0.25rem' }}>
+              ({t('storefront.checkout.optional')})
+            </span>
+          </label>
+          <input
+            id="customerEmail"
+            type="email"
+            {...register('customerEmail')}
+            placeholder={t('storefront.checkout.customerEmailPlaceholder')}
+            style={{
+              width: '100%',
+              padding: '0.625rem 0.875rem',
+              borderRadius: '0.375rem',
+              border: `1px solid ${errors.customerEmail ? '#ef4444' : '#d1d5db'}`,
+              fontSize: '0.9375rem',
+              color: '#111827',
+              boxSizing: 'border-box',
+            }}
+          />
+          {errors.customerEmail && (
+            <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+              {errors.customerEmail.message}
+            </p>
+          )}
+          <p style={{ color: '#6b7280', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+            {t('storefront.checkout.customerEmailHelper')}
+          </p>
+        </div>
+
+        {/* Customer phone (optional) */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label
+            htmlFor="customerPhone"
+            style={{
+              display: 'block',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.375rem',
+            }}
+          >
+            {t('storefront.checkout.customerPhoneLabel')}
+            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: '0.25rem' }}>
+              ({t('storefront.checkout.optional')})
+            </span>
+          </label>
+          <input
+            id="customerPhone"
+            type="tel"
+            {...register('customerPhone')}
+            placeholder={t('storefront.checkout.customerPhonePlaceholder')}
             style={{
               width: '100%',
               padding: '0.625rem 0.875rem',
@@ -393,7 +501,7 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
         {/* Submit */}
         <button
           type="submit"
-          disabled={isSubmitting || createOrder.isPending}
+          disabled={isSubmitting || createOrder.isPending || !shopIsOpen}
           style={{
             width: '100%',
             padding: '0.875rem',
@@ -403,8 +511,8 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
             color: '#fff',
             fontWeight: 700,
             fontSize: '1rem',
-            cursor: isSubmitting || createOrder.isPending ? 'not-allowed' : 'pointer',
-            opacity: isSubmitting || createOrder.isPending ? 0.7 : 1,
+            cursor: isSubmitting || createOrder.isPending || !shopIsOpen ? 'not-allowed' : 'pointer',
+            opacity: isSubmitting || createOrder.isPending || !shopIsOpen ? 0.7 : 1,
           }}
         >
           {isSubmitting || createOrder.isPending
@@ -417,27 +525,17 @@ function CheckoutForm({ brandSlug, shopId }: CheckoutFormProps) {
 }
 
 // ---------------------------------------------------------------------------
-// CheckoutPage — wraps form in CartProvider
+// CheckoutPage — reads shop from ShopContext, wraps form in CartProvider
 // ---------------------------------------------------------------------------
 
 export function CheckoutPage() {
   const { brandSlug } = useParams<{ brandSlug: string }>();
+  const { t } = useTranslation('common');
+  // shopId and shopSlug come from the resolved ShopContext (set by ShopResolver).
+  const shop = useResolvedShop();
   const resolvedBrandSlug = brandSlug ?? '';
 
-  return <CheckoutPageInner brandSlug={resolvedBrandSlug} />;
-}
-
-/**
- * Inner component that creates a CartProvider by reading the shopId from localStorage
- * directly (before CartContext is available). This avoids a chicken-and-egg problem.
- */
-function CheckoutPageInner({ brandSlug }: { brandSlug: string }) {
-  const { t } = useTranslation('common');
-
-  // Find the first cart key in localStorage for this brand
-  const shopId = findActiveShopId(brandSlug);
-
-  if (!shopId) {
+  if (!shop.id) {
     return (
       <main style={{ maxWidth: '36rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', marginBottom: '1rem' }}>
@@ -449,32 +547,13 @@ function CheckoutPageInner({ brandSlug }: { brandSlug: string }) {
   }
 
   return (
-    <CartProvider brandSlug={brandSlug} shopId={shopId}>
-      <CheckoutForm brandSlug={brandSlug} shopId={shopId} />
+    <CartProvider brandSlug={resolvedBrandSlug} shopId={shop.id}>
+      <CheckoutForm
+        brandSlug={resolvedBrandSlug}
+        shopId={shop.id}
+        shopSlug={shop.slug}
+        shopIsOpen={shop.isOpen}
+      />
     </CartProvider>
   );
-}
-
-/**
- * Scans localStorage for a cart belonging to the given brandSlug.
- * Returns the first shopId found, or null if no cart exists.
- */
-function findActiveShopId(brandSlug: string): string | null {
-  const prefix = `cart:${brandSlug}:`;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key?.startsWith(prefix)) {
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) continue;
-        const parsed = JSON.parse(raw) as { shopId?: string; items?: unknown[] };
-        if (parsed.shopId && Array.isArray(parsed.items) && parsed.items.length > 0) {
-          return parsed.shopId;
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-  return null;
 }

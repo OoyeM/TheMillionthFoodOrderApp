@@ -1,6 +1,6 @@
 // Order tracking page — shows the shop's configured lifecycle as a visual
 // stepper and subscribes to real-time status updates via SignalR.
-// Accessible to guests (no RequireAuth) via /:brandSlug/:lang/order/:orderId/track.
+// Accessible to guests (no RequireAuth) via /:brandSlug/:lang/:shopSlug/order/:orderId/track.
 
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { ordersApi } from '@api/orders';
 import type { OrderTrackingResponse } from '@api/orders';
 import { useOrderUpdates } from '@api/useOrderUpdates';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
+import { useResolvedShop } from '../hooks/useResolvedShop';
 
 // ---------------------------------------------------------------------------
 // Query hook
@@ -36,15 +37,15 @@ export function OrderTrackingPage() {
     orderId: string;
   }>();
 
+  // shopId comes from the resolved ShopContext (set by ShopResolver layout route).
+  const shop = useResolvedShop();
+
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedOrderId = orderId ?? '';
 
-  // Recover shopId from sessionStorage — written by CheckoutPage after order placement.
-  const shopId = recoverShopId(resolvedBrandSlug, resolvedOrderId) ?? '';
-
   const { data, isLoading, isError } = useOrderTracking(
     resolvedBrandSlug,
-    shopId,
+    shop.id,
     resolvedOrderId,
   );
 
@@ -247,30 +248,4 @@ function MetaCard({ label, value }: MetaCardProps) {
       <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{value}</p>
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Helpers — recover shopId from sessionStorage after checkout
-// ---------------------------------------------------------------------------
-
-/**
- * The CheckoutPage writes `sessionStorage.setItem(\`order-shop:\${brandSlug}:\${orderId}\`, shopId)`
- * immediately after a successful order submission. We read that key here.
- */
-function recoverShopId(brandSlug: string, orderId: string): string | null {
-  const sessionKey = `order-shop:${brandSlug}:${orderId}`;
-  const fromSession = sessionStorage.getItem(sessionKey);
-  if (fromSession) return fromSession;
-
-  // Fall back to scanning any remaining cart entries for this brand.
-  const prefix = `cart:${brandSlug}:`;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key?.startsWith(prefix)) {
-      const shopId = key.slice(prefix.length);
-      if (shopId) return shopId;
-    }
-  }
-
-  return null;
 }

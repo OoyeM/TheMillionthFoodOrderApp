@@ -49,7 +49,10 @@ public sealed class OrderService(
             tableNumber: null,
             createdByStaffId: null,
             request.Items,
-            cancellationToken);
+            cancellationToken,
+            request.CustomerEmail,
+            request.CustomerPhone,
+            enforceOpeningHours: true);
     }
 
     public async Task<OrderResponse> CreateInStoreOrderAsync(
@@ -113,7 +116,10 @@ public sealed class OrderService(
         int? tableNumber,
         Guid? createdByStaffId,
         IReadOnlyList<OrderItemInput> items,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? customerEmail = null,
+        string? customerPhone = null,
+        bool enforceOpeningHours = false)
     {
         // 1. Determine consumption mode for VAT calculation
         var consumptionMode = orderType == OrderType.EatIn
@@ -130,6 +136,12 @@ public sealed class OrderService(
         var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
+
+        // 3b. Online customer orders are rejected when the shop is currently closed (US-FP-071 / #127).
+        //     In-store staff orders are exempt — staff are physically present at the counter.
+        if (enforceOpeningHours && !shop.IsOpenAt(DateTimeOffset.UtcNow))
+            throw new InvalidOperationException(
+                "This shop is currently closed and is not accepting online orders.");
 
         // 4. Load order lifecycle config to determine opening status (lazy-init default if missing)
         var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken);
@@ -245,7 +257,9 @@ public sealed class OrderService(
                 vatRate,
                 orderItems,
                 tableNumber,
-                createdByStaffId);
+                createdByStaffId,
+                customerEmail,
+                customerPhone);
 
             try
             {
@@ -324,5 +338,7 @@ public sealed class OrderService(
             order.TotalGross,
             order.CreatedAt,
             order.TableNumber,
-            order.CreatedByStaffId);
+            order.CreatedByStaffId,
+            order.CustomerEmail,
+            order.CustomerPhone);
 }

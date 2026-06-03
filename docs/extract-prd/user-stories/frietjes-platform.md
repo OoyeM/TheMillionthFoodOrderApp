@@ -1003,3 +1003,21 @@ This document contains the complete set of user stories for the Frietjes Platfor
 - [ ] Database schema migrations are applied to all brand databases consistently
 
 ---
+
+### US-FP-071: Storefront landing & shop selection
+**As a** Customer (guest or registered), **I want** to arrive on a brand's storefront and find or select a shop, **so that** I can reach a shop's menu and order without already knowing a shop's URL.
+
+**Priority:** Must Have
+
+**Acceptance Criteria:**
+- [ ] `/{brandSlug}/{lang}/shops` lists the brand's active shops (name, address, open/closed status) to choose from; the landing (`/{brandSlug}/{lang}`) routes here
+- [ ] Shops have a unique, brand-scoped slug (backend), plus a public endpoint to list a brand's active shops and resolve a shop by slug
+- [ ] Selecting a shop navigates to `/{brandSlug}/{lang}/{shopSlug}/menu`; the order flow is nested under the shop slug (`…/{shopSlug}/checkout`, `…/{shopSlug}/order/{orderId}`, `…/{shopSlug}/order/{orderId}/track`)
+- [ ] Shop context is read from the route slug — the localStorage/sessionStorage shopId-recovery hacks are removed
+- [ ] If the brand has exactly one active shop, the customer can be taken straight to its menu
+- [ ] Closed / inactive shops are clearly indicated and cannot start an order
+- [ ] Deep links to `…/{shopSlug}/menu` work directly
+
+> Added 2026-06-03 (GitHub issue #127). Shop selection + shop-scoped routing; closes the storefront entry-point gap blocking US-FP-016 / 017 / 038 / 058 / 063 from being user-reachable.
+
+---

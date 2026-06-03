@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ordersApi } from '@api/orders';
 import type { OrderResponse } from '@api/orders';
 import { useOrderUpdates } from '@api/useOrderUpdates';
+import { useResolvedShop } from '../hooks/useResolvedShop';
 
 // ---------------------------------------------------------------------------
 // Query
@@ -31,20 +32,15 @@ export function OrderConfirmationPage() {
     orderId: string;
   }>();
 
+  // shopId comes from the resolved ShopContext (set by ShopResolver layout route).
+  const shop = useResolvedShop();
+
   const resolvedBrandSlug = brandSlug ?? '';
   const resolvedOrderId = orderId ?? '';
 
-  // We need shopId for the API call — attempt to recover it from orderId query if possible.
-  // Since the backend returns the order at GET /brands/{brandSlug}/shops/{shopId}/orders/{orderId}
-  // and we don't have shopId in this route, we use the ordersApi.getByOrderId approach which
-  // is scoped differently. For now, we store shopId in localStorage after checkout or use
-  // a separate route. Per the contract, we'll use a simpler approach: retrieve from
-  // the session storage key we save at checkout.
-  const shopId = recoverShopId(resolvedBrandSlug, resolvedOrderId);
-
   const { data: order, isLoading, isError } = useOrderDetails(
     resolvedBrandSlug,
-    shopId ?? '',
+    shop.id,
     resolvedOrderId,
   );
 
@@ -333,32 +329,4 @@ function TotalRow({ label, value, bold }: TotalRowProps) {
       <span>{value}</span>
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Helpers — recover shopId from localStorage after checkout
-// ---------------------------------------------------------------------------
-
-/**
- * After a successful order, the cart is cleared but we may still have the shopId
- * saved under a separate key in sessionStorage that CheckoutPage wrote before clearing.
- * Falls back to scanning localStorage cart keys for this brand.
- */
-function recoverShopId(brandSlug: string, orderId: string): string | null {
-  // Try sessionStorage key first
-  const sessionKey = `order-shop:${brandSlug}:${orderId}`;
-  const fromSession = sessionStorage.getItem(sessionKey);
-  if (fromSession) return fromSession;
-
-  // Fall back to scanning any remaining cart entries for this brand
-  const prefix = `cart:${brandSlug}:`;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key?.startsWith(prefix)) {
-      const shopId = key.slice(prefix.length);
-      if (shopId) return shopId;
-    }
-  }
-
-  return null;
 }

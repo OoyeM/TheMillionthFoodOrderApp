@@ -37,3 +37,14 @@ public sealed record ShopResponse(
     bool IsActive,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
+
+/// <summary>
+/// Lightweight shop summary returned by the public storefront endpoint.
+/// Only active shops are included; <see cref="IsOpen"/> reflects real-time status.
+/// </summary>
+public sealed record StorefrontShopResponse(
+    Guid Id,
+    string Name,
+    string Slug,
+    AddressResponse Address,
+    bool IsOpen);

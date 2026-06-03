@@ -45,4 +45,8 @@ public sealed record OrderResponse(
     /// <summary>Table number for eat-in in-store orders; null for online/pickup/delivery orders.</summary>
     int? TableNumber = null,
     /// <summary>Counter staff ID extracted server-side from JWT claims; null for customer-facing orders.</summary>
-    Guid? CreatedByStaffId = null);
+    Guid? CreatedByStaffId = null,
+    /// <summary>Optional customer email address for digital receipts (US-FP-017).</summary>
+    string? CustomerEmail = null,
+    /// <summary>Optional customer phone number (US-FP-017).</summary>
+    string? CustomerPhone = null);
