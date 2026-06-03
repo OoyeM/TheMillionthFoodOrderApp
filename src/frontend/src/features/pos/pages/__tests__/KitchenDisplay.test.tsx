@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Routes, Route } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 
@@ -166,5 +167,48 @@ describe('KitchenDisplay', () => {
   it('renders the connection status indicator', async () => {
     renderPage();
     expect(await screen.findByTestId('kitchen-connection-status')).toBeInTheDocument();
+  });
+
+  it('renders an advance button per allowed next status and posts the transition on tap', async () => {
+    const advanceCalls: Array<{ orderId: string; toStatusId: string }> = [];
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
+        HttpResponse.json({
+          orders: [makeOrder({ id: 'a', orderNumber: '0001' })],
+        }),
+      ),
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/order-lifecycle`, () =>
+        HttpResponse.json({
+          shopId,
+          statuses: [
+            { id: 's-placed', name: 'Placed', systemKey: 'placed', sortOrder: 0, isEnabled: true, isTerminal: false, colorHex: null },
+            { id: 's-prep', name: 'Preparing', systemKey: 'preparing', sortOrder: 1, isEnabled: true, isTerminal: false, colorHex: '#f59e0b' },
+          ],
+          transitions: [{ id: 't1', fromStatusId: 's-placed', toStatusId: 's-prep' }],
+        }),
+      ),
+      http.post(
+        `/api/brands/${brandSlug}/shops/${shopId}/orders/:orderId/status`,
+        async ({ params, request }) => {
+          const body = (await request.json()) as { toStatusId: string };
+          advanceCalls.push({ orderId: String(params.orderId), toStatusId: body.toStatusId });
+          return HttpResponse.json({
+            ...makeOrder({ id: 'a', orderNumber: '0001' }),
+            statusName: 'Preparing',
+          });
+        },
+      ),
+    );
+
+    const user = userEvent.setup();
+    renderPage();
+
+    const advanceBtn = await screen.findByTestId('kitchen-advance-button');
+    expect(advanceBtn).toHaveTextContent('Preparing');
+
+    await user.click(advanceBtn);
+
+    await waitFor(() => expect(advanceCalls).toHaveLength(1));
+    expect(advanceCalls[0]).toEqual({ orderId: 'a', toStatusId: 's-prep' });
   });
 });

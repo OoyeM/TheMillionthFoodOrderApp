@@ -113,6 +113,9 @@
       "customer": "Client : {{name}}",
       "table": "Table {{number}}",
       "timeSlot": "Créneau : {{value}}",
+      "status": "Statut : {{name}}",
+      "advanceTo": "→ {{status}}",
+      "advanceError": "Échec de la mise à jour du statut. Réessayez.",
       "orderType": {
         "Pickup": "À emporter",
         "EatIn": "Sur place",

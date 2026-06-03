@@ -146,4 +146,36 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
 
         return order;
     }
+
+    /// <summary>
+    /// Advances the order to a new lifecycle status (US-FP-023).
+    /// Raises <see cref="OrderStatusChangedEvent"/> so the change propagates via
+    /// Wolverine/SignalR to the kitchen display, POS, and the customer's tracking page.
+    /// </summary>
+    /// <remarks>
+    /// Whether the transition is <em>allowed</em> (i.e. configured in the shop's
+    /// <c>OrderLifecycleConfig</c>) is a cross-aggregate concern enforced by the
+    /// application service before this method is called. The aggregate only guards
+    /// the invariants it owns: a non-empty, genuinely different status name.
+    /// </remarks>
+    public void AdvanceTo(string newStatusName)
+    {
+        if (string.IsNullOrWhiteSpace(newStatusName))
+            throw new ArgumentException("Status name is required.", nameof(newStatusName));
+
+        if (string.Equals(newStatusName, StatusName, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Order is already in status '{StatusName}'.");
+
+        var previousStatus = StatusName;
+        StatusName = newStatusName;
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        AddDomainEvent(new OrderStatusChangedEvent(
+            Id,
+            ShopId,
+            BrandSlug,
+            previousStatus,
+            newStatusName,
+            CustomerName));
+    }
 }

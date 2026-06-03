@@ -1,7 +1,11 @@
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useActiveOrders } from '../hooks/useActiveOrders';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useActiveOrders, activeOrdersQueryKey } from '../hooks/useActiveOrders';
 import { KitchenOrderCard } from '../components/KitchenOrderCard';
+import { orderLifecycleApi } from '@api/orderLifecycle';
+import { ordersApi, type OrderStatusResponse } from '@api/orders';
 import type { ConnectionStatus } from '@api/useSignalR';
 
 const connectionColor: Record<ConnectionStatus, string> = {
@@ -21,11 +25,58 @@ export function KitchenDisplay() {
 
   const resolvedBrand = brandSlug ?? '';
   const resolvedShop = shopId ?? '';
+  const hasShop = resolvedBrand.length > 0 && resolvedShop.length > 0;
+
+  const queryClient = useQueryClient();
 
   const { orders, isLoading, isError, connectionStatus } = useActiveOrders(
     resolvedBrand,
     resolvedShop,
   );
+
+  // The shop's lifecycle drives which "advance" buttons each card shows. It rarely
+  // changes, so fetch it once and keep it warm for the kitchen session.
+  const lifecycleQuery = useQuery({
+    queryKey: ['order-lifecycle', resolvedBrand, resolvedShop],
+    queryFn: () => orderLifecycleApi.get(resolvedBrand, resolvedShop),
+    enabled: hasShop,
+    staleTime: 5 * 60_000,
+  });
+
+  // Map each status name → the statuses reachable from it (sorted by lifecycle order).
+  // Orders carry only the denormalised status name, so we key by name.
+  const nextStatusesByName = useMemo(() => {
+    const map = new Map<string, OrderStatusResponse[]>();
+    const lifecycle = lifecycleQuery.data;
+    if (!lifecycle) return map;
+
+    const byId = new Map(lifecycle.statuses.map((s) => [s.id, s]));
+    for (const status of lifecycle.statuses) {
+      const next = lifecycle.transitions
+        .filter((tr) => tr.fromStatusId === status.id)
+        .map((tr) => byId.get(tr.toStatusId))
+        .filter((s): s is OrderStatusResponse => s !== undefined)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      map.set(status.name, next);
+    }
+    return map;
+  }, [lifecycleQuery.data]);
+
+  // Tracks which order's last advance attempt failed, so we surface the error on
+  // that specific card rather than globally.
+  const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
+
+  const advanceMutation = useMutation({
+    mutationFn: ({ orderId, toStatusId }: { orderId: string; toStatusId: string }) =>
+      ordersApi.advanceStatus(resolvedBrand, resolvedShop, orderId, toStatusId),
+    onMutate: () => setFailedOrderId(null),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: activeOrdersQueryKey(resolvedBrand, resolvedShop),
+      });
+    },
+    onError: (_error, variables) => setFailedOrderId(variables.orderId),
+  });
 
   return (
     <main
@@ -115,7 +166,19 @@ export function KitchenDisplay() {
           data-testid="kitchen-order-grid"
         >
           {orders.map((order) => (
-            <KitchenOrderCard key={order.id} order={order} />
+            <KitchenOrderCard
+              key={order.id}
+              order={order}
+              nextStatuses={nextStatusesByName.get(order.statusName) ?? []}
+              onAdvance={(toStatusId) =>
+                advanceMutation.mutate({ orderId: order.id, toStatusId })
+              }
+              isAdvancing={
+                advanceMutation.isPending &&
+                advanceMutation.variables?.orderId === order.id
+              }
+              advanceError={failedOrderId === order.id}
+            />
           ))}
         </section>
       )}

@@ -44,4 +44,27 @@ public interface IOrderService
         CreateInStoreOrderRequest request,
         Guid? createdByStaffId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Advances an order to a new status in the shop's configured lifecycle (US-FP-023).
+    /// Validates that a transition from the order's current status to
+    /// <paramref name="toStatusId"/> is allowed before applying it, then persists the
+    /// change — which dispatches <c>OrderStatusChangedEvent</c> for real-time notification.
+    /// </summary>
+    /// <param name="shopId">The shop the order belongs to (from the route).</param>
+    /// <param name="orderId">The order to advance.</param>
+    /// <param name="toStatusId">The target lifecycle status's identifier.</param>
+    /// <exception cref="KeyNotFoundException">
+    /// Thrown when the order does not exist for the shop, or the target status id is
+    /// not part of the shop's lifecycle.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the shop has no lifecycle config, the order's current status is not
+    /// in the lifecycle, or the requested transition is not configured.
+    /// </exception>
+    Task<OrderResponse> AdvanceOrderStatusAsync(
+        Guid shopId,
+        Guid orderId,
+        Guid toStatusId,
+        CancellationToken cancellationToken = default);
 }

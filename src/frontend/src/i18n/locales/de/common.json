@@ -113,6 +113,9 @@
       "customer": "Kunde: {{name}}",
       "table": "Tisch {{number}}",
       "timeSlot": "Zeitfenster: {{value}}",
+      "status": "Status: {{name}}",
+      "advanceTo": "→ {{status}}",
+      "advanceError": "Status konnte nicht aktualisiert werden. Bitte erneut versuchen.",
       "orderType": {
         "Pickup": "Abholung",
         "EatIn": "Vor Ort",
