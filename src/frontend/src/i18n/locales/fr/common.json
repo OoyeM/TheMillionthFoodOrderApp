@@ -112,6 +112,30 @@
         "reconnecting": "Reconnexion…",
         "disconnected": "Hors ligne"
       }
+    },
+    "menu": {
+      "title": "Menu",
+      "modifierIndicator": "+ options"
+    },
+    "order": {
+      "title": "Commande",
+      "orderType": "Type de commande",
+      "pickup": "À emporter",
+      "eatIn": "Sur place",
+      "tableNumber": "Numéro de table",
+      "tableNumberPlaceholder": "ex. 5",
+      "submit": "Passer la commande",
+      "subtotal": "Sous-total",
+      "vat": "TVA ({{rate}}%)",
+      "total": "Total"
+    },
+    "error": {
+      "submit": "Échec de la commande. Veuillez réessayer."
+    },
+    "confirmation": {
+      "title": "Commande passée !",
+      "orderNumber": "Numéro de commande : {{number}}",
+      "back": "Retour au menu"
     }
   },
   "allergens": {

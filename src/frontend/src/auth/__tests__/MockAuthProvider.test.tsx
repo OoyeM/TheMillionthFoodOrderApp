@@ -107,4 +107,60 @@ describe('MockAuthProvider', () => {
 
     expect(screen.getByTestId('role').textContent).toBe('counter-staff');
   });
+
+  it('enables the BFF login button for a role with a server persona', () => {
+    vi.stubEnv('VITE_MOCK_ROLE', 'platform-admin');
+
+    render(
+      <MockAuthProvider>
+        <div />
+      </MockAuthProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: /bff login/i })).toBeEnabled();
+  });
+
+  it('disables the BFF login button for roles without a server persona', () => {
+    vi.stubEnv('VITE_MOCK_ROLE', 'shop-manager');
+
+    render(
+      <MockAuthProvider>
+        <div />
+      </MockAuthProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: /bff login/i })).toBeDisabled();
+  });
+
+  it('navigates to /bff/login with the mapped persona and current page as returnUrl', () => {
+    vi.stubEnv('VITE_MOCK_ROLE', 'brand-admin');
+
+    const assign = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { assign, pathname: '/frietjes/nl/admin/brands', search: '' },
+    });
+
+    try {
+      render(
+        <MockAuthProvider>
+          <div />
+        </MockAuthProvider>,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /bff login/i }));
+
+      expect(assign).toHaveBeenCalledTimes(1);
+      const url = String(assign.mock.calls[0]?.[0]);
+      // brand-admin → brand-admin@frietjes (encoded), returnUrl = current path (encoded)
+      expect(url).toContain('/bff/login?mock=brand-admin%40frietjes');
+      expect(url).toContain('returnUrl=%2Ffrietjes%2Fnl%2Fadmin%2Fbrands');
+    } finally {
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: originalLocation,
+      });
+    }
+  });
 });

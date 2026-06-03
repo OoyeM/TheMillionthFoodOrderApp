@@ -12,6 +12,19 @@ const ALL_ROLES: UserRole[] = [
   'customer',
 ];
 
+/**
+ * Maps a frontend role to the BFF mock persona accepted by `/bff/login?mock=`.
+ * Only these four personas exist server-side (see MockAuthHandler.MockPersonas);
+ * roles without an entry cannot establish a real BFF session, so the toolbar's
+ * "BFF login" button is disabled for them.
+ */
+const BFF_PERSONA: Partial<Record<UserRole, string>> = {
+  'platform-admin': 'platform-admin',
+  'brand-admin': 'brand-admin@frietjes',
+  'counter-staff': 'counter-staff@frietjes',
+  customer: 'customer',
+};
+
 function buildMockUser(role: UserRole, displayName: string): AuthUser {
   return {
     userId: 'mock-user-id',
@@ -88,6 +101,20 @@ interface MockDevToolbarProps {
 }
 
 function MockDevToolbar({ currentRole, onRoleChange }: MockDevToolbarProps) {
+  const persona = BFF_PERSONA[currentRole];
+
+  // Full-page navigation to the BFF login endpoint: it sets the session cookie and
+  // redirects back to `returnUrl`, so the proxied /api/* calls become authorized.
+  // (The client-side mock above only fakes the frontend's auth UI — real API calls
+  // still need a BFF session, which is wiped whenever the AppHost restarts.)
+  const handleBffLogin = () => {
+    if (!persona) return;
+    const returnUrl = window.location.pathname + window.location.search;
+    window.location.assign(
+      `/bff/login?mock=${encodeURIComponent(persona)}&returnUrl=${encodeURIComponent(returnUrl)}`,
+    );
+  };
+
   return (
     <div
       style={{
@@ -128,6 +155,29 @@ function MockDevToolbar({ currentRole, onRoleChange }: MockDevToolbarProps) {
           </option>
         ))}
       </select>
+      <button
+        type="button"
+        onClick={handleBffLogin}
+        disabled={!persona}
+        title={
+          persona
+            ? `Sign in to the BFF as "${persona}" so /api calls are authorized, then return to this page`
+            : `No BFF mock persona for "${currentRole}" — BFF supports: platform-admin, brand-admin, counter-staff, customer`
+        }
+        style={{
+          background: persona ? '#a6e3a1' : '#313244',
+          color: persona ? '#1e1e2e' : '#6c7086',
+          border: persona ? 'none' : '1px solid #45475a',
+          borderRadius: '4px',
+          padding: '3px 8px',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          fontWeight: 'bold',
+          cursor: persona ? 'pointer' : 'not-allowed',
+        }}
+      >
+        BFF login
+      </button>
     </div>
   );
 }

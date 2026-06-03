@@ -113,11 +113,37 @@ public sealed class ModifierGroupService(
         Guid productId,
         CancellationToken cancellationToken = default)
     {
+        var primaryLanguage = await GetPrimaryLanguageAsync(cancellationToken);
         var assignments = await modifierGroupRepository.GetProductModifierGroupsAsync(productId, cancellationToken);
-        return assignments
-            .Select(pmg => new ProductModifierGroupResponse(pmg.Id, pmg.ProductId, pmg.ModifierGroupId, pmg.SortOrder))
-            .ToList()
-            .AsReadOnly();
+
+        var result = new List<ProductModifierGroupResponse>(assignments.Count);
+        foreach (var pmg in assignments)
+        {
+            // The assignment only stores the group id + sort order; load the full group
+            // so the response carries the resolved name + modifiers the menu UI needs.
+            var group = await modifierGroupRepository.GetByIdAsync(pmg.ModifierGroupId, cancellationToken);
+            if (group is null)
+                continue; // assigned group was soft-deleted — skip rather than emit a broken row
+
+            var name = TranslationResolver.ResolveName(
+                group.Translations, t => t.LanguageCode, t => t.Name, primaryLanguage);
+
+            var modifiers = group.Modifiers
+                .OrderBy(m => m.SortOrder)
+                .Select(m => new ModifierResponse(
+                    m.Id,
+                    m.PriceAdjustment,
+                    m.SortOrder,
+                    m.Translations
+                        .Select(t => new ModifierTranslationResponse(t.LanguageCode, t.Name))
+                        .ToList().AsReadOnly()))
+                .ToList().AsReadOnly();
+
+            result.Add(new ProductModifierGroupResponse(
+                pmg.Id, pmg.ProductId, pmg.ModifierGroupId, name, pmg.SortOrder, modifiers));
+        }
+
+        return result.AsReadOnly();
     }
 
     public async Task SetProductModifierGroupsAsync(

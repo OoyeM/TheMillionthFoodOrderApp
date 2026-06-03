@@ -27,8 +27,8 @@ public sealed class BrandDbSeeder(
 
         await SeedBrandSettingsAsync(context, cancellationToken);
         await SeedShopsAsync(context, cancellationToken);
-        await SeedMenuCategoriesAsync(context, cancellationToken);
-        await SeedProductsAsync(context, cancellationToken);
+        var categories = await SeedMenuCategoriesAsync(context, cancellationToken);
+        await SeedProductsAsync(context, categories, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         await SeedModifierGroupsAsync(context, cancellationToken);
         await SeedOrderLifecycleConfigsAsync(context, cancellationToken);
@@ -119,15 +119,17 @@ public sealed class BrandDbSeeder(
         }
     }
 
-    private async Task SeedMenuCategoriesAsync(
+    private async Task<IReadOnlyList<MenuCategory>> SeedMenuCategoriesAsync(
         BrandDbContext context,
         CancellationToken cancellationToken)
     {
-        var exists = await context.MenuCategories.AnyAsync(cancellationToken);
-        if (exists)
+        var existing = await context.MenuCategories
+            .OrderBy(c => c.SortOrder)
+            .ToListAsync(cancellationToken);
+        if (existing.Count > 0)
         {
             logger.LogDebug("Seed: Menu categories already exist — skipping.");
-            return;
+            return existing;
         }
 
         var categories = new[]
@@ -159,10 +161,13 @@ public sealed class BrandDbSeeder(
             var name = category.Translations.First().Name;
             logger.LogInformation("Seed: Created menu category '{Name}'.", name);
         }
+
+        return categories;
     }
 
     private async Task SeedProductsAsync(
         BrandDbContext context,
+        IReadOnlyList<MenuCategory> categories,
         CancellationToken cancellationToken)
     {
         var exists = await context.Products.AnyAsync(cancellationToken);
@@ -196,6 +201,19 @@ public sealed class BrandDbSeeder(
             await context.Products.AddAsync(product, cancellationToken);
             var name = product.Translations.First().Name;
             logger.LogInformation("Seed: Created product '{Name}'.", name);
+        }
+
+        // Assign each seeded product to a menu category so the storefront/POS menu
+        // shows them grouped. Categories are ordered by SortOrder (0..3):
+        // [0] Frietjes, [1] Sauzen, [2] Snacks, [3] Burgers.
+        if (categories.Count >= 4)
+        {
+            products[0].AssignCategory(categories[0].Id, sortOrder: 0); // Kleine Friet   -> Frietjes
+            products[1].AssignCategory(categories[0].Id, sortOrder: 1); // Grote Friet    -> Frietjes
+            products[2].AssignCategory(categories[1].Id, sortOrder: 0); // Stoofvleessaus -> Sauzen
+            products[3].AssignCategory(categories[2].Id, sortOrder: 0); // Frikandel      -> Snacks
+            products[4].AssignCategory(categories[3].Id, sortOrder: 0); // Bicky Burger   -> Burgers
+            logger.LogInformation("Seed: Assigned {Count} products to menu categories.", products.Length);
         }
     }
 

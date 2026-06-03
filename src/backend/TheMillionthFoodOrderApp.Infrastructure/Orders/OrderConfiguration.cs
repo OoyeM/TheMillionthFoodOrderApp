@@ -58,6 +58,13 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
+        builder.Property(o => o.TableNumber)
+            .IsRequired(false);
+
+        builder.Property(o => o.CreatedByStaffId)
+            .HasColumnType("uniqueidentifier")
+            .IsRequired(false);
+
         builder.Property(o => o.CreatedAt)
             .IsRequired();
 

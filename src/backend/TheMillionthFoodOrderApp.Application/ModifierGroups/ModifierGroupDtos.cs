@@ -54,7 +54,9 @@ public sealed record ProductModifierGroupResponse(
     Guid Id,
     Guid ProductId,
     Guid ModifierGroupId,
-    int SortOrder);
+    string Name,
+    int SortOrder,
+    IReadOnlyList<ModifierResponse> Modifiers);
 
 public sealed record SetProductModifierGroupsRequest(
     IReadOnlyList<ProductModifierGroupAssignment> Assignments);

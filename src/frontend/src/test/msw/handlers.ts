@@ -661,6 +661,72 @@ export const handlers = [
     new HttpResponse(null, { status: 200 }),
   ),
 
+  // ── In-store Orders (/api/brands/:slug/shops/:shopId/orders/in-store) ────
+
+  http.post('/api/brands/:slug/shops/:shopId/orders/in-store', async ({ params, request }) => {
+    const body = await request.json() as {
+      orderType: string;
+      paymentMethod: string;
+      tableNumber?: number;
+      customerName?: string;
+      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+    };
+
+    // Minimal server-side validation: reject obviously malformed payloads in tests
+    const validOrderTypes = ['Pickup', 'EatIn', 'Delivery'];
+    if (!validOrderTypes.includes(body.orderType)) {
+      return HttpResponse.json({ error: `Invalid orderType: ${body.orderType}` }, { status: 400 });
+    }
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return HttpResponse.json({ error: 'items must be a non-empty array' }, { status: 400 });
+    }
+    if (!body.paymentMethod) {
+      return HttpResponse.json({ error: 'paymentMethod is required' }, { status: 400 });
+    }
+
+    return HttpResponse.json(
+      {
+        id: 'instore-order-1',
+        orderNumber: 'ORD-999',
+        shopId: params.shopId,
+        brandSlug: params.slug,
+        orderType: body.orderType,
+        statusName: 'New',
+        customerName: body.customerName ?? null,
+        items: (body.items ?? []).map((item) => ({
+          productId: item.productId,
+          productName: 'Kleine friet',
+          quantity: item.quantity,
+          unitGrossPrice: 3.5,
+          unitNetPrice: 3.3,
+          unitVatAmount: 0.2,
+          lineTotal: item.quantity * 3.5,
+          selectedModifiers: item.selectedModifierIds.map((id) => ({
+            modifierId: id,
+            modifierName: 'Mayonaise',
+            priceAdjustment: 0,
+          })),
+        })),
+        vatRatePercent: body.orderType === 'EatIn' ? 21 : 6,
+        subtotalGross: (body.items ?? []).reduce(
+          (sum: number, item) => sum + item.quantity * 3.5,
+          0,
+        ),
+        totalVatAmount: 0.2,
+        totalNet: 3.3,
+        totalGross: (body.items ?? []).reduce(
+          (sum: number, item) => sum + item.quantity * 3.5,
+          0,
+        ),
+        createdAt: '2024-06-01T10:00:00Z',
+        paymentMethod: body.paymentMethod,
+        tableNumber: body.tableNumber,
+        createdByStaffId: 'staff-1',
+      },
+      { status: 201 },
+    );
+  }),
+
   // ── Tax Configuration (/api/brands/:slug/tax-configuration) ─────────────
 
   http.get('/api/brands/:slug/tax-configuration', () =>

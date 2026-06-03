@@ -10,11 +10,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TheMillionthFoodOrderApp.Domain\TheMillionthFoodOrderApp.Domain.csproj" />
+    <ProjectReference Include="..\TheMillionthFoodOrderApp.Application\TheMillionthFoodOrderApp.Application.csproj" />
+    <ProjectReference Include="..\TheMillionthFoodOrderApp.Api\TheMillionthFoodOrderApp.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="TUnit" Version="*" />
     <PackageReference Include="TUnit.Mocks" Version="*-*" />
+    <PackageReference Include="NSubstitute" Version="5.*" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="*" />
   </ItemGroup>
 
 </Project>
