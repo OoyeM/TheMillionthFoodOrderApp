@@ -85,6 +85,17 @@ public sealed class GetOrderTests(IntegrationTestBase fixture)
         // Trigger default lifecycle creation (lazy-initialised on first GET)
         await client.GetAsync(OrderLifecycleUrl(brandSlug, shop!.Id));
 
+        // US-FP-071: online orders require an open shop — give it an always-open schedule.
+        var openingHours = new
+        {
+            TimeBlocks = Enumerable.Range(0, 7)
+                .Select(day => new { DayOfWeek = day, OpenTime = "00:00", CloseTime = "23:59" })
+                .ToArray()
+        };
+        var hoursResponse = await client.PutAsJsonAsync(
+            $"/api/brands/{brandSlug}/shops/{shop.Id}/opening-hours", openingHours);
+        await Assert.That(hoursResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
         return shop.Id;
     }
 
@@ -109,6 +120,7 @@ public sealed class GetOrderTests(IntegrationTestBase fixture)
         var request = new
         {
             OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
             CustomerName = "Tracking Tester",
             Items = new[]
             {

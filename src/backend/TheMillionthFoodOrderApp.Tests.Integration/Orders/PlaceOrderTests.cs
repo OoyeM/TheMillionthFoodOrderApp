@@ -40,8 +40,12 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
     // ── Setup helpers ─────────────────────────────────────────────────────────
 
-    /// <summary>Creates a shop and triggers order lifecycle initialisation.</summary>
-    private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug)
+    /// <summary>
+    /// Creates a shop and triggers order lifecycle initialisation.
+    /// By default the shop is given an always-open weekly schedule so it accepts online
+    /// orders (US-FP-071). Pass <paramref name="open"/> = false to leave it closed.
+    /// </summary>
+    private async Task<Guid> CreateShopAsync(HttpClient client, string brandSlug, bool open = true)
     {
         var request = new
         {
@@ -68,7 +72,24 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         // Trigger default lifecycle creation (lazy-initialised on first GET)
         await client.GetAsync(OrderLifecycleUrl(brandSlug, shop!.Id));
 
+        if (open)
+            await SetAlwaysOpenAsync(client, brandSlug, shop.Id);
+
         return shop.Id;
+    }
+
+    /// <summary>Sets an always-open weekly schedule (00:00–23:59 every day) so the shop accepts online orders.</summary>
+    private async Task SetAlwaysOpenAsync(HttpClient client, string brandSlug, Guid shopId)
+    {
+        var request = new
+        {
+            TimeBlocks = Enumerable.Range(0, 7)
+                .Select(day => new { DayOfWeek = day, OpenTime = "00:00", CloseTime = "23:59" })
+                .ToArray()
+        };
+        var response = await client.PutAsJsonAsync(
+            $"/api/brands/{brandSlug}/shops/{shopId}/opening-hours", request);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
     }
 
     /// <summary>Creates a simple product and returns its ID and gross price.</summary>
@@ -90,6 +111,34 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
         await Assert.That(product).IsNotNull();
         return (product!.Id, product.BasePrice.Amount);
+    }
+
+    // ── Closed shop — online orders rejected (US-FP-071 / #127) ───────────────
+
+    [Test]
+    public async Task PlaceOrder_WhenShopClosed_Returns400()
+    {
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        // A shop with no opening hours is always closed.
+        var shopId = await CreateShopAsync(client, brand, open: false);
+        var (productId, _) = await CreateProductAsync(client, brand, price: 3.50m, name: "Closed Shop Frietje");
+
+        var request = new
+        {
+            OrderType = "Pickup",
+            PaymentMethod = "CashAtPickup",
+            CustomerName = "Too Early",
+            Items = new[]
+            {
+                new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     // ── Happy path — Pickup (6% VAT) ─────────────────────────────────────────
