@@ -50,7 +50,7 @@ export function PosModifierModal({
 
     const selected: CartModifier[] = [];
     for (const group of modifierGroups) {
-      for (const modifier of group.modifiers) {
+      for (const modifier of group.modifiers ?? []) {
         if (selectedModifierIds.has(modifier.id)) {
           const modifierName = modifier.translations[0]?.name ?? '';
           selected.push({
@@ -175,7 +175,7 @@ export function PosModifierModal({
                 >
                   {group.name}
                 </h3>
-                {group.modifiers.map((modifier) => {
+                {(group.modifiers ?? []).map((modifier) => {
                   const modifierName = modifier.translations[0]?.name ?? '';
                   const isChecked = selectedModifierIds.has(modifier.id);
                   const adjustmentLabel =
