@@ -77,7 +77,7 @@ export function KitchenOrderCard({ order }: KitchenOrderCardProps) {
         >
           {typeLabel}
         </span>
-        {order.tableNumber != null && order.tableNumber.length > 0 && (
+        {order.tableNumber != null && (
           <span
             data-testid="kitchen-order-table"
             style={{
