@@ -30,6 +30,7 @@ public sealed class BrandDbSeeder(
         var categories = await SeedMenuCategoriesAsync(context, cancellationToken);
         await SeedProductsAsync(context, categories, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+        await SeedOpeningHoursAsync(context, cancellationToken);
         await SeedModifierGroupsAsync(context, cancellationToken);
         await SeedOrderLifecycleConfigsAsync(context, cancellationToken);
         await SeedTaxConfigurationAsync(context, cancellationToken);
@@ -117,6 +118,42 @@ public sealed class BrandDbSeeder(
             await context.Shops.AddAsync(shop, cancellationToken);
             logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
         }
+    }
+
+    private async Task SeedOpeningHoursAsync(
+        BrandDbContext context,
+        CancellationToken cancellationToken)
+    {
+        // Default dev/demo schedule: open every day 11:00-23:00 (shop-local time, Europe/Brussels).
+        // Idempotent — only applied to shops with no opening hours yet, so it also backfills shops
+        // seeded before opening hours existed, without clobbering any configured schedule.
+        var shops = await context.Shops
+            .Include(s => s.OpeningHours)
+            .ToListAsync(cancellationToken);
+
+        var openTime = new TimeOnly(11, 0);
+        var closeTime = new TimeOnly(23, 0);
+        var changed = false;
+
+        foreach (var shop in shops)
+        {
+            if (shop.OpeningHours.Count > 0)
+                continue;
+
+            var blocks = Enum.GetValues<DayOfWeek>()
+                .Select(day => OpeningHoursTimeBlock.Create(shop.Id, day, openTime, closeTime))
+                .ToList();
+
+            shop.SetOpeningHours(blocks);
+            await context.OpeningHoursTimeBlocks.AddRangeAsync(blocks, cancellationToken);
+            changed = true;
+
+            logger.LogInformation(
+                "Seed: Set default opening hours (11:00-23:00 daily) for shop '{Slug}'.", shop.Slug);
+        }
+
+        if (changed)
+            await context.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<IReadOnlyList<MenuCategory>> SeedMenuCategoriesAsync(
