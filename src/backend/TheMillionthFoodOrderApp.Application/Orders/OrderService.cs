@@ -100,6 +100,49 @@ public sealed class OrderService(
             cancellationToken);
     }
 
+    public async Task<OrderResponse> AdvanceOrderStatusAsync(
+        Guid shopId,
+        Guid orderId,
+        Guid toStatusId,
+        CancellationToken cancellationToken = default)
+    {
+        // 1. Load the order and confirm it belongs to the shop named in the route.
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+        if (order is null || order.ShopId != shopId)
+            throw new KeyNotFoundException(
+                $"Order with id '{orderId}' was not found for shop '{shopId}'.");
+
+        // 2. Load the shop's lifecycle config (statuses + allowed transitions).
+        var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken)
+            ?? throw new InvalidOperationException(
+                "This shop has no order lifecycle configuration.");
+
+        // 3. Resolve the current status by name (orders store the denormalised status name).
+        var currentStatus = lifecycleConfig.Statuses.FirstOrDefault(s => s.Name == order.StatusName)
+            ?? throw new InvalidOperationException(
+                $"The order's current status '{order.StatusName}' is not part of the shop's lifecycle.");
+
+        // 4. Resolve the requested target status.
+        var targetStatus = lifecycleConfig.Statuses.FirstOrDefault(s => s.Id == toStatusId)
+            ?? throw new KeyNotFoundException(
+                $"Status with id '{toStatusId}' was not found in the shop's lifecycle.");
+
+        // 5. The transition must be explicitly configured (current → target).
+        var transitionAllowed = lifecycleConfig.Transitions.Any(
+            t => t.FromStatusId == currentStatus.Id && t.ToStatusId == targetStatus.Id);
+        if (!transitionAllowed)
+            throw new InvalidOperationException(
+                $"Cannot advance order from '{currentStatus.Name}' to '{targetStatus.Name}': " +
+                "no such transition is configured for this shop.");
+
+        // 6. Apply the change (raises OrderStatusChangedEvent) and persist —
+        //    SaveChangesAsync dispatches the event via Wolverine → SignalR.
+        order.AdvanceTo(targetStatus.Name);
+        await orderRepository.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(order);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
     /// <summary>

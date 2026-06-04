@@ -1,8 +1,16 @@
 import { useTranslation } from 'react-i18next';
-import type { OrderResponse, OrderType } from '@api/orders';
+import type { OrderResponse, OrderStatusResponse, OrderType } from '@api/orders';
 
 interface KitchenOrderCardProps {
   order: OrderResponse;
+  /** Statuses the order can advance to next (computed from the shop's lifecycle). */
+  nextStatuses?: OrderStatusResponse[];
+  /** Called with the target status id when a staff member taps an advance button. */
+  onAdvance?: (toStatusId: string) => void;
+  /** True while this order's advance request is in flight — disables the buttons. */
+  isAdvancing?: boolean;
+  /** True when the last advance attempt for this order failed. */
+  advanceError?: boolean;
 }
 
 const orderTypeColor: Record<OrderType, string> = {
@@ -25,7 +33,13 @@ function formatRelative(iso: string, now: number): string {
   return `${hours}h ${minutes % 60}m`;
 }
 
-export function KitchenOrderCard({ order }: KitchenOrderCardProps) {
+export function KitchenOrderCard({
+  order,
+  nextStatuses = [],
+  onAdvance,
+  isAdvancing = false,
+  advanceError = false,
+}: KitchenOrderCardProps) {
   const { t } = useTranslation('common');
   const typeLabel = t(`pos.kitchen.orderType.${order.orderType}`);
   const typeColor = orderTypeColor[order.orderType];
@@ -112,6 +126,20 @@ export function KitchenOrderCard({ order }: KitchenOrderCardProps) {
             {t('pos.kitchen.customer', { name: order.customerName })}
           </span>
         )}
+        <span
+          data-testid="kitchen-order-status"
+          style={{
+            padding: '0.25rem 0.625rem',
+            background: '#f3f4f6',
+            color: '#374151',
+            border: '1px solid #d1d5db',
+            borderRadius: '999px',
+            fontSize: '0.8125rem',
+            fontWeight: 700,
+          }}
+        >
+          {t('pos.kitchen.status', { name: order.statusName })}
+        </span>
       </div>
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.375rem' }}>
@@ -143,6 +171,44 @@ export function KitchenOrderCard({ order }: KitchenOrderCardProps) {
           </li>
         ))}
       </ul>
+
+      {(nextStatuses.length > 0 || advanceError) && (
+        <footer style={{ marginTop: 'auto', display: 'grid', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {nextStatuses.map((status) => (
+              <button
+                key={status.id}
+                type="button"
+                data-testid="kitchen-advance-button"
+                disabled={isAdvancing || onAdvance === undefined}
+                onClick={() => onAdvance?.(status.id)}
+                style={{
+                  flex: '1 1 auto',
+                  padding: '0.625rem 0.75rem',
+                  background: status.colorHex ?? '#111827',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.9375rem',
+                  fontWeight: 700,
+                  cursor: isAdvancing ? 'wait' : 'pointer',
+                  opacity: isAdvancing ? 0.6 : 1,
+                }}
+              >
+                {t('pos.kitchen.advanceTo', { status: status.name })}
+              </button>
+            ))}
+          </div>
+          {advanceError && (
+            <p
+              data-testid="kitchen-advance-error"
+              style={{ margin: 0, color: '#dc2626', fontSize: '0.8125rem', fontWeight: 600 }}
+            >
+              {t('pos.kitchen.advanceError')}
+            </p>
+          )}
+        </footer>
+      )}
     </article>
   );
 }

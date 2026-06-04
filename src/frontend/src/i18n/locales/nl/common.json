@@ -113,6 +113,9 @@
       "customer": "Klant: {{name}}",
       "table": "Tafel {{number}}",
       "timeSlot": "Tijdslot: {{value}}",
+      "status": "Status: {{name}}",
+      "advanceTo": "→ {{status}}",
+      "advanceError": "Status bijwerken mislukt. Probeer opnieuw.",
       "orderType": {
         "Pickup": "Afhalen",
         "EatIn": "Ter plaatse",

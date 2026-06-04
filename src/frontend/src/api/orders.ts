@@ -176,6 +176,25 @@ export const ordersApi = {
       .then((r) => r.data.orders),
 
   /**
+   * Advance an order to the next status in the shop's lifecycle (US-FP-023).
+   * Only transitions configured for the shop are accepted; the server pushes the
+   * change to kitchen displays and the customer's tracking page via SignalR.
+   * Route: POST /brands/{brandSlug}/shops/{shopId}/orders/{orderId}/status
+   */
+  advanceStatus: (
+    brandSlug: string,
+    shopId: string,
+    orderId: string,
+    toStatusId: string,
+  ): Promise<OrderResponse> =>
+    apiClient
+      .post<OrderResponse>(
+        `/brands/${brandSlug}/shops/${shopId}/orders/${orderId}/status`,
+        { toStatusId },
+      )
+      .then((r) => r.data),
+
+  /**
    * Create an in-store order via the POS interface (staff-only).
    * Route: POST /brands/{brandSlug}/shops/{shopId}/orders/in-store
    */
