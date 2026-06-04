@@ -129,7 +129,7 @@ export function MenuCategoryEdit() {
         })),
     }),
     invalidate: [menuCategoryKeys.all(resolvedBrandSlug)],
-    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/menu-categories`); },
+    onSuccess: () => { navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories`); },
   });
 
   // ---------------------------------------------------------------------------
@@ -145,14 +145,14 @@ export function MenuCategoryEdit() {
     ) {
       deleteCategory.mutate(resolvedCategoryId, {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories`);
         },
       });
     }
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories`);
   }
 
   function moveProduct(index: number, direction: 'up' | 'down') {
@@ -208,7 +208,7 @@ export function MenuCategoryEdit() {
         Edit Menu Category
       </h1>
 
-      <form onSubmit={submit} noValidate>
+      <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
         {/* Sort Order */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="sortOrder">

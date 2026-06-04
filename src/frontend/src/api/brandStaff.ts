@@ -31,6 +31,6 @@ export const brandStaffApi = {
 
   deactivate: (brandSlug: string, roleId: string): Promise<void> =>
     apiClient
-      .post<void>(`/brands/${brandSlug}/staff/${roleId}/deactivate`)
+      .post(`/brands/${brandSlug}/staff/${roleId}/deactivate`)
       .then(() => undefined),
 };

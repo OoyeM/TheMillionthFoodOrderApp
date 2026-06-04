@@ -25,7 +25,7 @@ interface MockPaymentScreenProps {
 // No API calls, no side effects beyond the timer.
 // ---------------------------------------------------------------------------
 
-export function MockPaymentScreen({ orderId: _orderId, onComplete }: MockPaymentScreenProps) {
+export function MockPaymentScreen({ onComplete }: MockPaymentScreenProps) {
   const { t } = useTranslation('common');
 
   useEffect(() => {

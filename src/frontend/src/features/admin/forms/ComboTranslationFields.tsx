@@ -19,7 +19,7 @@ export function ComboTranslationFields({
   activeTab,
   register,
   nlNameError,
-}: ComboTranslationFieldsProps): JSX.Element {
+}: ComboTranslationFieldsProps): React.JSX.Element {
   if (activeTab === 'nl') {
     return (
       <>

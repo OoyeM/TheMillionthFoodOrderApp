@@ -22,7 +22,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   function handleGoToCheckout() {
     onClose();
-    navigate(`/${brandSlug}/${lang}/${shop.slug}/checkout`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/${shop.slug}/checkout`);
   }
 
   function formatCurrency(amount: number): string {

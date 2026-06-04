@@ -81,6 +81,7 @@ describe('PlatformAdminList', () => {
     // A confirmation dialog appears — click the confirm (second "Deactiveren") button
     const confirmBtns = await screen.findAllByRole('button', { name: /deactiveren/i });
     // The confirm button inside the dialog is the last one
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- findAllByRole guarantees a non-empty array, so the last element exists
     await user.click(confirmBtns[confirmBtns.length - 1]!);
 
     await waitFor(() => { expect(deactivateCalled).toBe(true); });
@@ -121,7 +122,9 @@ describe('PlatformAdminList', () => {
     // The form has two inputs: email (index 0) and displayName (index 1).
     // Labels are not associated via htmlFor so we query by role index.
     const textboxes = screen.getAllByRole('textbox');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the invite form renders exactly two textboxes (email, displayName)
     const emailInput = textboxes[0]!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the invite form renders exactly two textboxes (email, displayName)
     const displayNameInput = textboxes[1]!;
 
     await user.type(emailInput, 'new@platform.dev');
@@ -130,10 +133,13 @@ describe('PlatformAdminList', () => {
     // Submit — button text is "Beheerder uitnodigen" inside the form
     const submitBtns = screen.getAllByRole('button', { name: /beheerder uitnodigen/i });
     // The submit button inside the form is the last rendered one
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the last element exists
     await user.click(submitBtns[submitBtns.length - 1]!);
 
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.email).toBe('new@platform.dev');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.displayName).toBe('New Admin');
   });
 
@@ -152,11 +158,13 @@ describe('PlatformAdminList', () => {
     // Fill in displayName but leave email empty.
     // Labels are not associated via htmlFor; query by role index (displayName is index 1).
     const textboxes = screen.getAllByRole('textbox');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the invite form renders exactly two textboxes (email, displayName)
     const displayNameInput = textboxes[1]!;
     await user.type(displayNameInput, 'New Admin');
 
     // Submit without filling in email
     const submitBtns = screen.getAllByRole('button', { name: /beheerder uitnodigen/i });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the last element exists
     await user.click(submitBtns[submitBtns.length - 1]!);
 
     // Validation error: source builds "E-mailadres is required."

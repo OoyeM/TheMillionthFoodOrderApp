@@ -123,7 +123,9 @@ export function ProductEdit() {
       imageUrl: product.imageUrl ?? '',
       translations: buildTranslationsMap(product.translations),
       // allergens/dietaryTags stored as number[] at form layer (was Set<number>)
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- product is API/JSON data; arrays may be absent at runtime despite the type
       allergens: product.allergens ?? [],
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- product is API/JSON data; arrays may be absent at runtime despite the type
       dietaryTags: product.dietaryTags ?? [],
     }),
     toUpdatePayload: (values) => ({
@@ -140,7 +142,7 @@ export function ProductEdit() {
       dietaryTags: values.dietaryTags,
     }),
     invalidate: [productKeys.all(resolvedBrandSlug)],
-    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/products`); },
+    onSuccess: () => { navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`); },
   });
 
   // ---------------------------------------------------------------------------
@@ -152,14 +154,14 @@ export function ProductEdit() {
     if (window.confirm(t('admin.products.confirmDelete', { name: nlName }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/products`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`);
         },
       });
     }
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/products`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`);
   }
 
   // ---------------------------------------------------------------------------
@@ -196,7 +198,11 @@ export function ProductEdit() {
     if (index === 0) return;
     setAssignedGroups((prev) => {
       const next = [...prev];
-      [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+      const current = next[index];
+      const above = next[index - 1];
+      if (current === undefined || above === undefined) return prev;
+      next[index - 1] = current;
+      next[index] = above;
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
   }
@@ -205,7 +211,11 @@ export function ProductEdit() {
     setAssignedGroups((prev) => {
       if (index >= prev.length - 1) return prev;
       const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+      const current = next[index];
+      const below = next[index + 1];
+      if (current === undefined || below === undefined) return prev;
+      next[index] = below;
+      next[index + 1] = current;
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
   }
@@ -246,7 +256,7 @@ export function ProductEdit() {
         {t('admin.products.edit')}
       </h1>
 
-      <form onSubmit={submit} noValidate>
+      <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
@@ -307,6 +317,7 @@ export function ProductEdit() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {ALLERGEN_KEYS.map((key) => {
                   const val = Allergen[key];
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                   const checked = (field.value ?? []).includes(val);
                   return (
                     <label
@@ -324,8 +335,10 @@ export function ProductEdit() {
                         checked={checked}
                         onChange={() => {
                           if (checked) {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange((field.value ?? []).filter((v) => v !== val));
                           } else {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange([...(field.value ?? []), val]);
                           }
                         }}
@@ -351,6 +364,7 @@ export function ProductEdit() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {DIETARY_TAG_KEYS.map((key) => {
                   const val = DietaryTag[key];
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                   const checked = (field.value ?? []).includes(val);
                   return (
                     <label
@@ -368,8 +382,10 @@ export function ProductEdit() {
                         checked={checked}
                         onChange={() => {
                           if (checked) {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange((field.value ?? []).filter((v) => v !== val));
                           } else {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange([...(field.value ?? []), val]);
                           }
                         }}
@@ -496,7 +512,9 @@ export function ProductEdit() {
               // The assignment endpoint returns only { modifierGroupId, sortOrder };
               // resolve the display name + modifier count from the full group list.
               const info = allModifierGroups?.find((g) => g.id === group.modifierGroupId);
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- group is API/JSON data; name may be absent at runtime despite the type
               const groupName = info?.name ?? group.name ?? '';
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- group is API/JSON data; modifiers may be absent at runtime despite the type
               const modifierCount = info?.modifierCount ?? group.modifiers?.length ?? 0;
               return (
               <div

@@ -327,7 +327,7 @@ export const handlers = [
   http.put('/api/brands/:slug/shops/:shopId/opening-hours', async ({ request }) => {
     const body = await request.json() as { timeBlocks: unknown[] };
     return HttpResponse.json({
-      timeBlocks: body.timeBlocks.map((tb, i) => ({ id: `tb-${i}`, ...tb as object })),
+      timeBlocks: body.timeBlocks.map((tb, i) => ({ id: `tb-${String(i)}`, ...tb as object })),
     });
   }),
 
@@ -631,7 +631,7 @@ export const handlers = [
         dietaryTags: [],
         comboItems: (body.componentProductIds as string[]).map((id, i) => ({
           componentProductId: id,
-          name: `Product ${i + 1}`,
+          name: `Product ${String(i + 1)}`,
           sortOrder: i,
         })),
         createdAt: '2024-06-01T00:00:00Z',
@@ -655,7 +655,7 @@ export const handlers = [
       dietaryTags: [],
       comboItems: (body.componentProductIds as string[]).map((id, i) => ({
         componentProductId: id,
-        name: `Product ${i + 1}`,
+        name: `Product ${String(i + 1)}`,
         sortOrder: i,
       })),
       createdAt: '2024-01-01T00:00:00Z',
@@ -736,7 +736,7 @@ export const handlers = [
         languageCode: body.languageCode ?? null,
         customerEmail: body.customerEmail ?? null,
         customerPhone: body.customerPhone ?? null,
-        items: (body.items ?? []).map((item) => ({
+        items: body.items.map((item) => ({
           productId: item.productId,
           productName: 'Kleine friet',
           quantity: item.quantity,
@@ -751,13 +751,13 @@ export const handlers = [
           })),
         })),
         vatRatePercent: body.orderType === 'EatIn' ? 21 : 6,
-        subtotalGross: (body.items ?? []).reduce(
+        subtotalGross: body.items.reduce(
           (sum: number, item) => sum + item.quantity * 3.5,
           0,
         ),
         totalVatAmount: 0.2,
         totalNet: 3.3,
-        totalGross: (body.items ?? []).reduce(
+        totalGross: body.items.reduce(
           (sum: number, item) => sum + item.quantity * 3.5,
           0,
         ),
@@ -806,7 +806,7 @@ export const handlers = [
         customerName: [body.customerFirstName, body.customerLastName].filter(Boolean).join(' ') || null,
         customerFirstName: body.customerFirstName ?? null,
         customerLastName: body.customerLastName ?? null,
-        items: (body.items ?? []).map((item) => ({
+        items: body.items.map((item) => ({
           productId: item.productId,
           productName: 'Kleine friet',
           quantity: item.quantity,
@@ -821,13 +821,13 @@ export const handlers = [
           })),
         })),
         vatRatePercent: body.orderType === 'EatIn' ? 21 : 6,
-        subtotalGross: (body.items ?? []).reduce(
+        subtotalGross: body.items.reduce(
           (sum: number, item) => sum + item.quantity * 3.5,
           0,
         ),
         totalVatAmount: 0.2,
         totalNet: 3.3,
-        totalGross: (body.items ?? []).reduce(
+        totalGross: body.items.reduce(
           (sum: number, item) => sum + item.quantity * 3.5,
           0,
         ),

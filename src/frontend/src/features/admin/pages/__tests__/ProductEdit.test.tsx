@@ -131,6 +131,7 @@ describe('ProductEdit', () => {
     expect(capturedBody).toMatchObject({ basePrice: 5.99 });
 
     // Translations array must contain the NL entry with the original name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;

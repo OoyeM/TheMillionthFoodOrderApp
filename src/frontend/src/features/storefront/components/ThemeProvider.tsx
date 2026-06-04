@@ -39,6 +39,9 @@ export function ThemeProvider({ children }: { children?: ReactNode }) {
 
   useEffect(() => {
     loadGoogleFonts(effectiveTheme, fontLinksRef.current);
+    // Intentionally re-run only when the font families change; loadGoogleFonts reads
+    // only those two fields from effectiveTheme, so the full object is not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveTheme.headingFontFamily, effectiveTheme.bodyFontFamily]);
 
   // Cleanup font link elements on unmount

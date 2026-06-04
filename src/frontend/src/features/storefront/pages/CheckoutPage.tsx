@@ -52,7 +52,7 @@ function makeCheckoutSchema(
         customerEmail: z
           .string()
           .trim()
-          .refine((v) => !v || z.string().email().safeParse(v).success, {
+          .refine((v) => !v || z.email().safeParse(v).success, {
             message: t('storefront.checkout.customerEmailInvalid'),
           }),
         customerPhone: z.string().trim().min(1, t('storefront.checkout.customerPhoneRequired')),
@@ -64,7 +64,7 @@ function makeCheckoutSchema(
           .string()
           .trim()
           .min(1, t('storefront.checkout.customerEmailRequired'))
-          .refine((v) => z.string().email().safeParse(v).success, {
+          .refine((v) => z.email().safeParse(v).success, {
             message: t('storefront.checkout.customerEmailInvalid'),
           }),
         customerPhone: z.string().trim().min(1, t('storefront.checkout.customerPhoneRequired')),
@@ -134,7 +134,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
   // Redirect to menu if cart is empty
   useEffect(() => {
     if (state.items.length === 0) {
-      navigate(`/${paramSlug}/${lang}/${shopSlug}/menu`, { replace: true });
+      navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/menu`, { replace: true });
     }
   }, [state.items.length, navigate, paramSlug, lang, shopSlug]);
 
@@ -174,9 +174,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
   const vatNotice =
     orderType === 'EatIn'
       ? t('storefront.checkout.vatEatIn')
-      : orderType
-        ? t('storefront.checkout.vatTakeaway')
-        : null;
+      : t('storefront.checkout.vatTakeaway');
 
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -215,7 +213,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     clearCart();
 
     if (values.paymentMethod === 'CashAtPickup') {
-      navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${result.id}`);
+      navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${result.id}`);
     } else {
       // Online payment methods: show mock processing screen first
       setPendingOrderId(result.id);
@@ -225,7 +223,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
 
   function handleMockPaymentComplete() {
     setShowMockPayment(false);
-    navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${pendingOrderId}`);
+    navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${String(pendingOrderId)}`);
   }
 
   if (state.items.length === 0) {

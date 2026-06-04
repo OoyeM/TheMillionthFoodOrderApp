@@ -153,6 +153,7 @@ describe('PosDashboard — EatIn submit guard (t-17, AC4)', () => {
       const alerts = screen.getAllByRole('alert');
       // At least one alert contains the table-number error text
       const tableAlert = alerts.find((el) =>
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Node.textContent is null for some node kinds at runtime despite the narrowed type; keep the guard.
         el.textContent?.toLowerCase().includes('tafelnummer'),
       );
       expect(tableAlert).toBeDefined();
@@ -217,6 +218,7 @@ describe('PosDashboard — EatIn submit guard (t-17, AC4)', () => {
     await waitFor(() => {
       const alerts = screen.queryAllByRole('alert');
       const tableAlert = alerts.find((el) =>
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Node.textContent is null for some node kinds at runtime despite the narrowed type; keep the guard.
         el.textContent?.toLowerCase().includes('tafelnummer'),
       );
       expect(tableAlert).toBeUndefined();

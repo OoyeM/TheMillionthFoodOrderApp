@@ -93,6 +93,7 @@ describe('MenuCategoryCreate', () => {
 
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;

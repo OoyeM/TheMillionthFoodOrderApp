@@ -21,11 +21,8 @@ vi.mock('../hooks/useActiveShops', () => ({
 }));
 
 // We need to import AFTER the mock is registered
-// eslint-disable-next-line import/first
 import { useActiveShops } from '../hooks/useActiveShops';
-// eslint-disable-next-line import/first
 import { ShopResolver } from '../context/ShopContext';
-// eslint-disable-next-line import/first
 import { useResolvedShop } from '../hooks/useResolvedShop';
 
 // ---------------------------------------------------------------------------

@@ -267,7 +267,7 @@ export function TaxConfiguration() {
               amount={breakdown.netAmount}
             />
             <BreakdownRow
-              label={`${t('admin.taxConfiguration.vatAmount')} (${rates[calcMode]}%)`}
+              label={`${t('admin.taxConfiguration.vatAmount')} (${String(rates[calcMode])}%)`}
               amount={breakdown.vatAmount}
             />
             <BreakdownRow

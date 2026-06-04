@@ -9,11 +9,11 @@ type Method = 'get' | 'post' | 'put' | 'delete' | 'patch';
  * Use this to replace inline `server.use(http.get(path, () => new HttpResponse(null, { status })))`
  * blocks in tests.
  */
-export function mockEndpoint<TBody = unknown>(
+export function mockEndpoint(
   method: Method,
   path: string,
   status: number,
-  body?: TBody,
+  body?: unknown,
 ): HttpHandler {
   const responder = () => {
     if (body === undefined) {

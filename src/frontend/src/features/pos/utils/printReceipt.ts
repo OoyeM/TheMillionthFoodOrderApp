@@ -110,7 +110,7 @@ export function buildReceiptHtml(order: OrderResponse, labels: ReceiptLabels): s
         .join('');
       return `<li class="item">
           <div class="item-line">
-            <span class="qty">${item.quantity}×</span>
+            <span class="qty">${String(item.quantity)}×</span>
             <span class="name">${escapeHtml(item.productName)}</span>
             <span class="line-total">${formatCurrency(item.lineTotal)}</span>
           </div>

@@ -138,7 +138,7 @@ describe('ComboProductEdit', () => {
           dietaryTags: [],
           comboItems: (capturedBody.componentProductIds as string[]).map((id, i) => ({
             componentProductId: id,
-            name: `Product ${i + 1}`,
+            name: `Product ${String(i + 1)}`,
             sortOrder: i,
           })),
           createdAt: '2024-01-01T00:00:00Z',
@@ -170,6 +170,7 @@ describe('ComboProductEdit', () => {
     });
 
     // Translations array must contain the NL entry with the original name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;

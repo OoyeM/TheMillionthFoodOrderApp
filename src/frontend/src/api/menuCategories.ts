@@ -76,7 +76,7 @@ export const menuCategoriesApi = {
     data: ReorderMenuCategoryRequest,
   ): Promise<void> =>
     apiClient
-      .patch<void>(`/brands/${brandSlug}/menu-categories/${id}/sort-order`, data)
+      .patch(`/brands/${brandSlug}/menu-categories/${id}/sort-order`, data)
       .then(toVoid),
 
   assignProduct: (
@@ -84,7 +84,7 @@ export const menuCategoriesApi = {
     data: AssignProductRequest,
   ): Promise<void> =>
     apiClient
-      .post<void>(`/brands/${brandSlug}/menu-categories/assign-product`, data)
+      .post(`/brands/${brandSlug}/menu-categories/assign-product`, data)
       .then(toVoid),
 
   listProducts: (brandSlug: string, categoryId: string): Promise<ProductListItem[]> =>
@@ -98,7 +98,7 @@ export const menuCategoriesApi = {
     data: ReorderProductsRequest,
   ): Promise<void> =>
     apiClient
-      .put<void>(
+      .put(
         `/brands/${brandSlug}/menu-categories/${categoryId}/products/order`,
         data,
       )

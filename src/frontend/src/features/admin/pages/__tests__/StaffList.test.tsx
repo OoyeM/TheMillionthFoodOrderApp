@@ -61,6 +61,7 @@ describe('StaffList', () => {
     // A confirmation dialog appears — click the confirm button (also "Deactiveren")
     const confirmButtons = screen.getAllByRole('button', { name: /deactiveren/i });
     // The last "Deactiveren" button is inside the dialog
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the last element exists
     const confirmBtn = confirmButtons[confirmButtons.length - 1]!;
     await user.click(confirmBtn);
 
@@ -103,7 +104,9 @@ describe('StaffList', () => {
 
     // The form has two textboxes: first is email (type="email"), second is displayName (type="text")
     const textboxes = screen.getAllByRole('textbox');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the invite form renders exactly two textboxes (email, displayName)
     const emailInput = textboxes[0]!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the invite form renders exactly two textboxes (email, displayName)
     const displayNameInput = textboxes[1]!;
 
     await user.type(emailInput, 'new@frietjes.be');
@@ -119,10 +122,14 @@ describe('StaffList', () => {
 
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.email).toBe('new@frietjes.be');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.displayName).toBe('New Staff');
     // BrandAdmin = 0
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.role).toBe(0);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.shopId).toBeNull();
   });
 

@@ -100,6 +100,7 @@ describe('ShopOrderLifecycle', () => {
     // The terminal checkboxes are associated with rows; find the one in the new row
     const terminalCheckboxes = screen.getAllByRole('checkbox');
     // The last checkbox corresponds to the newly added row
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the last element exists
     const lastCheckbox = terminalCheckboxes[terminalCheckboxes.length - 1]!;
     await user.click(lastCheckbox);
 
@@ -110,6 +111,7 @@ describe('ShopOrderLifecycle', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain statuses
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const statuses = capturedBody!.statuses as { name: string }[];
     expect(statuses.some((s) => s.name === 'New')).toBe(true);
     expect(statuses.some((s) => s.name === 'Delivered')).toBe(true);

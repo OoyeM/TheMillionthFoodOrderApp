@@ -91,6 +91,7 @@ describe('ModifierGroupCreate', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // Assert the POST body contains the NL group name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
@@ -98,12 +99,14 @@ describe('ModifierGroupCreate', () => {
     expect(translations.some((t) => t.languageCode === 'nl' && t.name === 'Sauzen')).toBe(true);
 
     // Assert the POST body contains at least one modifier with NL name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const modifiers = capturedBody!.modifiers as {
       translations: { languageCode: string; name: string }[];
       priceAdjustment: number;
       sortOrder: number;
     }[];
     expect(modifiers.length).toBeGreaterThanOrEqual(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- length asserted >= 1 above, so index 0 exists
     const firstModifier = modifiers[0]!;
     expect(
       firstModifier.translations.some((t) => t.languageCode === 'nl' && t.name === 'Mayonaise'),

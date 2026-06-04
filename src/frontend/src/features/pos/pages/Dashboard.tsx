@@ -41,7 +41,7 @@ function PosDashboardInner({ brandSlug, shopId, eatIn }: PosDashboardInnerProps)
       const order = await mutation.mutateAsync({});
       // Carry the full order to the confirmation screen so counter staff can print/reprint
       // the customer receipt (US-FP-052) without an extra round-trip.
-      navigate(`/${paramBrandSlug}/${lang}/pos/confirmation/${order.orderNumber}`, {
+      navigate(`/${String(paramBrandSlug)}/${String(lang)}/pos/confirmation/${order.orderNumber}`, {
         state: { order },
       });
     } catch {

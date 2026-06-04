@@ -105,14 +105,14 @@ export function MenuCategoryCreate() {
       },
       {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories`);
         },
       },
     );
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/menu-categories`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories`);
   }
 
   return (

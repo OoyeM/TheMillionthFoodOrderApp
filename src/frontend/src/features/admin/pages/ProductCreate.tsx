@@ -170,6 +170,7 @@ export function ProductCreate() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {ALLERGEN_KEYS.map((key) => {
                   const val = Allergen[key];
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                   const checked = (field.value ?? []).includes(val);
                   return (
                     <label
@@ -187,8 +188,10 @@ export function ProductCreate() {
                         checked={checked}
                         onChange={() => {
                           if (checked) {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange((field.value ?? []).filter((v) => v !== val));
                           } else {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange([...(field.value ?? []), val]);
                           }
                         }}
@@ -214,6 +217,7 @@ export function ProductCreate() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {DIETARY_TAG_KEYS.map((key) => {
                   const val = DietaryTag[key];
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                   const checked = (field.value ?? []).includes(val);
                   return (
                     <label
@@ -231,8 +235,10 @@ export function ProductCreate() {
                         checked={checked}
                         onChange={() => {
                           if (checked) {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange((field.value ?? []).filter((v) => v !== val));
                           } else {
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- field.value is react-hook-form Controller state that can be undefined before defaults apply
                             field.onChange([...(field.value ?? []), val]);
                           }
                         }}

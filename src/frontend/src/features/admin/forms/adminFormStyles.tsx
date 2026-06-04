@@ -1,3 +1,7 @@
+/* eslint-disable react-refresh/only-export-components --
+   Intentional shared module: exports admin-form style constants alongside two tiny
+   presentational helpers (RequiredMark, FieldError). Splitting them would churn every
+   importer for a HMR-only hint with no correctness benefit. */
 import type React from 'react';
 
 // ---------------------------------------------------------------------------
@@ -31,11 +35,11 @@ export function inputStyle(hasError: boolean): React.CSSProperties {
   };
 }
 
-export function RequiredMark(): JSX.Element {
+export function RequiredMark(): React.JSX.Element {
   return <span style={{ color: '#dc2626' }}>*</span>;
 }
 
-export function FieldError({ message }: { message: string }): JSX.Element {
+export function FieldError({ message }: { message: string }): React.JSX.Element {
   return (
     <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
       {message}
