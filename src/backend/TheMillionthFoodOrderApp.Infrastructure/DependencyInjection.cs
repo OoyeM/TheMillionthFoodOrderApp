@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using TheMillionthFoodOrderApp.Application.BrandSettings;
+using TheMillionthFoodOrderApp.Application.Email;
 using TheMillionthFoodOrderApp.Application.Multitenancy;
 using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Domain.Brands;
@@ -14,6 +15,7 @@ using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
 using TheMillionthFoodOrderApp.Infrastructure.Brands;
 using TheMillionthFoodOrderApp.Infrastructure.BrandSettings;
+using TheMillionthFoodOrderApp.Infrastructure.Email;
 using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
 using TheMillionthFoodOrderApp.Infrastructure.Identity;
 using TheMillionthFoodOrderApp.Infrastructure.MenuCategories;
@@ -84,6 +86,11 @@ public static class DependencyInjection
         // Real-time notifications — SignalR implementation.
         // Singleton: depends only on IHubContext<OrderHub> (singleton) and ILogger (singleton).
         services.AddSingleton<IOrderNotificationService, SignalROrderNotificationService>();
+
+        // Email — SMTP (MailKit) implementation for the digital receipt (US-FP-051).
+        // Singleton: depends only on IOptions<SmtpOptions> and ILogger. Points at a mailpit
+        // catcher in dev; swap SmtpOptions for a real relay in prod with no code change.
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         return services;
     }

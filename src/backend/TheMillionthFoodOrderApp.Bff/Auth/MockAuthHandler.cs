@@ -50,7 +50,10 @@ public sealed class MockAuthHandler(
                 new Claim(ClaimTypes.Name,           "Platform Admin"),
                 new Claim(ClaimTypes.Email,          "platform-admin@mock.local"),
                 new Claim(ClaimTypes.Role,           AuthConstants.Roles.PlatformAdmin),
-                new Claim(AuthConstants.Claims.PlatformRole, AuthConstants.Roles.PlatformAdmin)
+                new Claim(AuthConstants.Claims.PlatformRole, AuthConstants.Roles.PlatformAdmin),
+                new Claim(AuthConstants.Claims.GivenName,   "Platform"),
+                new Claim(AuthConstants.Claims.FamilyName,  "Admin"),
+                new Claim(AuthConstants.Claims.PhoneNumber, "+32470000001")
             },
 
             MockPersonas.BrandAdminFrietjes => new[]
@@ -60,7 +63,10 @@ public sealed class MockAuthHandler(
                 new Claim(ClaimTypes.Email,          "brand-admin@frietjes.mock.local"),
                 new Claim(ClaimTypes.Role,           AuthConstants.Roles.BrandAdmin),
                 new Claim(AuthConstants.Claims.BrandSlug,  "frietjes"),
-                new Claim(AuthConstants.Claims.BrandRoles, "frietjes:BrandAdmin")
+                new Claim(AuthConstants.Claims.BrandRoles, "frietjes:BrandAdmin"),
+                new Claim(AuthConstants.Claims.GivenName,   "Brand"),
+                new Claim(AuthConstants.Claims.FamilyName,  "Admin"),
+                new Claim(AuthConstants.Claims.PhoneNumber, "+32470000002")
             },
 
             MockPersonas.CounterStaffFrietjes => new[]
@@ -70,15 +76,21 @@ public sealed class MockAuthHandler(
                 new Claim(ClaimTypes.Email,          "counter-staff@frietjes.mock.local"),
                 new Claim(ClaimTypes.Role,           AuthConstants.Roles.CounterStaff),
                 new Claim(AuthConstants.Claims.BrandSlug,  "frietjes"),
-                new Claim(AuthConstants.Claims.BrandRoles, "frietjes:CounterStaff")
+                new Claim(AuthConstants.Claims.BrandRoles, "frietjes:CounterStaff"),
+                new Claim(AuthConstants.Claims.GivenName,   "Counter"),
+                new Claim(AuthConstants.Claims.FamilyName,  "Staff"),
+                new Claim(AuthConstants.Claims.PhoneNumber, "+32470000003")
             },
 
             MockPersonas.Customer => new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, "mock-customer"),
-                new Claim(ClaimTypes.Name,           "Customer"),
+                new Claim(ClaimTypes.Name,           "Test Customer"),
                 new Claim(ClaimTypes.Email,          "customer@mock.local"),
-                new Claim(ClaimTypes.Role,           AuthConstants.Roles.Customer)
+                new Claim(ClaimTypes.Role,           AuthConstants.Roles.Customer),
+                new Claim(AuthConstants.Claims.GivenName,   "Test"),
+                new Claim(AuthConstants.Claims.FamilyName,  "Customer"),
+                new Claim(AuthConstants.Claims.PhoneNumber, "+32470000004")
             },
 
             _ => Array.Empty<Claim>()

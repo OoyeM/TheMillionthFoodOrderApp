@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -10,27 +10,91 @@ import { useResolvedShop } from '../hooks/useResolvedShop';
 import { useCreateOrder } from '../hooks/useCreateOrder';
 import { MockPaymentScreen } from '../components/MockPaymentScreen';
 import type { OrderType } from '@api/orders';
+import type { SupportedLocale } from '@/types/common';
 
 // ---------------------------------------------------------------------------
-// Zod schema
+// Language normalisation helper
 // ---------------------------------------------------------------------------
 
-const checkoutSchema = z.object({
-  orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
-  customerName: z.string().trim().optional(),
-  customerEmail: z
-    .string()
-    .trim()
-    .optional()
-    .refine(
-      (v) => !v || z.string().email().safeParse(v).success,
-      { message: 'Please enter a valid email address.' },
-    ),
-  customerPhone: z.string().trim().optional(),
-  paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
-});
+const SUPPORTED_LOCALES: ReadonlySet<string> = new Set<string>(['nl', 'fr', 'de']);
 
-type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+/**
+ * Maps a raw route :lang param to a supported locale.
+ * Falls back to 'nl' for any unsupported value.
+ */
+function normalizeLang(lang: string | undefined): SupportedLocale {
+  const code = lang?.toLowerCase();
+  return code && SUPPORTED_LOCALES.has(code) ? (code as SupportedLocale) : 'nl';
+}
+
+// ---------------------------------------------------------------------------
+// Zod schema factory (auth-aware validation)
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds the checkout schema based on the current auth state.
+ *
+ * - Guest (not authenticated): first name, last name, email, phone are all REQUIRED.
+ * - Authenticated: fields come from the profile and are pre-filled; schema stays
+ *   permissive because the form renders them read-only (still submitted).
+ */
+function makeCheckoutSchema(isAuthenticated: boolean, t: (key: string) => string) {
+  if (!isAuthenticated) {
+    return z.object({
+      orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
+      customerFirstName: z
+        .string()
+        .trim()
+        .min(1, t('storefront.checkout.customerFirstNameRequired')),
+      customerLastName: z
+        .string()
+        .trim()
+        .min(1, t('storefront.checkout.customerLastNameRequired')),
+      customerEmail: z
+        .string()
+        .trim()
+        .min(1, t('storefront.checkout.customerEmailRequired'))
+        .refine(
+          (v) => z.string().email().safeParse(v).success,
+          { message: t('storefront.checkout.customerEmailInvalid') },
+        ),
+      customerPhone: z
+        .string()
+        .trim()
+        .min(1, t('storefront.checkout.customerPhoneRequired')),
+      paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
+    });
+  }
+
+  // Authenticated: profile fields are pre-filled and read-only; still require
+  // non-empty values (they come from the profile) but treat phone as editable + required.
+  return z.object({
+    orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
+    customerFirstName: z.string().trim().min(1),
+    customerLastName: z.string().trim().min(1),
+    customerEmail: z
+      .string()
+      .trim()
+      .refine(
+        (v) => !v || z.string().email().safeParse(v).success,
+        { message: t('storefront.checkout.customerEmailInvalid') },
+      ),
+    customerPhone: z
+      .string()
+      .trim()
+      .min(1, t('storefront.checkout.customerPhoneRequired')),
+    paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
+  });
+}
+
+type CheckoutFormValues = {
+  orderType: 'Pickup' | 'EatIn' | 'Delivery';
+  customerFirstName: string;
+  customerLastName: string;
+  customerEmail: string;
+  customerPhone: string;
+  paymentMethod: 'CashAtPickup' | 'CreditCard' | 'Bancontact';
+};
 
 // ---------------------------------------------------------------------------
 // Checkout form inner component (needs CartProvider to be above)
@@ -47,7 +111,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { brandSlug: paramSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { state, clearCart } = useCart();
   const createOrder = useCreateOrder(brandSlug, shopId);
 
@@ -61,6 +125,21 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
     }
   }, [state.items.length, navigate, paramSlug, lang, shopSlug]);
 
+  // Build auth-aware schema (memoised so it only rebuilds when auth state or t changes)
+  const schema = useMemo(
+    () => makeCheckoutSchema(isAuthenticated, t),
+    [isAuthenticated, t],
+  );
+
+  const defaultValues: CheckoutFormValues = {
+    orderType: 'Pickup',
+    customerFirstName: user?.firstName ?? '',
+    customerLastName: user?.lastName ?? '',
+    customerEmail: user?.email ?? '',
+    customerPhone: user?.phoneNumber ?? '',
+    paymentMethod: 'CashAtPickup',
+  };
+
   const {
     register,
     handleSubmit,
@@ -68,10 +147,9 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
     control,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
-    defaultValues: {
-      customerName: user?.displayName ?? '',
-    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema as z.ZodType<CheckoutFormValues, any, any>),
+    defaultValues,
   });
 
   const orderType = watch('orderType');
@@ -104,11 +182,13 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
 
     const result = await createOrder.mutateAsync({
       orderType: values.orderType as OrderType,
-      customerName: values.customerName ?? null,
+      customerFirstName: values.customerFirstName || null,
+      customerLastName: values.customerLastName || null,
       customerEmail: values.customerEmail || null,
       customerPhone: values.customerPhone || null,
       items: orderItems,
       paymentMethod: values.paymentMethod,
+      languageCode: normalizeLang(lang),
     });
 
     clearCart();
@@ -134,6 +214,8 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
   if (showMockPayment && pendingOrderId) {
     return <MockPaymentScreen orderId={pendingOrderId} onComplete={handleMockPaymentComplete} />;
   }
+
+  const isReadOnlyField = isAuthenticated;
 
   return (
     <main style={{ maxWidth: '36rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
@@ -239,10 +321,10 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
           </div>
         )}
 
-        {/* Customer name */}
+        {/* Customer first name */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label
-            htmlFor="customerName"
+            htmlFor="customerFirstName"
             style={{
               display: 'block',
               fontSize: '0.9375rem',
@@ -251,29 +333,79 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
               marginBottom: '0.375rem',
             }}
           >
-            {t('storefront.checkout.customerNameLabel')}
-            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: '0.25rem' }}>
-              ({t('storefront.checkout.optional')})
-            </span>
+            {t('storefront.checkout.customerFirstNameLabel')}
+            {!isAuthenticated && (
+              <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+            )}
           </label>
           <input
-            id="customerName"
+            id="customerFirstName"
             type="text"
-            {...register('customerName')}
-            placeholder={t('storefront.checkout.customerNamePlaceholder')}
+            {...register('customerFirstName')}
+            placeholder={t('storefront.checkout.customerFirstNamePlaceholder')}
+            readOnly={isReadOnlyField}
+            disabled={isReadOnlyField}
             style={{
               width: '100%',
               padding: '0.625rem 0.875rem',
               borderRadius: '0.375rem',
-              border: '1px solid #d1d5db',
+              border: `1px solid ${errors.customerFirstName ? '#ef4444' : '#d1d5db'}`,
               fontSize: '0.9375rem',
               color: '#111827',
               boxSizing: 'border-box',
+              background: isReadOnlyField ? '#f9fafb' : '#fff',
             }}
           />
+          {errors.customerFirstName && (
+            <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+              {errors.customerFirstName.message}
+            </p>
+          )}
         </div>
 
-        {/* Customer email (optional, for digital receipt) */}
+        {/* Customer last name */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label
+            htmlFor="customerLastName"
+            style={{
+              display: 'block',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.375rem',
+            }}
+          >
+            {t('storefront.checkout.customerLastNameLabel')}
+            {!isAuthenticated && (
+              <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+            )}
+          </label>
+          <input
+            id="customerLastName"
+            type="text"
+            {...register('customerLastName')}
+            placeholder={t('storefront.checkout.customerLastNamePlaceholder')}
+            readOnly={isReadOnlyField}
+            disabled={isReadOnlyField}
+            style={{
+              width: '100%',
+              padding: '0.625rem 0.875rem',
+              borderRadius: '0.375rem',
+              border: `1px solid ${errors.customerLastName ? '#ef4444' : '#d1d5db'}`,
+              fontSize: '0.9375rem',
+              color: '#111827',
+              boxSizing: 'border-box',
+              background: isReadOnlyField ? '#f9fafb' : '#fff',
+            }}
+          />
+          {errors.customerLastName && (
+            <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+              {errors.customerLastName.message}
+            </p>
+          )}
+        </div>
+
+        {/* Customer email */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label
             htmlFor="customerEmail"
@@ -286,15 +418,17 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
             }}
           >
             {t('storefront.checkout.customerEmailLabel')}
-            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: '0.25rem' }}>
-              ({t('storefront.checkout.optional')})
-            </span>
+            {!isAuthenticated ? (
+              <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+            ) : null}
           </label>
           <input
             id="customerEmail"
             type="email"
             {...register('customerEmail')}
             placeholder={t('storefront.checkout.customerEmailPlaceholder')}
+            readOnly={isReadOnlyField}
+            disabled={isReadOnlyField}
             style={{
               width: '100%',
               padding: '0.625rem 0.875rem',
@@ -303,6 +437,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
               fontSize: '0.9375rem',
               color: '#111827',
               boxSizing: 'border-box',
+              background: isReadOnlyField ? '#f9fafb' : '#fff',
             }}
           />
           {errors.customerEmail && (
@@ -315,7 +450,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
           </p>
         </div>
 
-        {/* Customer phone (optional) */}
+        {/* Customer phone — always editable + required */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label
             htmlFor="customerPhone"
@@ -328,9 +463,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
             }}
           >
             {t('storefront.checkout.customerPhoneLabel')}
-            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: '0.25rem' }}>
-              ({t('storefront.checkout.optional')})
-            </span>
+            <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
           </label>
           <input
             id="customerPhone"
@@ -341,12 +474,17 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
               width: '100%',
               padding: '0.625rem 0.875rem',
               borderRadius: '0.375rem',
-              border: '1px solid #d1d5db',
+              border: `1px solid ${errors.customerPhone ? '#ef4444' : '#d1d5db'}`,
               fontSize: '0.9375rem',
               color: '#111827',
               boxSizing: 'border-box',
             }}
           />
+          {errors.customerPhone && (
+            <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+              {errors.customerPhone.message}
+            </p>
+          )}
         </div>
 
         {/* Cart summary */}

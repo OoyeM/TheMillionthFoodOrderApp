@@ -5,7 +5,6 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using TheMillionthFoodOrderApp.Api.Endpoints.Orders;
 using TheMillionthFoodOrderApp.Application.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 
 // Disambiguate Arg: TUnit.Mocks uses TUnit.Mocks.Arguments.Arg; NSubstitute uses NSubstitute.Arg.
 // We use NSubstitute's Arg for Received/Returns matching.
@@ -53,7 +52,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsTrue();
@@ -67,7 +66,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
@@ -82,7 +81,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
-                null, 5,
+                null, null, 5,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsTrue();
@@ -96,7 +95,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
-                null, 0,
+                null, null, 0,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
@@ -109,7 +108,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
-                null, -3,
+                null, null, -3,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
@@ -123,7 +122,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Delivery", "CashAtPickup",
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsTrue();
@@ -137,7 +136,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                null, null, []));
+                null, null, null, []));
 
         await Assert.That(result.IsValid).IsFalse();
         await Assert.That(result.Errors.Any(e => e.PropertyName == "Items")).IsTrue();
@@ -151,7 +150,7 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 0, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
@@ -163,25 +162,38 @@ public sealed class CreateInStoreOrderEndpointTests
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 100, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
     }
 
-    // ── Validator: CustomerName length ────────────────────────────────────────
+    // ── Validator: CustomerFirstName / CustomerLastName length ────────────────
 
     [Test]
-    public async Task Validator_CustomerNameOver200Chars_FailsValidation()
+    public async Task Validator_CustomerFirstNameOver100Chars_FailsValidation()
     {
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                new string('A', 201), null,
+                new string('A', 101), null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
         await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors.Any(e => e.PropertyName == "CustomerName")).IsTrue();
+        await Assert.That(result.Errors.Any(e => e.PropertyName == "CustomerFirstName")).IsTrue();
+    }
+
+    [Test]
+    public async Task Validator_CustomerLastNameOver100Chars_FailsValidation()
+    {
+        var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
+            new CreateInStoreOrderApiRequest(
+                "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
+                null, new string('B', 101), null,
+                [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
+
+        await Assert.That(result.IsValid).IsFalse();
+        await Assert.That(result.Errors.Any(e => e.PropertyName == "CustomerLastName")).IsTrue();
     }
 
     // ── HandleAsync: maps tableNumber + createdByStaffId to service ───────────
@@ -211,7 +223,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", shopId, "Pickup", "CashAtPickup",
-                null, tableNumber,
+                null, null, tableNumber,
                 [new OrderItemApiInput(productId, 2, null)]),
             CancellationToken.None);
 
@@ -246,7 +258,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", shopId, "Pickup", "CashAtPickup",
-                null, null, // no table number for Pickup
+                null, null, null, // no table number for Pickup
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
@@ -283,7 +295,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", shopId, "Pickup", "CreditCard", // client submits CreditCard
-                null, null,
+                null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
@@ -309,7 +321,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "Pickup", "CashAtPickup",
-                null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
+                null, null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
         await Assert.That(httpContext.Response.StatusCode).IsEqualTo(400);
@@ -331,7 +343,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
-                null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
+                null, null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
         await Assert.That(httpContext.Response.StatusCode).IsEqualTo(400);
@@ -363,7 +375,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", shopId, "Pickup", "CashAtPickup",
-                null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
+                null, null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
         await Assert.That(captured).IsNotNull();
@@ -399,7 +411,7 @@ public sealed class CreateInStoreOrderEndpointTests
         await endpoint.HandleAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", shopId, "Pickup", "CashAtPickup",
-                null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
+                null, null, null, [new OrderItemApiInput(Guid.NewGuid(), 1, null)]),
             CancellationToken.None);
 
         // Verify service was called exactly once with a null staffId (graceful degradation)

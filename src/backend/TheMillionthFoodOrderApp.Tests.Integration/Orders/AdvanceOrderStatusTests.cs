@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -90,7 +90,10 @@ public sealed class AdvanceOrderStatusTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = "Status Test",
+            CustomerFirstName = "Status",
+            CustomerLastName = "Test",
+            CustomerEmail = "status@example.com",
+            CustomerPhone = "+32470000030",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }

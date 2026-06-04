@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using TheMillionthFoodOrderApp.Application.Email;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence.Interceptors;
 
@@ -65,6 +66,13 @@ public sealed class IntegrationTestWebAppFactory(string platformConnectionString
                 var interceptor = sp.GetRequiredService<AuditSaveChangesInterceptor>();
                 options.AddInterceptors(interceptor);
             });
+
+            // Replace the real IEmailSender with a recording fake so integration tests
+            // can inspect outbound emails without an SMTP relay (US-FP-051).
+            services.RemoveAll<IEmailSender>();
+            var recordingEmailSender = new RecordingEmailSender();
+            services.AddSingleton<RecordingEmailSender>(recordingEmailSender);
+            services.AddSingleton<IEmailSender>(recordingEmailSender);
         });
 
         // Use "Testing" environment so seeding and migrations behave predictably.

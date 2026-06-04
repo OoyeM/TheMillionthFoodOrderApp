@@ -129,6 +129,35 @@ public sealed class MockAuthHandlerTests
         await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.BrandSlug)).IsNull();
     }
 
+    // ── Customer persona: OIDC profile claims (US-FP-051) ────────────────────
+
+    [Test]
+    public async Task BuildPrincipal_Customer_HasGivenNameClaimTest()
+    {
+        var principal = MockAuthHandler.BuildPrincipal(MockPersonas.Customer);
+
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.GivenName))
+            .IsEqualTo("Test");
+    }
+
+    [Test]
+    public async Task BuildPrincipal_Customer_HasFamilyNameClaimCustomer()
+    {
+        var principal = MockAuthHandler.BuildPrincipal(MockPersonas.Customer);
+
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.FamilyName))
+            .IsEqualTo("Customer");
+    }
+
+    [Test]
+    public async Task BuildPrincipal_Customer_HasPhoneNumberClaim()
+    {
+        var principal = MockAuthHandler.BuildPrincipal(MockPersonas.Customer);
+
+        await Assert.That(principal!.FindFirstValue(AuthConstants.Claims.PhoneNumber))
+            .IsEqualTo("+32470000004");
+    }
+
     // ── Unknown persona ───────────────────────────────────────────────────────
 
     [Test]

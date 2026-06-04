@@ -26,12 +26,24 @@ const BFF_PERSONA: Partial<Record<UserRole, string>> = {
 };
 
 function buildMockUser(role: UserRole, displayName: string): AuthUser {
+  // Role-specific profile fields for US-FP-051 (digital receipt prefill).
+  const profileByRole: Partial<Record<UserRole, { firstName: string; lastName: string; phoneNumber: string }>> = {
+    customer: { firstName: 'Test', lastName: 'Customer', phoneNumber: '+32470000004' },
+    'counter-staff': { firstName: 'Counter', lastName: 'Staff', phoneNumber: '+32470000001' },
+    'brand-admin': { firstName: 'Brand', lastName: 'Admin', phoneNumber: '+32470000002' },
+    'platform-admin': { firstName: 'Platform', lastName: 'Admin', phoneNumber: '+32470000003' },
+  };
+  const profile = profileByRole[role] ?? null;
+
   return {
     userId: 'mock-user-id',
     displayName,
     email: `${role}@mock.dev`,
     roles: [role],
     brandSlug: role === 'platform-admin' ? null : 'demo',
+    firstName: profile?.firstName ?? null,
+    lastName: profile?.lastName ?? null,
+    phoneNumber: profile?.phoneNumber ?? null,
   };
 }
 

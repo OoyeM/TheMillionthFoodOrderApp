@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -129,7 +129,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = "Too Early",
+            CustomerFirstName = "Too",
+            CustomerLastName = "Early",
+            CustomerEmail = "too.early@example.com",
+            CustomerPhone = "+32470000099",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -157,7 +160,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = "Jan Janssen",
+            CustomerFirstName = "Jan",
+            CustomerLastName = "Janssen",
+            CustomerEmail = "jan.janssen@example.com",
+            CustomerPhone = "+32470000001",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 2, SelectedModifierIds = Array.Empty<Guid>() }
@@ -214,7 +220,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Delivery",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Delivery",
+            CustomerLastName = "Customer",
+            CustomerEmail = "delivery@example.com",
+            CustomerPhone = "+32470000002",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -250,7 +259,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "EatIn",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Eat",
+            CustomerLastName = "InCustomer",
+            CustomerEmail = "eatin@example.com",
+            CustomerPhone = "+32470000003",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -296,7 +308,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Multi",
+            CustomerLastName = "Items",
+            CustomerEmail = "multi@example.com",
+            CustomerPhone = "+32470000005",
             Items = new[]
             {
                 new { ProductId = productId1, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() },
@@ -332,7 +347,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Order",
+            CustomerLastName = "Uniqueness",
+            CustomerEmail = "unique@example.com",
+            CustomerPhone = "+32470000006",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -369,7 +387,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Unknown",
+            CustomerLastName = "Product",
+            CustomerEmail = "unknown@example.com",
+            CustomerPhone = "+32470000007",
             Items = new[]
             {
                 new { ProductId = Guid.NewGuid(), Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -393,7 +414,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Empty",
+            CustomerLastName = "Items",
+            CustomerEmail = "empty@example.com",
+            CustomerPhone = "+32470000008",
             Items = Array.Empty<object>()
         };
 
@@ -415,7 +439,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "DineIn",  // Not a valid OrderType value
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Invalid",
+            CustomerLastName = "Type",
+            CustomerEmail = "invalid@example.com",
+            CustomerPhone = "+32470000009",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -440,7 +467,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Zero",
+            CustomerLastName = "Qty",
+            CustomerEmail = "zero@example.com",
+            CustomerPhone = "+32470000010",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 0, SelectedModifierIds = Array.Empty<Guid>() }
@@ -460,7 +490,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Non",
+            CustomerLastName = "Existent",
+            CustomerEmail = "nonexistent@example.com",
+            CustomerPhone = "+32470000011",
             Items = new[]
             {
                 new { ProductId = Guid.NewGuid(), Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -492,7 +525,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Denorm",
+            CustomerLastName = "Test",
+            CustomerEmail = "denorm@example.com",
+            CustomerPhone = "+32470000012",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -524,7 +560,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Status",
+            CustomerLastName = "Check",
+            CustomerEmail = "status@example.com",
+            CustomerPhone = "+32470000013",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -593,7 +632,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Modifier",
+            CustomerLastName = "Test",
+            CustomerEmail = "modifier@example.com",
+            CustomerPhone = "+32470000014",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 2, SelectedModifierIds = new[] { modifierId } }
@@ -647,7 +689,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CreditCard",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Credit",
+            CustomerLastName = "Card",
+            CustomerEmail = "credit@example.com",
+            CustomerPhone = "+32470000015",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -679,7 +724,8 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = "Lieselot Pieters",
+            CustomerFirstName = "Lieselot",
+            CustomerLastName = "Pieters",
             CustomerEmail = "lieselot@example.com",
             CustomerPhone = "+32 478 12 34 56",
             Items = new[]
@@ -700,9 +746,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
     }
 
     [Test]
-    public async Task PlaceOrder_WithoutEmailAndPhone_StillSucceeds()
+    public async Task PlaceOrder_WithoutContactFields_Returns400()
     {
-        // Regression: ensures that omitting email and phone does not break order placement.
+        // US-FP-051: every online order must supply all four contact fields (first, last, email, phone)
+        // so the digital receipt can be delivered. Omitting them returns 400.
         var client = CreateClient();
         var brand = IntegrationTestBase.BetaSlug;
 
@@ -713,8 +760,7 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
-            // CustomerEmail and CustomerPhone intentionally omitted
+            // All four contact fields intentionally omitted
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }
@@ -723,12 +769,8 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
 
         var response = await client.PostAsJsonAsync(OrdersUrl(brand, shopId), request);
 
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
-
-        var order = await response.Content.ReadFromJsonAsync<OrderResponse>();
-        await Assert.That(order).IsNotNull();
-        await Assert.That(order!.CustomerEmail).IsNull();
-        await Assert.That(order.CustomerPhone).IsNull();
+        // Contact fields are required for online orders since US-FP-051
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
     }
 
     [Test]
@@ -745,8 +787,10 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = (string?)null,
+            CustomerFirstName = "Invalid",
+            CustomerLastName = "Email",
             CustomerEmail = "not-a-valid-email",
+            CustomerPhone = "+32470000016",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }

@@ -1,12 +1,18 @@
 <Solution>
-  <Project Path="TheMillionthFoodOrderApp.Api/TheMillionthFoodOrderApp.Api.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.AppHost/TheMillionthFoodOrderApp.AppHost.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Application/TheMillionthFoodOrderApp.Application.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Bff/TheMillionthFoodOrderApp.Bff.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Domain/TheMillionthFoodOrderApp.Domain.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Infrastructure/TheMillionthFoodOrderApp.Infrastructure.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.ServiceDefaults/TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Tests.Integration/TheMillionthFoodOrderApp.Tests.Integration.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Tests.Unit/TheMillionthFoodOrderApp.Tests.Unit.csproj" />
-  <Project Path="TheMillionthFoodOrderApp.Bff.Tests/TheMillionthFoodOrderApp.Bff.Tests.csproj" />
+  <Folder Name="/01-ASPIRE/">
+    <Project Path="TheMillionthFoodOrderApp.AppHost/TheMillionthFoodOrderApp.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/02-BFF/">
+    <Project Path="TheMillionthFoodOrderApp.Bff.Tests/TheMillionthFoodOrderApp.Bff.Tests.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Bff/TheMillionthFoodOrderApp.Bff.csproj" />
+  </Folder>
+  <Folder Name="/03-API/">
+    <Project Path="TheMillionthFoodOrderApp.Api/TheMillionthFoodOrderApp.Api.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Application/TheMillionthFoodOrderApp.Application.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Domain/TheMillionthFoodOrderApp.Domain.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Infrastructure/TheMillionthFoodOrderApp.Infrastructure.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.ServiceDefaults/TheMillionthFoodOrderApp.ServiceDefaults.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Tests.Integration/TheMillionthFoodOrderApp.Tests.Integration.csproj" />
+    <Project Path="TheMillionthFoodOrderApp.Tests.Unit/TheMillionthFoodOrderApp.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

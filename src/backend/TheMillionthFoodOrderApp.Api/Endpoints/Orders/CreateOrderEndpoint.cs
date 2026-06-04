@@ -1,8 +1,8 @@
+using System.Security.Claims;
 using FastEndpoints;
 using FluentValidation;
 using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 using TheMillionthFoodOrderApp.Domain.Orders;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
@@ -14,10 +14,12 @@ public sealed record CreateOrderApiRequest(
     [property: RouteParam] Guid ShopId,
     string OrderType,
     string PaymentMethod,
-    string? CustomerName,
+    string? CustomerFirstName,
+    string? CustomerLastName,
     List<OrderItemApiInput> Items,
     string? CustomerEmail = null,
-    string? CustomerPhone = null);
+    string? CustomerPhone = null,
+    string? LanguageCode = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -46,9 +48,16 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
                 .LessThanOrEqualTo(99).WithMessage("Quantity cannot exceed 99.");
         });
 
-        RuleFor(x => x.CustomerName)
-            .MaximumLength(200)
-            .When(x => x.CustomerName is not null);
+        // Contact-field SHAPE only (max length / email format). Presence ("required for guest
+        // checkout") is enforced in the handler after merging claim-or-body values, because a
+        // FluentValidation validator cannot read the authenticated user's claims (US-FP-051).
+        RuleFor(x => x.CustomerFirstName)
+            .MaximumLength(100)
+            .When(x => x.CustomerFirstName is not null);
+
+        RuleFor(x => x.CustomerLastName)
+            .MaximumLength(100)
+            .When(x => x.CustomerLastName is not null);
 
         RuleFor(x => x.CustomerEmail)
             .EmailAddress().WithMessage("CustomerEmail must be a valid email address.")
@@ -58,6 +67,11 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
         RuleFor(x => x.CustomerPhone)
             .MaximumLength(32).WithMessage("CustomerPhone must not exceed 32 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.CustomerPhone));
+
+        RuleFor(x => x.LanguageCode)
+            .Must(v => v is "nl" or "fr" or "de")
+            .WithMessage("LanguageCode must be one of: nl, fr, de.")
+            .When(x => !string.IsNullOrWhiteSpace(x.LanguageCode));
     }
 }
 
@@ -86,6 +100,51 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
 
     public override async Task HandleAsync(CreateOrderApiRequest req, CancellationToken ct)
     {
+        // Merge contact details: prefer the authenticated customer's profile claims (populated
+        // only in real OIDC mode), falling back to the request body for guests (US-FP-051).
+        var user = HttpContext.User;
+
+        string? ClaimOrNull(params string[] keys) =>
+            keys.Select(k => user.FindFirstValue(k))
+                .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+        var givenName = ClaimOrNull("given_name");
+        var familyName = ClaimOrNull("family_name");
+        if (givenName is null && familyName is null)
+        {
+            // No discrete name claims — fall back to splitting a combined "name" claim.
+            var combined = ClaimOrNull("name", ClaimTypes.Name);
+            if (!string.IsNullOrWhiteSpace(combined))
+            {
+                var parts = combined.Trim().Split(' ', 2,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                givenName = parts.Length > 0 ? parts[0] : null;
+                familyName = parts.Length > 1 ? parts[1] : null;
+            }
+        }
+
+        var firstName = !string.IsNullOrWhiteSpace(givenName) ? givenName : req.CustomerFirstName;
+        var lastName = !string.IsNullOrWhiteSpace(familyName) ? familyName : req.CustomerLastName;
+        var email = ClaimOrNull("email", ClaimTypes.Email) ?? req.CustomerEmail;
+        var phone = ClaimOrNull("phone_number") ?? req.CustomerPhone;
+
+        // Every online order must carry a complete contact record (guests type it; logged-in
+        // customers get it from their profile) so the digital receipt can be delivered.
+        var missing = new List<ValidationFailure>();
+        if (string.IsNullOrWhiteSpace(firstName))
+            missing.Add(new(nameof(req.CustomerFirstName), "First name is required."));
+        if (string.IsNullOrWhiteSpace(lastName))
+            missing.Add(new(nameof(req.CustomerLastName), "Last name is required."));
+        if (string.IsNullOrWhiteSpace(email))
+            missing.Add(new(nameof(req.CustomerEmail), "Email is required."));
+        if (string.IsNullOrWhiteSpace(phone))
+            missing.Add(new(nameof(req.CustomerPhone), "Phone number is required."));
+        if (missing.Count > 0)
+        {
+            await HttpContext.Response.SendErrorsAsync(missing, statusCode: 400, cancellation: ct);
+            return;
+        }
+
         try
         {
             var appRequest = new CreateOrderRequest(
@@ -93,7 +152,8 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                 req.BrandSlug,
                 req.OrderType,
                 req.PaymentMethod,
-                req.CustomerName,
+                firstName,
+                lastName,
                 req.Items
                     .Select(i => new OrderItemInput(
                         i.ProductId,
@@ -101,8 +161,9 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                         (i.SelectedModifierIds ?? []).AsReadOnly()))
                     .ToList()
                     .AsReadOnly(),
-                req.CustomerEmail,
-                req.CustomerPhone);
+                email,
+                phone,
+                req.LanguageCode);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 

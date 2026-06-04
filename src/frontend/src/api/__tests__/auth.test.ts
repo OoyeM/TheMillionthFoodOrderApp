@@ -29,6 +29,9 @@ describe('auth API', () => {
         email: 'test@example.com',
         roles: ['brand-admin'],
         brandSlug: 'frietjes',
+        firstName: 'Test',
+        lastName: 'User',
+        phoneNumber: '+32470000001',
       });
     });
 

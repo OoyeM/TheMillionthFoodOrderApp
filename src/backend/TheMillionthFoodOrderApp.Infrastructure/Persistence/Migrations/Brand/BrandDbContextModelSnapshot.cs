@@ -366,13 +366,24 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .HasMaxLength(320)
                         .HasColumnType("nvarchar(320)");
 
-                    b.Property<string>("CustomerName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<string>("CustomerFirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CustomerLastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("CustomerPhone")
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("nl-BE");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
@@ -386,6 +397,11 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<bool>("ReceiptEmailSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<Guid>("ShopId")
                         .HasColumnType("uniqueidentifier");

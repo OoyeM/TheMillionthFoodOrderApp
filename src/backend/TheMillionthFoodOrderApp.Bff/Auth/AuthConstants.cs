@@ -100,5 +100,14 @@ public static class AuthConstants
 
         /// <summary>Platform-wide role (only set for PlatformAdmin users).</summary>
         public const string PlatformRole = "platform_role";
+
+        /// <summary>OIDC standard given-name claim (raw name; MapInboundClaims is disabled).</summary>
+        public const string GivenName = "given_name";
+
+        /// <summary>OIDC standard family-name claim.</summary>
+        public const string FamilyName = "family_name";
+
+        /// <summary>OIDC standard phone-number claim (from the "phone" scope), used to prefill checkout (US-FP-051).</summary>
+        public const string PhoneNumber = "phone_number";
     }
 }

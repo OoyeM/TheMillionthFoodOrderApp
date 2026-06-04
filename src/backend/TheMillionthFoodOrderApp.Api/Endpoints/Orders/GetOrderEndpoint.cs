@@ -1,6 +1,6 @@
 using FastEndpoints;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Domain.Orders;
 using TheMillionthFoodOrderApp.Domain.Shops;
 

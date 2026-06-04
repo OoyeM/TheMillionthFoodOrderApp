@@ -16,11 +16,16 @@ export type PaymentMethod = 'CashAtPickup' | 'CreditCard' | 'Bancontact';
 
 export interface CreateOrderRequest {
   orderType: OrderType;
-  customerName?: string | null;
+  /** Given name (US-FP-051). Required for online (guest) orders. */
+  customerFirstName?: string | null;
+  /** Family name (US-FP-051). Required for online (guest) orders. */
+  customerLastName?: string | null;
   customerEmail?: string | null;
   customerPhone?: string | null;
   items: OrderItemRequest[];
   paymentMethod: PaymentMethod;
+  /** Storefront language used to render the receipt (US-FP-051). */
+  languageCode?: 'nl' | 'fr' | 'de';
 }
 
 // ---------------------------------------------------------------------------
@@ -51,11 +56,18 @@ export interface OrderResponse {
   brandSlug: string;
   orderType: OrderType;
   statusName: string;
+  /** Server-computed full name (first + last). Kept for display compatibility. */
   customerName: string | null;
+  /** Given name (US-FP-051). */
+  customerFirstName?: string | null;
+  /** Family name (US-FP-051). */
+  customerLastName?: string | null;
   /** Optional email for digital receipt (US-FP-017). */
   customerEmail?: string | null;
   /** Optional phone number (US-FP-017). */
   customerPhone?: string | null;
+  /** Language used to render the receipt (US-FP-051). */
+  languageCode?: string | null;
   items: OrderItemResponse[];
   vatRatePercent: number;
   subtotalGross: number;
@@ -91,7 +103,10 @@ export interface ListActiveOrdersResponse {
 export interface CreateInStoreOrderRequest {
   orderType: OrderType;
   paymentMethod: PaymentMethod;
-  customerName?: string;
+  /** Given name (US-FP-051). Replaces old customerName field. */
+  customerFirstName?: string;
+  /** Family name (US-FP-051). Replaces old customerName field. */
+  customerLastName?: string;
   /** Required when orderType === 'EatIn'. */
   tableNumber?: number;
   items: OrderItemRequest[];

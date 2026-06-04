@@ -3,7 +3,6 @@ using FastEndpoints;
 using FluentValidation;
 using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 using TheMillionthFoodOrderApp.Domain.Orders;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
@@ -13,7 +12,8 @@ public sealed record CreateInStoreOrderApiRequest(
     [property: RouteParam] Guid ShopId,
     string OrderType,
     string PaymentMethod,
-    string? CustomerName,
+    string? CustomerFirstName,
+    string? CustomerLastName,
     int? TableNumber,
     List<OrderItemApiInput> Items);
 
@@ -47,9 +47,13 @@ public sealed class CreateInStoreOrderRequestValidator : Validator<CreateInStore
                 .LessThanOrEqualTo(99).WithMessage("Quantity cannot exceed 99.");
         });
 
-        RuleFor(x => x.CustomerName)
-            .MaximumLength(200)
-            .When(x => x.CustomerName is not null);
+        RuleFor(x => x.CustomerFirstName)
+            .MaximumLength(100)
+            .When(x => x.CustomerFirstName is not null);
+
+        RuleFor(x => x.CustomerLastName)
+            .MaximumLength(100)
+            .When(x => x.CustomerLastName is not null);
 
         // TableNumber is required and must be > 0 only when OrderType is EatIn
         RuleFor(x => x.TableNumber)
@@ -119,7 +123,8 @@ public sealed class CreateInStoreOrderEndpoint(IOrderService orderService)
                 req.BrandSlug,
                 req.OrderType,
                 req.PaymentMethod,
-                req.CustomerName,
+                req.CustomerFirstName,
+                req.CustomerLastName,
                 req.TableNumber,
                 req.Items
                     .Select(i => new OrderItemInput(

@@ -6,6 +6,7 @@ using TheMillionthFoodOrderApp.Application.MenuCategories;
 using TheMillionthFoodOrderApp.Application.ModifierGroups;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
 using TheMillionthFoodOrderApp.Application.Orders;
+using TheMillionthFoodOrderApp.Application.Orders.Receipts;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Application.TaxConfiguration;
@@ -29,6 +30,9 @@ public static class DependencyInjection
         services.AddScoped<IOrderLifecycleService, OrderLifecycleService>();
         services.AddScoped<ITaxConfigurationService, TaxConfigurationService>();
         services.AddScoped<IOrderService, OrderService>();
+
+        // Digital-receipt HTML composer (US-FP-051) — pure/stateless.
+        services.AddSingleton<IReceiptComposer, ReceiptComposer>();
 
         return services;
     }

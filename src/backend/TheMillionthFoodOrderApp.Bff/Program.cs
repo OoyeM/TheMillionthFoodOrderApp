@@ -117,6 +117,8 @@ else
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("email");
+        // phone scope yields the phone_number claim used to prefill storefront checkout (US-FP-051).
+        options.Scope.Add("phone");
         // offline_access is required for Keycloak to issue refresh tokens —
         // without it, access tokens stored in the cookie cannot be renewed
         // and proxied API calls start failing with 401 after ~5 minutes.

@@ -14,8 +14,8 @@ import { useOrderState } from '../context/PosOrderContext';
 export function useCreateInStoreOrder(brandSlug: string, shopId: string) {
   const { state, clearOrder } = useOrderState();
 
-  return useMutation<OrderResponse, Error, { customerName?: string }>({
-    mutationFn: ({ customerName }) => {
+  return useMutation<OrderResponse, Error, { customerFirstName?: string; customerLastName?: string }>({
+    mutationFn: ({ customerFirstName, customerLastName }) => {
       const payload: CreateInStoreOrderRequest = {
         orderType: state.orderType,
         paymentMethod: state.paymentMethod,
@@ -24,7 +24,8 @@ export function useCreateInStoreOrder(brandSlug: string, shopId: string) {
           quantity: item.quantity,
           selectedModifierIds: item.selectedModifiers.map((m) => m.modifierId),
         })),
-        ...(customerName ? { customerName } : {}),
+        ...(customerFirstName ? { customerFirstName } : {}),
+        ...(customerLastName ? { customerLastName } : {}),
         ...(state.orderType === 'EatIn' && state.tableNumber !== undefined
           ? { tableNumber: state.tableNumber }
           : {}),

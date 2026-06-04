@@ -1,4 +1,7 @@
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using Microsoft.Extensions.Logging;
+using TheMillionthFoodOrderApp.Application.Email;
+using TheMillionthFoodOrderApp.Application.Orders.Receipts;
+using TheMillionthFoodOrderApp.Domain.BrandSettings;
 using TheMillionthFoodOrderApp.Domain.Common;
 using TheMillionthFoodOrderApp.Domain.ModifierGroups;
 using TheMillionthFoodOrderApp.Domain.OrderLifecycle;
@@ -21,7 +24,11 @@ public sealed class OrderService(
     IModifierGroupRepository modifierGroupRepository,
     ITaxConfigurationRepository taxConfigurationRepository,
     IOrderLifecycleConfigRepository orderLifecycleConfigRepository,
-    IShopRepository shopRepository) : IOrderService
+    IShopRepository shopRepository,
+    IBrandSettingsRepository brandSettingsRepository,
+    IEmailSender emailSender,
+    IReceiptComposer receiptComposer,
+    ILogger<OrderService> logger) : IOrderService
 {
     public async Task<OrderResponse> CreateOrderAsync(
         CreateOrderRequest request,
@@ -45,13 +52,15 @@ public sealed class OrderService(
             request.BrandSlug,
             orderType,
             paymentMethod,
-            request.CustomerName,
+            request.CustomerFirstName,
+            request.CustomerLastName,
             tableNumber: null,
             createdByStaffId: null,
             request.Items,
             cancellationToken,
             request.CustomerEmail,
             request.CustomerPhone,
+            request.LanguageCode,
             enforceOpeningHours: true);
     }
 
@@ -88,12 +97,15 @@ public sealed class OrderService(
 
         // 4. createdByStaffId is supplied by the caller (endpoint extracts it from claims)
         //    and is never read from the request DTO to prevent client-trust issues.
+        // In-store orders never email a receipt (US-FP-051 is online-only) so no checkout
+        // language is captured; CreateOrderCoreAsync falls back to the brand default.
         return await CreateOrderCoreAsync(
             request.ShopId,
             request.BrandSlug,
             orderType,
             paymentMethod,
-            request.CustomerName,
+            request.CustomerFirstName,
+            request.CustomerLastName,
             request.TableNumber,
             createdByStaffId,
             request.Items,
@@ -140,9 +152,58 @@ public sealed class OrderService(
         order.AdvanceTo(targetStatus.Name);
         await orderRepository.SaveChangesAsync(cancellationToken);
 
+        // 7. Digital receipt (US-FP-051): when an ONLINE order (no staff creator) first reaches a
+        //    terminal status and a customer email is present, email the receipt. In-store orders
+        //    are excluded — they already print a thermal receipt (US-FP-052). The send runs here,
+        //    in the request scope, where the brand DbContext/tenant is resolved (a Wolverine
+        //    handler would run outside that scope). It is best-effort: a failed send must never
+        //    roll back or fail the status-advance request.
+        if (order.CreatedByStaffId is null
+            && targetStatus.IsTerminal
+            && !order.ReceiptEmailSent
+            && !string.IsNullOrWhiteSpace(order.CustomerEmail))
+        {
+            // Load the shop only when emailing — for the receipt's seller legal block + time zone.
+            var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
+            await TrySendReceiptEmailAsync(order, MapToResponse(order, shop), shop?.TimeZoneId, cancellationToken);
+        }
+
         // The status-advance response feeds the kitchen display, which renders an order
         // ticket (not a customer receipt), so the seller legal block is not needed here.
         return MapToResponse(order, shop: null);
+    }
+
+    /// <summary>
+    /// Composes and sends the digital receipt email, then persists the sent flag (US-FP-051).
+    /// Best-effort: any failure is logged and swallowed so the status advance still succeeds;
+    /// the flag is persisted only after a successful send, so a transient SMTP failure retries
+    /// on the next terminal transition.
+    /// </summary>
+    private async Task TrySendReceiptEmailAsync(
+        Order order,
+        OrderResponse response,
+        string? timeZoneId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var receipt = receiptComposer.Compose(response, timeZoneId);
+            await emailSender.SendAsync(
+                new EmailMessage(order.CustomerEmail!, receipt.Subject, receipt.HtmlBody),
+                cancellationToken);
+
+            order.MarkReceiptEmailSent();
+            await orderRepository.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to send the digital receipt for order {OrderId} to {Email}. The status " +
+                "advance still succeeded; the receipt will retry on the next terminal transition.",
+                order.Id,
+                order.CustomerEmail);
+        }
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -157,15 +218,23 @@ public sealed class OrderService(
         string brandSlug,
         OrderType orderType,
         PaymentMethod paymentMethod,
-        string? customerName,
+        string? customerFirstName,
+        string? customerLastName,
         int? tableNumber,
         Guid? createdByStaffId,
         IReadOnlyList<OrderItemInput> items,
         CancellationToken cancellationToken,
         string? customerEmail = null,
         string? customerPhone = null,
+        string? languageCode = null,
         bool enforceOpeningHours = false)
     {
+        // 0. Resolve the receipt language: the customer's checkout language when supplied,
+        //    otherwise the brand's primary language (US-FP-051).
+        var resolvedLanguage = string.IsNullOrWhiteSpace(languageCode)
+            ? (await brandSettingsRepository.GetAsync(cancellationToken))?.DefaultLanguage ?? "nl-BE"
+            : languageCode;
+
         // 1. Determine consumption mode for VAT calculation
         var consumptionMode = orderType == OrderType.EatIn
             ? ConsumptionMode.EatIn
@@ -298,13 +367,15 @@ public sealed class OrderService(
                 orderType,
                 paymentMethod,
                 openingStatus.Name,
-                customerName,
+                customerFirstName,
+                customerLastName,
                 vatRate,
                 orderItems,
                 tableNumber,
                 createdByStaffId,
                 customerEmail,
-                customerPhone);
+                customerPhone,
+                resolvedLanguage);
 
             try
             {
@@ -393,5 +464,8 @@ public sealed class OrderService(
             order.CustomerPhone,
             shop?.Name,
             shop?.VatNumber,
-            shop?.Address.ToSingleLine());
+            shop?.Address.ToSingleLine(),
+            order.CustomerFirstName,
+            order.CustomerLastName,
+            order.LanguageCode);
 }
