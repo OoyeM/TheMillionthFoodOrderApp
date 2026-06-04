@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Tests.Integration.Fixtures;
@@ -122,7 +122,10 @@ public sealed class GetOrderTests(IntegrationTestBase fixture)
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = "Tracking Tester",
+            CustomerFirstName = "Tracking",
+            CustomerLastName = "Tester",
+            CustomerEmail = "tracking@example.com",
+            CustomerPhone = "+32470000020",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }

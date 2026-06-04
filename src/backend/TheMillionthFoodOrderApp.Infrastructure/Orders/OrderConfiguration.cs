@@ -35,14 +35,29 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(o => o.CustomerName)
-            .HasMaxLength(200);
+        builder.Property(o => o.CustomerFirstName)
+            .HasMaxLength(100);
+
+        builder.Property(o => o.CustomerLastName)
+            .HasMaxLength(100);
+
+        // Combined name is computed from first/last — not persisted.
+        builder.Ignore(o => o.CustomerName);
 
         builder.Property(o => o.CustomerEmail)
             .HasMaxLength(320);
 
         builder.Property(o => o.CustomerPhone)
             .HasMaxLength(32);
+
+        builder.Property(o => o.LanguageCode)
+            .IsRequired()
+            .HasMaxLength(10)
+            .HasDefaultValue("nl-BE");
+
+        builder.Property(o => o.ReceiptEmailSent)
+            .IsRequired()
+            .HasDefaultValue(false);
 
         builder.Property(o => o.VatRatePercent)
             .HasColumnType("decimal(5,2)")

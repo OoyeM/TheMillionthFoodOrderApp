@@ -1,4 +1,4 @@
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Domain.Orders;
 using TheMillionthFoodOrderApp.Domain.Shops;
 
@@ -54,5 +54,8 @@ internal static class OrderTrackingMapper
             order.CustomerPhone,
             shop?.Name,
             shop?.VatNumber,
-            shop?.Address.ToSingleLine());
+            shop?.Address.ToSingleLine(),
+            order.CustomerFirstName,
+            order.CustomerLastName,
+            order.LanguageCode);
 }

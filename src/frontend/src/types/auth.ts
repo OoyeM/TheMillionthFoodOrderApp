@@ -20,6 +20,12 @@ export interface AuthUser {
   email: string;
   roles: UserRole[];
   brandSlug: string | null;
+  /** Given name from the user's profile (US-FP-051). Null when not provided. */
+  firstName: string | null;
+  /** Family name from the user's profile (US-FP-051). Null when not provided. */
+  lastName: string | null;
+  /** Phone number from the user's profile (US-FP-051). Null when not provided. */
+  phoneNumber: string | null;
 }
 
 /**
@@ -47,4 +53,10 @@ export type BffUserResponse =
       email: string;
       roles: string[];
       brandSlug: string | null;
+      /** Given name (US-FP-051). */
+      firstName: string | null;
+      /** Family name (US-FP-051). */
+      lastName: string | null;
+      /** Phone number (US-FP-051). */
+      phoneNumber: string | null;
     };

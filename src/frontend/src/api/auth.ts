@@ -51,6 +51,9 @@ function mapBffUserToAuthUser(response: BffUserResponse): AuthUser | null {
     email: response.email,
     roles,
     brandSlug: response.brandSlug,
+    firstName: response.firstName ?? null,
+    lastName: response.lastName ?? null,
+    phoneNumber: response.phoneNumber ?? null,
   };
 }
 

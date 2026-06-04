@@ -6,6 +6,7 @@ using TheMillionthFoodOrderApp.Api.Auth;
 using TheMillionthFoodOrderApp.Api.Middleware;
 using TheMillionthFoodOrderApp.Application;
 using TheMillionthFoodOrderApp.Infrastructure;
+using TheMillionthFoodOrderApp.Infrastructure.Email;
 using TheMillionthFoodOrderApp.Infrastructure.FileStorage;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
@@ -26,6 +27,11 @@ builder.Services.Configure<LocalFileStorageOptions>(opts =>
     opts.UploadsPath = uploadsPath;
     opts.UrlPrefix = "/uploads";
 });
+
+// Configure SMTP for the digital receipt email (US-FP-051). Host/Port are injected by Aspire
+// from the mailpit container in dev (Email__Host / Email__Port); prod overrides the "Email"
+// section to point at a real SMTP relay.
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Email"));
 
 // Register infrastructure services first (includes AuditSaveChangesInterceptor as singleton)
 builder.Services.AddInfrastructure();

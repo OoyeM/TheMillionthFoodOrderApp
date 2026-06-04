@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using TheMillionthFoodOrderApp.Api.Endpoints.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Application.Products;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
@@ -98,11 +98,19 @@ public sealed class ListActiveOrdersTests(IntegrationTestBase fixture)
         Guid productId,
         string customerName)
     {
+        // Split the provided customerName into first/last for the new API contract (US-FP-051).
+        var parts = customerName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var firstName = parts.Length > 0 ? parts[0] : customerName;
+        var lastName = parts.Length > 1 ? parts[1] : customerName;
+
         var request = new
         {
             OrderType = "Pickup",
             PaymentMethod = "CashAtPickup",
-            CustomerName = customerName,
+            CustomerFirstName = firstName,
+            CustomerLastName = lastName,
+            CustomerEmail = $"{customerName.ToLowerInvariant().Replace(' ', '.')}@example.com",
+            CustomerPhone = "+32470000040",
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }

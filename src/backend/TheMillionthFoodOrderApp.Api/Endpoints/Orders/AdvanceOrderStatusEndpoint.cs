@@ -1,7 +1,6 @@
 using FastEndpoints;
 using FluentValidation.Results;
 using TheMillionthFoodOrderApp.Application.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
 

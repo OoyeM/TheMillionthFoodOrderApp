@@ -1,5 +1,5 @@
 using FastEndpoints;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
+using TheMillionthFoodOrderApp.Application.Orders;
 using TheMillionthFoodOrderApp.Domain.Orders;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;

@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-04 (US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
+> Last updated: 2026-06-04 (US-FP-051 digital receipt done; US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -20,6 +20,7 @@
 **✅ Online-ordering entry point RESOLVED (2026-06-04).** US-FP-071 (shop selection + shop-slug-scoped storefront routes) merged via **PR #128** and was runtime-verified. The storefront now has a real customer journey: `/{brand}/{lang}/shops` chooser → `{shopSlug}/menu` → checkout → payment → order tracking, with the localStorage `shopId` hack removed. This unblocks the cluster that was previously "component-complete but NOT user-reachable" — **US-FP-016 / 017 / 038 / 058 / 063 restored to ✅.** (Historical note: this gap was found 2026-06-03 — `Home.tsx` was a stub and the menu only rendered at a GUID-based route nothing linked to.)
 
 **Changed 2026-06-04:**
+- **US-FP-051** → ✅ done. Digital receipt emailed when an **online** order reaches a terminal lifecycle status. New email infra: `IEmailSender` (Application) → MailKit `SmtpEmailSender` (Infrastructure) + a **mailpit** dev container in Aspire (SMTP 1025 / UI 8025); prod is a config-only SMTP swap. `ReceiptComposer` renders a localized HTML receipt (NL/FR/DE) mirroring the US-FP-052 printed layout, reusing the denormalised `OrderResponse` receipt data. Send is **synchronous** in `OrderService.AdvanceOrderStatusAsync` (request scope — avoids the Wolverine-handler tenant-context pitfall), online-only (`CreatedByStaffId is null`), idempotent via a persisted `Order.ReceiptEmailSent` flag, best-effort (try/catch, never fails the status advance). Scope expansions: customer name **split into first/last**; per-order `LanguageCode` captured at checkout (frontend sends the route lang); **guest checkout now requires first+last+email+phone** (enforced in `CreateOrderEndpoint` after merging claim-or-body), while logged-in customers get those from their **profile** — added an OIDC `phone` scope + Keycloak mapper + seed attributes, surfaced `firstName`/`lastName`/`phoneNumber` on `/bff/user`, with mock-auth parity. One brand migration `SplitOrderNameAndAddReceiptFields` (data-preserving). Tests: 314 unit + Bff + new receipt-email/claims integration tests green; frontend 342 vitest + type-check + build green.
 - **US-FP-052** → ✅ done. POS customer receipt: thermal-format `buildReceiptHtml` (seller legal block — shop name, address, VAT number — plus per-line prices, Belgian VAT breakdown net/VAT/gross, payment method, date) printed via the shared hidden-iframe `printDocument` helper (extracted from US-FP-028's `printTicket`). A "Print receipt" action on the POS confirmation screen triggers print and doubles as reprint (AC3). New nullable `Shop.VatNumber` (domain + EF + brand migration `AddShopVatNumber` + shop create/update DTOs/endpoints/validators + admin ShopEdit field). The seller legal block is denormalised onto `OrderResponse` (populated on the create + GET-order paths; null on the kitchen status-advance/list paths) — this also lays the groundwork for US-FP-051 (digital receipt). Note: the receipt button is fed the order via router state, so reprint is available on the confirmation screen but not after a hard refresh (acceptable for MVP). 284 unit + 45 integration + 84 frontend tests green.
 - **US-FP-071** → ✅ done. Shop chooser + shop-slug routes; FE/BE verified at runtime. PR #128 merged.
 - **US-FP-023** → ✅ done. Status-advance endpoint + kitchen-card button shipped (commit `adf18f2`); SignalR negotiate CSRF fix (`7fb5299`). The keystone is complete.
@@ -196,7 +197,7 @@ Once ordering works, these streams are **all independent**.
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| ⬜ | **US-FP-051** | Generate digital receipt | 016, 046 |
+| ✅ | **US-FP-051** | Generate digital receipt (email on online order completion) | 016, 046 |
 | ✅ | **US-FP-052** | Print receipt at point of sale (POS thermal receipt + reprint) | 016, 046 |
 
 ### Stream K: Offline Mode

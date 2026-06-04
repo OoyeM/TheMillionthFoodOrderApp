@@ -18,6 +18,9 @@ export const handlers = [
       email: 'test@example.com',
       roles: ['brand-admin'],
       brandSlug: 'frietjes',
+      firstName: 'Test',
+      lastName: 'User',
+      phoneNumber: '+32470000001',
     }),
   ),
 
@@ -661,6 +664,80 @@ export const handlers = [
     new HttpResponse(null, { status: 200 }),
   ),
 
+  // ── Online Orders (/api/brands/:slug/shops/:shopId/orders) ──────────────
+
+  http.post('/api/brands/:slug/shops/:shopId/orders', async ({ params, request }) => {
+    const body = await request.json() as {
+      orderType: string;
+      paymentMethod: string;
+      customerFirstName?: string | null;
+      customerLastName?: string | null;
+      customerEmail?: string | null;
+      customerPhone?: string | null;
+      languageCode?: string;
+      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+    };
+
+    const validOrderTypes = ['Pickup', 'EatIn', 'Delivery'];
+    if (!validOrderTypes.includes(body.orderType)) {
+      return HttpResponse.json({ error: `Invalid orderType: ${body.orderType}` }, { status: 400 });
+    }
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return HttpResponse.json({ error: 'items must be a non-empty array' }, { status: 400 });
+    }
+
+    const nameParts = [body.customerFirstName, body.customerLastName].filter(Boolean);
+    const customerName = nameParts.length > 0 ? nameParts.join(' ') : null;
+
+    return HttpResponse.json(
+      {
+        id: 'order-1',
+        orderNumber: 'ORD-001',
+        shopId: params.shopId,
+        brandSlug: params.slug,
+        orderType: body.orderType,
+        statusName: 'New',
+        customerName,
+        customerFirstName: body.customerFirstName ?? null,
+        customerLastName: body.customerLastName ?? null,
+        languageCode: body.languageCode ?? null,
+        customerEmail: body.customerEmail ?? null,
+        customerPhone: body.customerPhone ?? null,
+        items: (body.items ?? []).map((item) => ({
+          productId: item.productId,
+          productName: 'Kleine friet',
+          quantity: item.quantity,
+          unitGrossPrice: 3.5,
+          unitNetPrice: 3.3,
+          unitVatAmount: 0.2,
+          lineTotal: item.quantity * 3.5,
+          selectedModifiers: item.selectedModifierIds.map((id) => ({
+            modifierId: id,
+            modifierName: 'Mayonaise',
+            priceAdjustment: 0,
+          })),
+        })),
+        vatRatePercent: body.orderType === 'EatIn' ? 21 : 6,
+        subtotalGross: (body.items ?? []).reduce(
+          (sum: number, item) => sum + item.quantity * 3.5,
+          0,
+        ),
+        totalVatAmount: 0.2,
+        totalNet: 3.3,
+        totalGross: (body.items ?? []).reduce(
+          (sum: number, item) => sum + item.quantity * 3.5,
+          0,
+        ),
+        createdAt: '2024-06-01T10:00:00Z',
+        paymentMethod: body.paymentMethod,
+        shopName: 'Gent Centrum',
+        shopVatNumber: null,
+        shopAddressLine: null,
+      },
+      { status: 201 },
+    );
+  }),
+
   // ── In-store Orders (/api/brands/:slug/shops/:shopId/orders/in-store) ────
 
   http.post('/api/brands/:slug/shops/:shopId/orders/in-store', async ({ params, request }) => {
@@ -668,7 +745,8 @@ export const handlers = [
       orderType: string;
       paymentMethod: string;
       tableNumber?: number;
-      customerName?: string;
+      customerFirstName?: string;
+      customerLastName?: string;
       items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
     };
 
@@ -692,7 +770,9 @@ export const handlers = [
         brandSlug: params.slug,
         orderType: body.orderType,
         statusName: 'New',
-        customerName: body.customerName ?? null,
+        customerName: [body.customerFirstName, body.customerLastName].filter(Boolean).join(' ') || null,
+        customerFirstName: body.customerFirstName ?? null,
+        customerLastName: body.customerLastName ?? null,
         items: (body.items ?? []).map((item) => ({
           productId: item.productId,
           productName: 'Kleine friet',

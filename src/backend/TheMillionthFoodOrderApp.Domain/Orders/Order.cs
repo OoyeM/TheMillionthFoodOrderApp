@@ -21,14 +21,44 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     /// <summary>Name of the status the order was placed in (opening lifecycle status).</summary>
     public string StatusName { get; private set; } = string.Empty;
 
-    /// <summary>Optional customer name for display on kitchen displays and receipts.</summary>
-    public string? CustomerName { get; private set; }
+    /// <summary>Optional customer first name (US-FP-051).</summary>
+    public string? CustomerFirstName { get; private set; }
+
+    /// <summary>Optional customer last name (US-FP-051).</summary>
+    public string? CustomerLastName { get; private set; }
+
+    /// <summary>
+    /// Combined customer name for display on kitchen displays, tickets and receipts.
+    /// Computed from <see cref="CustomerFirstName"/> + <see cref="CustomerLastName"/>; not persisted.
+    /// </summary>
+    public string? CustomerName
+    {
+        get
+        {
+            var combined = string.Join(' ', new[] { CustomerFirstName, CustomerLastName }
+                .Where(s => !string.IsNullOrWhiteSpace(s)));
+            return string.IsNullOrWhiteSpace(combined) ? null : combined;
+        }
+    }
 
     /// <summary>Optional customer email address for digital receipts (US-FP-017).</summary>
     public string? CustomerEmail { get; private set; }
 
     /// <summary>Optional customer phone number (US-FP-017).</summary>
     public string? CustomerPhone { get; private set; }
+
+    /// <summary>
+    /// BCP-47 language code of the customer's checkout language (e.g. "nl-BE"),
+    /// used to render the digital receipt email in their language (US-FP-051).
+    /// Defaults to the brand's primary language.
+    /// </summary>
+    public string LanguageCode { get; private set; } = "nl-BE";
+
+    /// <summary>
+    /// True once a digital receipt email has been sent for this order (US-FP-051).
+    /// Guards against sending duplicate receipts on repeated terminal transitions.
+    /// </summary>
+    public bool ReceiptEmailSent { get; private set; }
 
     /// <summary>
     /// Table number for eat-in orders placed by counter staff.
@@ -89,13 +119,15 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         OrderType orderType,
         PaymentMethod paymentMethod,
         string statusName,
-        string? customerName,
+        string? customerFirstName,
+        string? customerLastName,
         decimal vatRatePercent,
         IEnumerable<OrderItem> items,
         int? tableNumber = null,
         Guid? createdByStaffId = null,
         string? customerEmail = null,
-        string? customerPhone = null)
+        string? customerPhone = null,
+        string? languageCode = null)
     {
         if (tableNumber.HasValue && tableNumber.Value <= 0)
             throw new ArgumentException("TableNumber must be greater than zero when provided.", nameof(tableNumber));
@@ -119,9 +151,11 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             OrderType = orderType,
             PaymentMethod = paymentMethod,
             StatusName = statusName,
-            CustomerName = customerName,
+            CustomerFirstName = string.IsNullOrWhiteSpace(customerFirstName) ? null : customerFirstName.Trim(),
+            CustomerLastName = string.IsNullOrWhiteSpace(customerLastName) ? null : customerLastName.Trim(),
             CustomerEmail = string.IsNullOrWhiteSpace(customerEmail) ? null : customerEmail.Trim(),
             CustomerPhone = string.IsNullOrWhiteSpace(customerPhone) ? null : customerPhone.Trim(),
+            LanguageCode = string.IsNullOrWhiteSpace(languageCode) ? "nl-BE" : languageCode.Trim(),
             TableNumber = tableNumber,
             CreatedByStaffId = createdByStaffId,
             VatRatePercent = vatRatePercent,
@@ -142,7 +176,7 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             brandSlug,
             orderNumber,
             statusName,
-            customerName));
+            order.CustomerName));
 
         return order;
     }
@@ -177,5 +211,19 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             previousStatus,
             newStatusName,
             CustomerName));
+    }
+
+    /// <summary>
+    /// Marks that a digital receipt email has been sent for this order (US-FP-051).
+    /// Idempotent: a no-op once already set, so repeated terminal transitions
+    /// never produce duplicate receipts.
+    /// </summary>
+    public void MarkReceiptEmailSent()
+    {
+        if (ReceiptEmailSent)
+            return;
+
+        ReceiptEmailSent = true;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

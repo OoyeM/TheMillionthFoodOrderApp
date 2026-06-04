@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TheMillionthFoodOrderApp.Application.Orders;
-using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 using TheMillionthFoodOrderApp.Application.Shops;
 using TheMillionthFoodOrderApp.Domain.Orders;
 using TheMillionthFoodOrderApp.Infrastructure.Multitenancy;
@@ -132,7 +131,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "EatIn",
                 PaymentMethod: "CashAtPickup",
-                CustomerName: "Jan Janssen",
+                CustomerFirstName: "Jan",
+                CustomerLastName: "Janssen",
                 TableNumber: 5,
                 Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
 
@@ -192,7 +192,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "Pickup",
                 PaymentMethod: "CashAtPickup",
-                CustomerName: null,
+                CustomerFirstName: null,
+                CustomerLastName: null,
                 TableNumber: null,
                 Items: [new OrderItemInput(productId, 2, Array.Empty<Guid>().ToList().AsReadOnly())]);
 
@@ -230,7 +231,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "Pickup",
                 PaymentMethod: "CreditCard",  // client requests CreditCard
-                CustomerName: null,
+                CustomerFirstName: null,
+                CustomerLastName: null,
                 TableNumber: null,
                 Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
 
@@ -263,7 +265,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "EatIn",
                 PaymentMethod: "CashAtPickup",
-                CustomerName: null,
+                CustomerFirstName: null,
+                CustomerLastName: null,
                 TableNumber: 3,
                 Items: [new OrderItemInput(productId, 2, Array.Empty<Guid>().ToList().AsReadOnly())]);
 
@@ -305,7 +308,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "EatIn",
                 PaymentMethod: "CashAtPickup",
-                CustomerName: null,
+                CustomerFirstName: null,
+                CustomerLastName: null,
                 TableNumber: null,  // missing table
                 Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
 
@@ -347,7 +351,8 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
                 BrandSlug: brand,
                 OrderType: "Delivery",
                 PaymentMethod: "CashAtPickup",
-                CustomerName: null,
+                CustomerFirstName: null,
+                CustomerLastName: null,
                 TableNumber: null, // Delivery: table is always null
                 Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
 

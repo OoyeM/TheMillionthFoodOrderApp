@@ -123,7 +123,11 @@ public static class BffEndpoints
             displayName     = user.FindFirstValue(ClaimTypes.Name),
             email           = user.FindFirstValue(ClaimTypes.Email),
             roles,
-            brandSlug       = user.FindFirstValue(AuthConstants.Claims.BrandSlug)
+            brandSlug       = user.FindFirstValue(AuthConstants.Claims.BrandSlug),
+            // Profile fields used to prefill storefront checkout (US-FP-051).
+            firstName       = user.FindFirstValue(AuthConstants.Claims.GivenName) ?? user.FindFirstValue(ClaimTypes.GivenName),
+            lastName        = user.FindFirstValue(AuthConstants.Claims.FamilyName) ?? user.FindFirstValue(ClaimTypes.Surname),
+            phoneNumber     = user.FindFirstValue(AuthConstants.Claims.PhoneNumber)
         });
     }
 
