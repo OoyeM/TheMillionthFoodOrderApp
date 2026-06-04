@@ -107,10 +107,10 @@ describe('ShopOrderLifecycle', () => {
     const saveButton = screen.getByRole('button', { name: /levenscyclus opslaan/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain statuses
-    const statuses = capturedBody!.statuses as Array<{ name: string }>;
+    const statuses = capturedBody!.statuses as { name: string }[];
     expect(statuses.some((s) => s.name === 'New')).toBe(true);
     expect(statuses.some((s) => s.name === 'Delivered')).toBe(true);
   });
@@ -151,6 +151,6 @@ describe('ShopOrderLifecycle', () => {
     await user.click(confirmResetButton);
 
     // The reset endpoint should have been called
-    await waitFor(() => expect(resetCalled).toBe(true));
+    await waitFor(() => { expect(resetCalled).toBe(true); });
   });
 });

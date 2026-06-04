@@ -48,7 +48,7 @@ describe('useActiveOrders', () => {
       wrapper: makeWrapper(client),
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => { expect(result.current.isLoading).toBe(false); });
     expect(callCount).toBe(1);
     expect(capturedOnStatusChange).toBeDefined();
 
@@ -56,7 +56,7 @@ describe('useActiveOrders', () => {
       capturedOnStatusChange!({ orderId: 'x', newStatus: 'Preparing' });
     });
 
-    await waitFor(() => expect(callCount).toBe(2));
+    await waitFor(() => { expect(callCount).toBe(2); });
   });
 
   it('does not run the query when brandSlug or shopId is empty', async () => {

@@ -98,7 +98,7 @@ function makeCheckoutSchema(
     );
 }
 
-type CheckoutFormValues = {
+interface CheckoutFormValues {
   orderType: 'Pickup' | 'EatIn' | 'Delivery';
   customerFirstName: string;
   customerLastName: string;
@@ -106,7 +106,7 @@ type CheckoutFormValues = {
   customerPhone: string;
   tableNumber: string;
   paymentMethod: 'CashAtPickup' | 'CreditCard' | 'Bancontact';
-};
+}
 
 // ---------------------------------------------------------------------------
 // Checkout form inner component (needs CartProvider to be above)
@@ -134,7 +134,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
   // Redirect to menu if cart is empty
   useEffect(() => {
     if (state.items.length === 0) {
-      void navigate(`/${paramSlug}/${lang}/${shopSlug}/menu`, { replace: true });
+      navigate(`/${paramSlug}/${lang}/${shopSlug}/menu`, { replace: true });
     }
   }, [state.items.length, navigate, paramSlug, lang, shopSlug]);
 
@@ -215,7 +215,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     clearCart();
 
     if (values.paymentMethod === 'CashAtPickup') {
-      void navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${result.id}`);
+      navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${result.id}`);
     } else {
       // Online payment methods: show mock processing screen first
       setPendingOrderId(result.id);
@@ -225,7 +225,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
 
   function handleMockPaymentComplete() {
     setShowMockPayment(false);
-    void navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${pendingOrderId}`);
+    navigate(`/${paramSlug}/${lang}/${shopSlug}/order/${pendingOrderId}`);
   }
 
   if (state.items.length === 0) {
@@ -314,7 +314,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
                       type="radio"
                       value={type}
                       checked={field.value === type}
-                      onChange={() => field.onChange(type)}
+                      onChange={() => { field.onChange(type); }}
                       style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }}
                     />
                     {t(`storefront.checkout.orderType.${type}`)}
@@ -672,7 +672,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
                       type="radio"
                       value={method}
                       checked={field.value === method}
-                      onChange={() => field.onChange(method)}
+                      onChange={() => { field.onChange(method); }}
                       style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }}
                     />
                     {t(`storefront.checkout.payment.${method === 'CashAtPickup' ? 'cashAtPickup' : method === 'CreditCard' ? 'creditCard' : 'bancontact'}`)}

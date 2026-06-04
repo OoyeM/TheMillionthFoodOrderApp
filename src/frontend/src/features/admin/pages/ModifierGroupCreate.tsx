@@ -183,7 +183,7 @@ export function ModifierGroupCreate() {
             id={`group-name-${activeTab}`}
             type="text"
             value={groupTranslations[activeTab].name}
-            onChange={(e) => updateGroupTranslation(activeTab, e.target.value)}
+            onChange={(e) => { updateGroupTranslation(activeTab, e.target.value); }}
             style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Group name in ${activeTab.toUpperCase()}`}
           />
@@ -325,7 +325,7 @@ function ModifierFormRow({
         </span>
         <button
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => { onRemove(index); }}
           style={{
             padding: '0.125rem 0.5rem',
             fontSize: '0.75rem',
@@ -349,7 +349,7 @@ function ModifierFormRow({
           id={`modifier-${index}-name-${activeTab}`}
           type="text"
           value={modifier.translations[activeTab].name}
-          onChange={(e) => onUpdateTranslation(index, activeTab, e.target.value)}
+          onChange={(e) => { onUpdateTranslation(index, activeTab, e.target.value); }}
           style={inputStyle(false)}
           placeholder={`Modifier name in ${activeTab.toUpperCase()}`}
         />
@@ -370,7 +370,7 @@ function ModifierFormRow({
           type="number"
           step="0.01"
           value={modifier.priceAdjustment}
-          onChange={(e) => onUpdatePrice(index, e.target.value)}
+          onChange={(e) => { onUpdatePrice(index, e.target.value); }}
           style={{ ...inputStyle(false), maxWidth: '12rem' }}
         />
       </div>
@@ -402,7 +402,7 @@ function TabBar({ activeTab, primaryLocale, onTabChange, languages }: TabBarProp
         <button
           key={l.code}
           type="button"
-          onClick={() => onTabChange(l.code)}
+          onClick={() => { onTabChange(l.code); }}
           style={{
             padding: '0.5rem 1rem',
             fontWeight: activeTab === l.code ? 700 : 400,

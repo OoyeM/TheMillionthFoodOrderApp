@@ -174,7 +174,7 @@ function MenuContent({ brandSlug }: MenuContentProps) {
       >
         <button
           type="button"
-          onClick={() => setCartOpen(true)}
+          onClick={() => { setCartOpen(true); }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -217,7 +217,7 @@ function MenuContent({ brandSlug }: MenuContentProps) {
       {isLoading && <p style={{ color: '#6b7280' }}>{t('loading')}</p>}
       {isError && <p style={{ color: '#ef4444' }}>{t('error')}</p>}
 
-      {categories && categories.length === 0 && (
+      {categories?.length === 0 && (
         <p style={{ color: '#6b7280' }}>{t('storefront.menu.noCategories')}</p>
       )}
 
@@ -245,12 +245,12 @@ function MenuContent({ brandSlug }: MenuContentProps) {
           brandSlug={brandSlug}
           product={modifierProduct}
           onConfirm={handleModifierConfirm}
-          onClose={() => setModifierProduct(null)}
+          onClose={() => { setModifierProduct(null); }}
         />
       )}
 
       {/* Cart drawer */}
-      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer isOpen={cartOpen} onClose={() => { setCartOpen(false); }} />
     </main>
   );
 }

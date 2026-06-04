@@ -5,7 +5,7 @@ import { playNewOrderSound, primeAudioAlerts } from '../playNewOrderSound';
 // The invariant under test: a missing AudioContext must never throw.
 describe('playNewOrderSound (no Web Audio API)', () => {
   it('never throws when AudioContext is unavailable', () => {
-    expect(() => primeAudioAlerts()).not.toThrow();
-    expect(() => playNewOrderSound()).not.toThrow();
+    expect(() => { primeAudioAlerts(); }).not.toThrow();
+    expect(() => { playNewOrderSound(); }).not.toThrow();
   });
 });

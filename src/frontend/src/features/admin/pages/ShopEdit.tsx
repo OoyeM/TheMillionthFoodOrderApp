@@ -107,7 +107,7 @@ export function ShopEdit() {
         : {}),
     }),
     invalidate: [shopKeys.all(resolvedBrandSlug), shopKeys.detail(resolvedBrandSlug, resolvedShopId)],
-    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/shops`),
+    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/shops`); },
   });
 
   const { register, watch, formState: { errors } } = form;
@@ -518,7 +518,7 @@ export function ShopEdit() {
           <button
             type="button"
             onClick={() =>
-              navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}/opening-hours`)
+              { navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}/opening-hours`); }
             }
             style={{
               padding: '0.5rem 1.25rem',
@@ -535,7 +535,7 @@ export function ShopEdit() {
           <button
             type="button"
             onClick={() =>
-              navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}/order-lifecycle`)
+              { navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}/order-lifecycle`); }
             }
             style={{
               padding: '0.5rem 1.25rem',

@@ -133,7 +133,7 @@ export function MenuCategoryCreate() {
             min="0"
             step="1"
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
+            onChange={(e) => { setSortOrder(e.target.value); }}
             style={inputStyle(!!errors.sortOrder)}
             placeholder="e.g. 0"
           />
@@ -150,7 +150,7 @@ export function MenuCategoryCreate() {
             id="imageUrl"
             type="url"
             value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            onChange={(e) => { setImageUrl(e.target.value); }}
             style={inputStyle(false)}
             placeholder="https://example.com/image.jpg"
           />
@@ -187,7 +187,7 @@ export function MenuCategoryCreate() {
             <button
               key={l.code}
               type="button"
-              onClick={() => setActiveTab(l.code)}
+              onClick={() => { setActiveTab(l.code); }}
               style={{
                 padding: '0.5rem 1rem',
                 fontWeight: activeTab === l.code ? 700 : 400,
@@ -214,7 +214,7 @@ export function MenuCategoryCreate() {
             id={`name-${activeTab}`}
             type="text"
             value={translations[activeTab].name}
-            onChange={(e) => updateTranslation(activeTab, e.target.value)}
+            onChange={(e) => { updateTranslation(activeTab, e.target.value); }}
             style={inputStyle(activeTab === primaryLocale && !!errors.primaryName)}
             placeholder={`Category name in ${activeTab.toUpperCase()}`}
           />

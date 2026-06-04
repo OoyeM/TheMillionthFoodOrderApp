@@ -104,7 +104,7 @@ describe('ShopCreate', () => {
     // Submit
     await user.click(screen.getByRole('button', { name: /create shop/i }));
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     expect(capturedBody!.name).toBe('Gent Centrum');
     expect(capturedBody!.slug).toBe('gent-centrum');

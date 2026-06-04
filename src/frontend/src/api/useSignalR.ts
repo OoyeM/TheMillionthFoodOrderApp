@@ -77,14 +77,14 @@ export function useSignalR(options: UseSignalROptions = {}) {
     const conn = getOrderHubConnection();
     connectionRef.current = conn;
 
-    conn.onreconnecting(() => setStatus('reconnecting'));
+    conn.onreconnecting(() => { setStatus('reconnecting'); });
     conn.onreconnected(() => {
       setStatus('connected');
       // Re-join groups after reconnect
       groupsRef.current = {};
       void joinGroups(conn);
     });
-    conn.onclose(() => setStatus('disconnected'));
+    conn.onclose(() => { setStatus('disconnected'); });
 
     if (conn.state === HubConnectionState.Disconnected) {
       setStatus('connecting');

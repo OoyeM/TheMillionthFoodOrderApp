@@ -86,7 +86,7 @@ describe('ShopOpeningHours', () => {
     const saveButton = screen.getByRole('button', { name: /openingstijden opslaan/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain the Monday block
     expect(capturedBody!.timeBlocks).toHaveLength(1);

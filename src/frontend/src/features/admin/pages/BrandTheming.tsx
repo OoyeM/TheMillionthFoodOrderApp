@@ -101,7 +101,7 @@ export function BrandTheming() {
     if (logoPreview === null) {
       brandSettingsApi
         .get(resolvedSlug)
-        .then((s) => setLogoPreview(s.logoUrl))
+        .then((s) => { setLogoPreview(s.logoUrl); })
         .catch(() => undefined);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -526,7 +526,7 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
         <input
           type="color"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { onChange(e.target.value); }}
           style={{
             width: '2.5rem',
             height: '2.5rem',
@@ -540,7 +540,7 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
           id={id}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { onChange(e.target.value); }}
           style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
           pattern="#[0-9a-fA-F]{3,6}"
           maxLength={7}

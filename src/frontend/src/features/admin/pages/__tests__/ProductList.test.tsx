@@ -119,7 +119,7 @@ describe('ProductList', () => {
     expect(confirmMessage).toMatch(/kleine friet/i);
 
     // DELETE endpoint should have been hit
-    await waitFor(() => expect(deleteCalled).toBe(true));
+    await waitFor(() => { expect(deleteCalled).toBe(true); });
 
     confirmSpy.mockRestore();
   });

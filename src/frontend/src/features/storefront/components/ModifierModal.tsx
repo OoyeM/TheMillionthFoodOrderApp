@@ -138,7 +138,7 @@ export function ModifierModal({ brandSlug, product, onConfirm, onClose }: Modifi
             </p>
           )}
 
-          {!isLoading && modifierGroups && modifierGroups.length === 0 && (
+          {!isLoading && modifierGroups?.length === 0 && (
             <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
               {t('storefront.menu.noModifiers')}
             </p>
@@ -186,7 +186,7 @@ export function ModifierModal({ brandSlug, product, onConfirm, onClose }: Modifi
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => toggleModifier(modifier)}
+                          onChange={() => { toggleModifier(modifier); }}
                           style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }}
                         />
                         <span style={{ flex: 1 }}>{modifierName}</span>

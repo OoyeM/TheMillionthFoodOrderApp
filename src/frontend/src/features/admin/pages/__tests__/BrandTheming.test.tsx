@@ -98,7 +98,7 @@ describe('BrandTheming', () => {
     const saveButton = screen.getByRole('button', { name: /save theming/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
       colors: expect.objectContaining({ primary: '#111827' }),
     });

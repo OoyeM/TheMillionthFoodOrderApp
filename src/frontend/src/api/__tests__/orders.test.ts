@@ -71,9 +71,9 @@ describe('ordersApi', () => {
 
       // Verify outgoing payload
       expect(capturedBody).not.toBeNull();
-      expect(capturedBody!['customerFirstName']).toBe('Jane');
-      expect(capturedBody!['customerLastName']).toBe('Doe');
-      expect(capturedBody!['languageCode']).toBe('nl');
+      expect(capturedBody!.customerFirstName).toBe('Jane');
+      expect(capturedBody!.customerLastName).toBe('Doe');
+      expect(capturedBody!.languageCode).toBe('nl');
       // customerName must NOT be in the request body (backend derives it)
       expect('customerName' in capturedBody!).toBe(false);
 
@@ -90,7 +90,7 @@ describe('ordersApi', () => {
       server.use(
         http.post('/api/brands/:slug/shops/:shopId/orders', async ({ request }) => {
           const body = await request.json() as Record<string, unknown>;
-          capturedLang = body['languageCode'];
+          capturedLang = body.languageCode;
           return HttpResponse.json(makeOrderResponse({ languageCode: 'fr' }), { status: 201 });
         }),
       );
@@ -140,8 +140,8 @@ describe('ordersApi', () => {
       await ordersApi.createInStore('frietjes', 'shop-1', payload);
 
       expect(capturedBody).not.toBeNull();
-      expect(capturedBody!['customerFirstName']).toBe('Staff');
-      expect(capturedBody!['customerLastName']).toBe('Member');
+      expect(capturedBody!.customerFirstName).toBe('Staff');
+      expect(capturedBody!.customerLastName).toBe('Member');
       // Old field must not be present in the request body
       expect('customerName' in capturedBody!).toBe(false);
     });

@@ -91,12 +91,12 @@ describe('TaxConfiguration', () => {
     await user.click(saveButton);
 
     // Wait for the PUT to be captured
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
-    const vatRates = capturedBody!.vatRates as Array<{
+    const vatRates = capturedBody!.vatRates as {
       consumptionMode: string;
       ratePercentage: number;
-    }>;
+    }[];
 
     const takeawayRate = vatRates.find((r) => r.consumptionMode === 'Takeaway');
     expect(takeawayRate?.ratePercentage).toBe(9);

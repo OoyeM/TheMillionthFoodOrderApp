@@ -121,7 +121,7 @@ export function BrandCreate() {
             id="name"
             type="text"
             value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
+            onChange={(e) => { handleNameChange(e.target.value); }}
             style={inputStyle(!!errors.name)}
             placeholder="e.g. Frietjes?"
           />
@@ -137,7 +137,7 @@ export function BrandCreate() {
             id="slug"
             type="text"
             value={slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
+            onChange={(e) => { handleSlugChange(e.target.value); }}
             style={inputStyle(!!errors.slug)}
             placeholder="e.g. frietjes"
           />
@@ -156,7 +156,7 @@ export function BrandCreate() {
             id="contactEmail"
             type="email"
             value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            onChange={(e) => { setContactEmail(e.target.value); }}
             style={inputStyle(!!errors.contactEmail)}
             placeholder="e.g. hello@frietjes.be"
           />
@@ -173,7 +173,7 @@ export function BrandCreate() {
             id="contactPhone"
             type="tel"
             value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
+            onChange={(e) => { setContactPhone(e.target.value); }}
             style={inputStyle(false)}
             placeholder="e.g. +32 9 000 00 00"
           />

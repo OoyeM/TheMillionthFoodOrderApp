@@ -44,7 +44,7 @@ describe('useSessionKeepalive', () => {
     vi.stubEnv('VITE_MOCK_AUTH', 'true');
     const tracker = trackKeepaliveCall();
 
-    renderHook(() => useSessionKeepalive(true));
+    renderHook(() => { useSessionKeepalive(true); });
 
     window.dispatchEvent(new MouseEvent('mousemove'));
     await act(async () => {
@@ -58,7 +58,7 @@ describe('useSessionKeepalive', () => {
   it('does nothing when not authenticated', async () => {
     const tracker = trackKeepaliveCall();
 
-    renderHook(() => useSessionKeepalive(false));
+    renderHook(() => { useSessionKeepalive(false); });
 
     window.dispatchEvent(new MouseEvent('mousemove'));
     await act(async () => {
@@ -72,7 +72,7 @@ describe('useSessionKeepalive', () => {
   it('calls keepalive when there was recent user activity', async () => {
     const tracker = trackKeepaliveCall();
 
-    renderHook(() => useSessionKeepalive(true));
+    renderHook(() => { useSessionKeepalive(true); });
     window.dispatchEvent(new MouseEvent('mousemove'));
     await act(async () => {
       vi.advanceTimersByTime(600);
@@ -89,7 +89,7 @@ describe('useSessionKeepalive', () => {
     server.use(mockEndpoint('post', '/bff/session/keepalive', 401));
 
     await expectAuthSessionExpired(async () => {
-      renderHook(() => useSessionKeepalive(true));
+      renderHook(() => { useSessionKeepalive(true); });
       window.dispatchEvent(new MouseEvent('mousemove'));
       await act(async () => {
         vi.advanceTimersByTime(600);
@@ -104,7 +104,7 @@ describe('useSessionKeepalive', () => {
   it('cleans up event listeners and interval on unmount', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    const { unmount } = renderHook(() => useSessionKeepalive(true));
+    const { unmount } = renderHook(() => { useSessionKeepalive(true); });
     unmount();
 
     // Should clean up at least mousemove, keydown, click listeners

@@ -84,7 +84,7 @@ describe('ModifierGroupList', () => {
     await screen.findByText('Sauzen');
 
     // Click the row — the <tr> element containing "Sauzen"
-    const row = container.querySelector('tr[style*="cursor: pointer"]') as HTMLElement;
+    const row = container.querySelector('tr[style*="cursor: pointer"]')!;
     await user.click(row);
 
     // Navigation should render the edit page placeholder

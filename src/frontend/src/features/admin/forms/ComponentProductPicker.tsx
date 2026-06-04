@@ -38,7 +38,7 @@ export function ComponentProductPicker({
       {available.map((product) => (
         <div
           key={product.id}
-          onClick={() => onAdd(product)}
+          onClick={() => { onAdd(product); }}
           style={{
             display: 'flex',
             alignItems: 'center',

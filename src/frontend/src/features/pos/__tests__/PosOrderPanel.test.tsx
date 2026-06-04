@@ -121,13 +121,13 @@ function renderWithItems() {
         type="button"
         data-testid="add-item-btn"
         onClick={() =>
-          addItem({
+          { addItem({
             productId: 'prod-1',
             productName: 'Friet',
             quantity: 1,
             unitGrossPrice: 3.5,
             selectedModifiers: [],
-          })
+          }); }
         }
       >
         Add item

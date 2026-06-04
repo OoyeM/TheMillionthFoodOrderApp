@@ -83,7 +83,7 @@ describe('PlatformAdminList', () => {
     // The confirm button inside the dialog is the last one
     await user.click(confirmBtns[confirmBtns.length - 1]!);
 
-    await waitFor(() => expect(deactivateCalled).toBe(true));
+    await waitFor(() => { expect(deactivateCalled).toBe(true); });
     expect(capturedId).toBe('pa-1');
   });
 
@@ -132,7 +132,7 @@ describe('PlatformAdminList', () => {
     // The submit button inside the form is the last rendered one
     await user.click(submitBtns[submitBtns.length - 1]!);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody!.email).toBe('new@platform.dev');
     expect(capturedBody!.displayName).toBe('New Admin');
   });

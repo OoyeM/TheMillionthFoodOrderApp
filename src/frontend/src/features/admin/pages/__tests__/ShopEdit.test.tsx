@@ -112,7 +112,7 @@ describe('ShopEdit', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
       name: 'Frietjes Gent Updated',
       address: expect.objectContaining({ city: 'Gent' }),
@@ -139,7 +139,7 @@ describe('ShopEdit', () => {
 
     await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({ ticketPrinterEnabled: true });
   });
 
@@ -176,7 +176,7 @@ describe('ShopEdit', () => {
 
     await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
       kitchenDisplayEnabled: true,
       soundAlertEnabled: true,

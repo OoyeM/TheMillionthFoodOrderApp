@@ -357,9 +357,9 @@ describe('CheckoutPage (US-FP-051)', () => {
         expect(capturedBody).not.toBeNull();
       });
 
-      expect(capturedBody!['customerFirstName']).toBe('Jane');
-      expect(capturedBody!['customerLastName']).toBe('Doe');
-      expect(capturedBody!['languageCode']).toBe('nl');
+      expect(capturedBody!.customerFirstName).toBe('Jane');
+      expect(capturedBody!.customerLastName).toBe('Doe');
+      expect(capturedBody!.languageCode).toBe('nl');
       // Old field must not be present in request
       expect('customerName' in capturedBody!).toBe(false);
     });
@@ -411,7 +411,7 @@ describe('CheckoutPage (US-FP-051)', () => {
         expect(capturedBody).not.toBeNull();
       });
 
-      expect(capturedBody!['languageCode']).toBe('nl');
+      expect(capturedBody!.languageCode).toBe('nl');
     });
   });
 });

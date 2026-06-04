@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
 const isCI = Boolean(process.env.CI);
-/* eslint-enable @typescript-eslint/no-unsafe-member-access */
+ 
 
 export default defineConfig({
   testDir: './e2e',

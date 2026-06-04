@@ -45,7 +45,7 @@ function buildTranslationsMap(
     de: { name: '', description: '' },
   };
   for (const tr of apiTranslations) {
-    const loc = tr.languageCode as SupportedLocale;
+    const loc = tr.languageCode;
     if (loc in map) {
       map[loc] = { name: tr.name, description: tr.description ?? '' };
     }
@@ -136,7 +136,7 @@ export function ComboProductEdit() {
       componentProductIds: values.componentProductIds,
     }),
     invalidate: [productKeys.all(resolvedBrandSlug)],
-    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/products`),
+    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/products`); },
   });
 
   // ---------------------------------------------------------------------------
@@ -358,7 +358,7 @@ export function ComboProductEdit() {
             <button
               key={l.code}
               type="button"
-              onClick={() => setActiveTab(l.code)}
+              onClick={() => { setActiveTab(l.code); }}
               style={{
                 padding: '0.5rem 1rem',
                 fontWeight: activeTab === l.code ? 700 : 400,
@@ -433,7 +433,7 @@ export function ComboProductEdit() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleMoveUp(index, currentIds, field.onChange)}
+                            onClick={() => { handleMoveUp(index, currentIds, field.onChange); }}
                             disabled={index === 0}
                             style={{
                               ...reorderButtonStyle,
@@ -445,7 +445,7 @@ export function ComboProductEdit() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleMoveDown(index, currentIds, field.onChange)}
+                            onClick={() => { handleMoveDown(index, currentIds, field.onChange); }}
                             disabled={index === selectedProducts.length - 1}
                             style={{
                               ...reorderButtonStyle,
@@ -457,7 +457,7 @@ export function ComboProductEdit() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleToggleComponent(comp, currentIds, field.onChange)}
+                            onClick={() => { handleToggleComponent(comp, currentIds, field.onChange); }}
                             style={{
                               padding: '0.125rem 0.5rem',
                               fontSize: '0.75rem',
@@ -495,7 +495,7 @@ export function ComboProductEdit() {
                         .map((p) => (
                           <div
                             key={p.id}
-                            onClick={() => handleToggleComponent(p, currentIds, field.onChange)}
+                            onClick={() => { handleToggleComponent(p, currentIds, field.onChange); }}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -629,7 +629,7 @@ export function ComboProductEdit() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleMoveGroupUp(index)}
+                  onClick={() => { handleMoveGroupUp(index); }}
                   disabled={index === 0}
                   style={{
                     ...reorderButtonStyle,
@@ -641,7 +641,7 @@ export function ComboProductEdit() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleMoveGroupDown(index)}
+                  onClick={() => { handleMoveGroupDown(index); }}
                   disabled={index === assignedGroups.length - 1}
                   style={{
                     ...reorderButtonStyle,
@@ -653,7 +653,7 @@ export function ComboProductEdit() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleRemoveAssignedGroup(group.modifierGroupId)}
+                  onClick={() => { handleRemoveAssignedGroup(group.modifierGroupId); }}
                   style={{
                     padding: '0.125rem 0.5rem',
                     fontSize: '0.75rem',
@@ -676,7 +676,7 @@ export function ComboProductEdit() {
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
             <select
               value={selectedGroupToAdd}
-              onChange={(e) => setSelectedGroupToAdd(e.target.value)}
+              onChange={(e) => { setSelectedGroupToAdd(e.target.value); }}
               style={{
                 padding: '0.5rem 0.75rem',
                 border: '1px solid #d1d5db',

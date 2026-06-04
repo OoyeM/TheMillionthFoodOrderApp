@@ -36,7 +36,7 @@ export function FormSection({
           justifyContent: 'space-between',
           cursor: 'pointer',
         }}
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => { setIsOpen((v) => !v); }}
         role="button"
         aria-expanded={isOpen}
         tabIndex={0}

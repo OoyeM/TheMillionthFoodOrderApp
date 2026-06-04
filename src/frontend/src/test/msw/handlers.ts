@@ -708,7 +708,7 @@ export const handlers = [
       customerEmail?: string | null;
       customerPhone?: string | null;
       languageCode?: string;
-      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     };
 
     const validOrderTypes = ['Pickup', 'EatIn', 'Delivery'];
@@ -780,7 +780,7 @@ export const handlers = [
       tableNumber?: number;
       customerFirstName?: string;
       customerLastName?: string;
-      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     };
 
     // Minimal server-side validation: reject obviously malformed payloads in tests

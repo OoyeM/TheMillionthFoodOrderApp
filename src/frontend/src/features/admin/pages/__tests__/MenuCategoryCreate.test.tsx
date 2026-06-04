@@ -91,12 +91,12 @@ describe('MenuCategoryCreate', () => {
     const createButton = screen.getByRole('button', { name: /create category/i });
     await user.click(createButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(
       translations.some((t) => t.languageCode === 'nl' && t.name === 'Friet Snacks'),
     ).toBe(true);

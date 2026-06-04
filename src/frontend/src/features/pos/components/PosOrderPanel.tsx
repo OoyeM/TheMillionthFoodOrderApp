@@ -75,7 +75,7 @@ export function PosOrderPanel({ eatIn }: PosOrderPanelProps) {
                 key={type}
                 type="button"
                 data-testid={`order-type-${type.toLowerCase()}`}
-                onClick={() => setOrderType(type)}
+                onClick={() => { setOrderType(type); }}
                 aria-pressed={isActive}
                 style={{
                   flex: 1,
@@ -154,12 +154,12 @@ export function PosOrderPanel({ eatIn }: PosOrderPanelProps) {
             key={`${item.productId}-${getModifierKey(item.selectedModifiers)}`}
             item={item}
             onIncrease={() =>
-              updateQuantity(item.productId, item.selectedModifiers, item.quantity + 1)
+              { updateQuantity(item.productId, item.selectedModifiers, item.quantity + 1); }
             }
             onDecrease={() =>
-              item.quantity <= 1
+              { item.quantity <= 1
                 ? removeItem(item.productId, item.selectedModifiers)
-                : updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1)
+                : updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1); }
             }
             formatCurrency={formatCurrency}
           />

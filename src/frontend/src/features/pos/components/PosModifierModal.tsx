@@ -156,7 +156,7 @@ export function PosModifierModal({
             </p>
           )}
 
-          {!isLoading && modifierGroups && modifierGroups.length === 0 && (
+          {!isLoading && modifierGroups?.length === 0 && (
             <p style={{ color: '#6b7280', fontSize: '1rem' }}>
               {t('storefront.menu.noModifiers')}
             </p>
@@ -205,7 +205,7 @@ export function PosModifierModal({
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => toggleModifier(modifier)}
+                        onChange={() => { toggleModifier(modifier); }}
                         style={{
                           width: '1.5rem',
                           height: '1.5rem',

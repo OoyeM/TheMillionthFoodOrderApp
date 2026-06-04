@@ -261,7 +261,7 @@ export function ProductCreate() {
             <button
               key={l.code}
               type="button"
-              onClick={() => setActiveTab(l.code)}
+              onClick={() => { setActiveTab(l.code); }}
               style={{
                 padding: '0.5rem 1rem',
                 fontWeight: activeTab === l.code ? 700 : 400,

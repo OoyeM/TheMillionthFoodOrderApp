@@ -27,7 +27,7 @@ function TestOrderForm({ brandSlug, shopId }: TestOrderFormProps) {
         type="button"
         data-testid="add-item"
         onClick={() =>
-          addItem({
+          { addItem({
             productId: 'prod-1',
             productName: 'Kleine friet',
             quantity: 2,
@@ -35,7 +35,7 @@ function TestOrderForm({ brandSlug, shopId }: TestOrderFormProps) {
             selectedModifiers: [
               { modifierId: 'mod-1', modifierName: 'Mayonaise', priceAdjustment: 0 },
             ],
-          })
+          }); }
         }
       >
         Add item
@@ -128,15 +128,15 @@ describe('useCreateInStoreOrder (t-13)', () => {
     // Verify payload shape
     expect(capturedUrl).toContain('/api/brands/frietjes/shops/shop-1/orders/in-store');
     expect(capturedBody).not.toBeNull();
-    expect(capturedBody!['orderType']).toBe('Pickup');
-    expect(capturedBody!['paymentMethod']).toBe('CashAtPickup');
-    expect(Array.isArray(capturedBody!['items'])).toBe(true);
+    expect(capturedBody!.orderType).toBe('Pickup');
+    expect(capturedBody!.paymentMethod).toBe('CashAtPickup');
+    expect(Array.isArray(capturedBody!.items)).toBe(true);
 
-    const items = capturedBody!['items'] as Array<{
+    const items = capturedBody!.items as {
       productId: string;
       quantity: number;
       selectedModifierIds: string[];
-    }>;
+    }[];
     expect(items).toHaveLength(1);
     expect(items[0]?.productId).toBe('prod-1');
     expect(items[0]?.quantity).toBe(2);
@@ -188,8 +188,8 @@ describe('useCreateInStoreOrder (t-13)', () => {
     });
 
     expect(capturedBody).not.toBeNull();
-    expect(capturedBody!['orderType']).toBe('EatIn');
-    expect(capturedBody!['tableNumber']).toBe(7);
+    expect(capturedBody!.orderType).toBe('EatIn');
+    expect(capturedBody!.tableNumber).toBe(7);
   });
 
   it('clears the order items after successful submission', async () => {

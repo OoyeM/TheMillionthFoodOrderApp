@@ -52,7 +52,7 @@ function MenuCategoryRow({
 
   return (
     <tr
-      onClick={() => onRowClick(category.id)}
+      onClick={() => { onRowClick(category.id); }}
       style={{ cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
     >
       <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', color: '#6b7280' }}>
@@ -217,7 +217,7 @@ export function MenuCategoryList() {
         </p>
       )}
 
-      {!isLoading && !isError && categories !== undefined && categories.length === 0 && (
+      {!isLoading && !isError && categories?.length === 0 && (
         <p style={{ color: '#6b7280' }}>No menu categories yet. Create the first one.</p>
       )}
 

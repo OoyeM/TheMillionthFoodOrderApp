@@ -115,13 +115,13 @@ describe('ModifierGroupEdit', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain the updated NL translation
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(
       translations.some((t) => t.languageCode === 'nl' && t.name === 'Dips'),
     ).toBe(true);

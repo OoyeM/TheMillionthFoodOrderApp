@@ -22,7 +22,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   function handleGoToCheckout() {
     onClose();
-    void navigate(`/${brandSlug}/${lang}/${shop.slug}/checkout`);
+    navigate(`/${brandSlug}/${lang}/${shop.slug}/checkout`);
   }
 
   function formatCurrency(amount: number): string {
@@ -154,7 +154,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <button
                       type="button"
                       onClick={() =>
-                        updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1)
+                        { updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1); }
                       }
                       aria-label={t('storefront.cart.decreaseQuantity')}
                       style={{
@@ -180,7 +180,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <button
                       type="button"
                       onClick={() =>
-                        updateQuantity(item.productId, item.selectedModifiers, item.quantity + 1)
+                        { updateQuantity(item.productId, item.selectedModifiers, item.quantity + 1); }
                       }
                       aria-label={t('storefront.cart.increaseQuantity')}
                       style={{
@@ -202,7 +202,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.productId, item.selectedModifiers)}
+                      onClick={() => { removeItem(item.productId, item.selectedModifiers); }}
                       aria-label={t('storefront.cart.remove')}
                       style={{
                         marginLeft: 'auto',

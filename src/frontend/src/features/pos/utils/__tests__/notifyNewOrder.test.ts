@@ -16,6 +16,6 @@ describe('notifyNewOrder', () => {
     expect(PERMISSIONS).toContain(notificationPermission());
     const requested = await requestNotificationPermission();
     expect(PERMISSIONS).toContain(requested);
-    expect(() => showNewOrderNotification('New order', '#0042', 'order-1')).not.toThrow();
+    expect(() => { showNewOrderNotification('New order', '#0042', 'order-1'); }).not.toThrow();
   });
 });

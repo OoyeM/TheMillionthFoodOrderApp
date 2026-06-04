@@ -45,9 +45,7 @@ function nextLocalId(): string {
 // Validation
 // ---------------------------------------------------------------------------
 
-interface ValidationErrors {
-  [localId: string]: string;
-}
+type ValidationErrors = Record<string, string>;
 
 /**
  * Returns true if "HH:mm" string `a` is strictly before `b`.
@@ -182,7 +180,7 @@ export function ShopOpeningHours() {
       {
         onSuccess: () => {
           setSavedMessage(true);
-          setTimeout(() => setSavedMessage(false), 3000);
+          setTimeout(() => { setSavedMessage(false); }, 3000);
         },
       },
     );
@@ -297,7 +295,7 @@ export function ShopOpeningHours() {
               )}
               <button
                 type="button"
-                onClick={() => addBlock(day)}
+                onClick={() => { addBlock(day); }}
                 style={addBlockButtonStyle}
               >
                 + {t('admin.shops.openingHours.addBlock')}
@@ -324,7 +322,7 @@ export function ShopOpeningHours() {
                     <input
                       type="time"
                       value={block.openTime}
-                      onChange={(e) => updateBlock(block.localId, 'openTime', e.target.value)}
+                      onChange={(e) => { updateBlock(block.localId, 'openTime', e.target.value); }}
                       style={timeInputStyle(!!validationErrors[block.localId])}
                     />
                   </div>
@@ -337,7 +335,7 @@ export function ShopOpeningHours() {
                     <input
                       type="time"
                       value={block.closeTime}
-                      onChange={(e) => updateBlock(block.localId, 'closeTime', e.target.value)}
+                      onChange={(e) => { updateBlock(block.localId, 'closeTime', e.target.value); }}
                       style={timeInputStyle(!!validationErrors[block.localId])}
                     />
                   </div>
@@ -346,7 +344,7 @@ export function ShopOpeningHours() {
                   <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '0.125rem' }}>
                     <button
                       type="button"
-                      onClick={() => removeBlock(block.localId)}
+                      onClick={() => { removeBlock(block.localId); }}
                       style={removeButtonStyle}
                     >
                       {t('admin.shops.openingHours.remove')}

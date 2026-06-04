@@ -126,16 +126,16 @@ describe('ProductEdit', () => {
     // Submit
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     expect(capturedBody).toMatchObject({ basePrice: 5.99 });
 
     // Translations array must contain the NL entry with the original name
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
       description: string | null;
-    }>;
+    }[];
     expect(
       translations.some(
         (t) => t.languageCode === 'nl' && t.name === 'Kleine friet' && t.description === null,
