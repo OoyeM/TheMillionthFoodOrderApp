@@ -60,6 +60,18 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     /// </summary>
     public bool SoundAlertEnabled { get; private set; }
 
+    /// <summary>
+    /// Eat-in ordering configuration (US-FP-066): whether the shop accepts eat-in orders and,
+    /// if so, whether a table number is mandatory. Defaults to enabled + table required.
+    /// </summary>
+    public EatInSettings EatIn { get; private set; } = EatInSettings.CreateDefault();
+
+    /// <summary>
+    /// Time-slot ordering configuration (US-FP-020): when enabled, online orders are capped per
+    /// fixed-length slot to match kitchen capacity. Disabled by default.
+    /// </summary>
+    public TimeSlotOrderingSettings TimeSlotOrdering { get; private set; } = TimeSlotOrderingSettings.Disabled();
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -162,6 +174,32 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
             return;
 
         SoundAlertEnabled = enabled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the shop's eat-in ordering configuration (US-FP-066).
+    /// </summary>
+    public void SetEatInSettings(bool isEnabled, bool requiresTableNumber)
+    {
+        var updated = new EatInSettings(isEnabled, requiresTableNumber);
+        if (EatIn.Equals(updated))
+            return;
+
+        EatIn = updated;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the shop's time-slot ordering configuration (US-FP-020).
+    /// </summary>
+    public void SetTimeSlotOrdering(TimeSlotOrderingSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        if (TimeSlotOrdering.Equals(settings))
+            return;
+
+        TimeSlotOrdering = settings;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

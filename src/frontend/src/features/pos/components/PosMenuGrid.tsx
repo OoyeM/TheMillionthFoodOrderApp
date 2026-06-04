@@ -95,7 +95,7 @@ export function PosMenuGrid({ brandSlug }: PosMenuGridProps) {
           brandSlug={brandSlug}
           product={modalProduct}
           onConfirm={handleModalConfirm}
-          onClose={() => setModalProduct(null)}
+          onClose={() => { setModalProduct(null); }}
         />
       )}
     </>
@@ -183,7 +183,7 @@ function ProductTile({ brandSlug, product, onTap }: ProductTileProps) {
   return (
     <button
       type="button"
-      onClick={() => onTap(product, hasModifiers)}
+      onClick={() => { onTap(product, hasModifiers); }}
       aria-label={`${product.name} — ${formattedPrice}`}
       style={{
         display: 'flex',

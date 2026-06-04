@@ -188,13 +188,13 @@ export function KitchenDisplay() {
   const advanceMutation = useMutation({
     mutationFn: ({ orderId, toStatusId }: { orderId: string; toStatusId: string }) =>
       ordersApi.advanceStatus(resolvedBrand, resolvedShop, orderId, toStatusId),
-    onMutate: () => setFailedOrderId(null),
+    onMutate: () => { setFailedOrderId(null); },
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: activeOrdersQueryKey(resolvedBrand, resolvedShop),
       });
     },
-    onError: (_error, variables) => setFailedOrderId(variables.orderId),
+    onError: (_error, variables) => { setFailedOrderId(variables.orderId); },
   });
 
   return (
@@ -280,7 +280,7 @@ export function KitchenDisplay() {
         </p>
       )}
 
-      {!isLoading && !isError && orders !== undefined && orders.length === 0 && (
+      {!isLoading && !isError && orders?.length === 0 && (
         <p
           style={{
             color: '#6b7280',
@@ -311,14 +311,14 @@ export function KitchenDisplay() {
               order={order}
               nextStatuses={nextStatusesByName.get(order.statusName) ?? []}
               onAdvance={(toStatusId) =>
-                advanceMutation.mutate({ orderId: order.id, toStatusId })
+                { advanceMutation.mutate({ orderId: order.id, toStatusId }); }
               }
               isAdvancing={
                 advanceMutation.isPending &&
                 advanceMutation.variables?.orderId === order.id
               }
               advanceError={failedOrderId === order.id}
-              onReprint={() => printOrder(order)}
+              onReprint={() => { printOrder(order); }}
               highlight={highlightedIds.has(order.id)}
             />
           ))}

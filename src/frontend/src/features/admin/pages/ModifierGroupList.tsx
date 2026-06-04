@@ -27,7 +27,7 @@ function ModifierGroupRow({ group, onRowClick, onDelete, isDeleting }: ModifierG
 
   return (
     <tr
-      onClick={() => onRowClick(group.id)}
+      onClick={() => { onRowClick(group.id); }}
       style={{ cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
     >
       <td style={{ padding: '0.75rem 1rem' }}>{group.name}</td>
@@ -120,7 +120,7 @@ export function ModifierGroupList() {
         </p>
       )}
 
-      {!isLoading && !isError && groups !== undefined && groups.length === 0 && (
+      {!isLoading && !isError && groups?.length === 0 && (
         <p style={{ color: '#6b7280' }}>{t('admin.modifierGroups.noModifierGroups')}</p>
       )}
 

@@ -12,12 +12,15 @@ import { renderWithProviders } from '@/test/testUtils';
 import { PosOrderProvider, useOrderState } from '../context/PosOrderContext';
 import { PosOrderPanel } from '../components/PosOrderPanel';
 
+// Eat-in enabled + table required — the default shop config these tests run against.
+const ENABLED_EATIN = { isEnabled: true, requiresTableNumber: true };
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function renderPanel() {
   return renderWithProviders(
     <PosOrderProvider>
-      <PosOrderPanel />
+      <PosOrderPanel eatIn={ENABLED_EATIN} />
     </PosOrderProvider>,
     { initialEntries: ['/frietjes/nl/pos'] },
   );
@@ -95,7 +98,7 @@ function SubmitGuardWrapper() {
 
   return (
     <div>
-      <PosOrderPanel />
+      <PosOrderPanel eatIn={ENABLED_EATIN} />
       {isEatInMissingTable && state.items.length > 0 && (
         <p role="alert" data-testid="table-error">
           {/* Mirrors Dashboard.tsx: t('pos.order.tableNumber') + t('error') */}
@@ -118,13 +121,13 @@ function renderWithItems() {
         type="button"
         data-testid="add-item-btn"
         onClick={() =>
-          addItem({
+          { addItem({
             productId: 'prod-1',
             productName: 'Friet',
             quantity: 1,
             unitGrossPrice: 3.5,
             selectedModifiers: [],
-          })
+          }); }
         }
       >
         Add item

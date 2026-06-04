@@ -84,7 +84,7 @@ describe('MenuCategoryList', () => {
     const deleteButton = screen.getByRole('button', { name: /delete/i });
     await user.click(deleteButton);
 
-    await waitFor(() => expect(deleteWasCalled).toBe(true));
+    await waitFor(() => { expect(deleteWasCalled).toBe(true); });
 
     confirmSpy.mockRestore();
   });

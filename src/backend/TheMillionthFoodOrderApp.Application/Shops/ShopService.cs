@@ -37,6 +37,8 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
                 s.SetTicketPrinterEnabled(request.TicketPrinterEnabled);
                 s.SetPushNotificationEnabled(request.PushNotificationEnabled);
                 s.SetSoundAlertEnabled(request.SoundAlertEnabled);
+                s.SetEatInSettings(request.EatIn.IsEnabled, request.EatIn.RequiresTableNumber);
+                s.SetTimeSlotOrdering(MapTimeSlotOrdering(request.TimeSlotOrdering));
             },
             cancellationToken);
 
@@ -107,6 +109,11 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             shop.TicketPrinterEnabled,
             shop.PushNotificationEnabled,
             shop.SoundAlertEnabled,
+            new EatInSettingsDto(shop.EatIn.IsEnabled, shop.EatIn.RequiresTableNumber),
+            new TimeSlotOrderingSettingsDto(
+                shop.TimeSlotOrdering.IsEnabled,
+                (int?)shop.TimeSlotOrdering.Interval,
+                shop.TimeSlotOrdering.MaxOrdersPerInterval),
             shop.CreatedAt,
             shop.UpdatedAt,
             shop.VatNumber);
@@ -122,5 +129,11 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
                 shop.Address.City,
                 shop.Address.PostalCode,
                 shop.Address.Country),
-            shop.IsOpenAt(now));
+            shop.IsOpenAt(now),
+            new EatInSettingsDto(shop.EatIn.IsEnabled, shop.EatIn.RequiresTableNumber));
+
+    private static TimeSlotOrderingSettings MapTimeSlotOrdering(TimeSlotOrderingSettingsDto dto) =>
+        dto.IsEnabled && dto.IntervalMinutes is int minutes && dto.MaxOrdersPerInterval is int max
+            ? TimeSlotOrderingSettings.Enabled((TimeSlotInterval)minutes, max)
+            : TimeSlotOrderingSettings.Disabled();
 }

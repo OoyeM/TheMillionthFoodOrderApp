@@ -137,6 +137,8 @@ public sealed class ShopVatNumberTests(IntegrationTestBase fixture)
             TicketPrinterEnabled = false,
             PushNotificationEnabled = false,
             SoundAlertEnabled = false,
+            EatIn = new { IsEnabled = true, RequiresTableNumber = true },
+            TimeSlotOrdering = new { IsEnabled = false, IntervalMinutes = (int?)null, MaxOrdersPerInterval = (int?)null },
             VatNumber = "BE0987654321"
         };
 

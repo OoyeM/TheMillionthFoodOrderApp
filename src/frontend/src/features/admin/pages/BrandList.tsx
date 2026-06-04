@@ -29,7 +29,7 @@ function BrandRow({ brand, onRowClick }: BrandRowProps) {
 
   return (
     <tr
-      onClick={() => onRowClick(brand.id)}
+      onClick={() => { onRowClick(brand.id); }}
       style={{
         cursor: 'pointer',
         borderBottom: '1px solid #e5e7eb',
@@ -129,7 +129,7 @@ export function BrandList() {
         </p>
       )}
 
-      {!isLoading && !isError && brands !== undefined && brands.length === 0 && (
+      {!isLoading && !isError && brands?.length === 0 && (
         <p style={{ color: '#6b7280' }}>No brands yet. Create the first one.</p>
       )}
 

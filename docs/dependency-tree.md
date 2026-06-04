@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-04 (US-FP-051 digital receipt done; US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
+> Last updated: 2026-06-04 (US-FP-066 eat-in toggle + US-FP-020 time-slot config done; US-FP-051 digital receipt done; US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -20,6 +20,8 @@
 **✅ Online-ordering entry point RESOLVED (2026-06-04).** US-FP-071 (shop selection + shop-slug-scoped storefront routes) merged via **PR #128** and was runtime-verified. The storefront now has a real customer journey: `/{brand}/{lang}/shops` chooser → `{shopSlug}/menu` → checkout → payment → order tracking, with the localStorage `shopId` hack removed. This unblocks the cluster that was previously "component-complete but NOT user-reachable" — **US-FP-016 / 017 / 038 / 058 / 063 restored to ✅.** (Historical note: this gap was found 2026-06-03 — `Home.tsx` was a stub and the menu only rendered at a GUID-based route nothing linked to.)
 
 **Changed 2026-06-04:**
+- **US-FP-066** → ✅ done. Per-shop eat-in toggle + a "require table number" sub-toggle, modelled as an owned `EatInSettings` value object on `Shop` (defaults: eat-in **on**, table **required** — preserves prior behaviour). Admin ShopEdit checkboxes; storefront + POS hide the eat-in order type when disabled and gate the table-number field (required/optional) by the flag; **server-side enforcement** in the shared `OrderService` create-core rejects eat-in when disabled and requires a table number when mandated, so online + in-store are gated identically. Closed US-FP-024's `IsEatInEnabled` gating gap and added **online table-number capture** (the public order path/`CreateOrderRequest` now accepts `tableNumber`). Brand migration `AddShopEatInAndTimeSlotSettings`.
+- **US-FP-020** → ✅ done. Per-shop time-slot ordering config — owned `TimeSlotOrderingSettings` VO (enabled + `TimeSlotInterval` enum 5/10/15 + max-orders-per-slot), admin UI (watch-gated interval `<select>` + max input) + FluentValidation. Config only; the customer-facing slot picker is **US-FP-019** (still ⬜, now unblocked since 020 is done).
 - **US-FP-051** → ✅ done. Digital receipt emailed when an **online** order reaches a terminal lifecycle status. New email infra: `IEmailSender` (Application) → MailKit `SmtpEmailSender` (Infrastructure) + a **mailpit** dev container in Aspire (SMTP 1025 / UI 8025); prod is a config-only SMTP swap. `ReceiptComposer` renders a localized HTML receipt (NL/FR/DE) mirroring the US-FP-052 printed layout, reusing the denormalised `OrderResponse` receipt data. Send is **synchronous** in `OrderService.AdvanceOrderStatusAsync` (request scope — avoids the Wolverine-handler tenant-context pitfall), online-only (`CreatedByStaffId is null`), idempotent via a persisted `Order.ReceiptEmailSent` flag, best-effort (try/catch, never fails the status advance). Scope expansions: customer name **split into first/last**; per-order `LanguageCode` captured at checkout (frontend sends the route lang); **guest checkout now requires first+last+email+phone** (enforced in `CreateOrderEndpoint` after merging claim-or-body), while logged-in customers get those from their **profile** — added an OIDC `phone` scope + Keycloak mapper + seed attributes, surfaced `firstName`/`lastName`/`phoneNumber` on `/bff/user`, with mock-auth parity. One brand migration `SplitOrderNameAndAddReceiptFields` (data-preserving). Tests: 314 unit + Bff + new receipt-email/claims integration tests green; frontend 342 vitest + type-check + build green.
 - **US-FP-052** → ✅ done. POS customer receipt: thermal-format `buildReceiptHtml` (seller legal block — shop name, address, VAT number — plus per-line prices, Belgian VAT breakdown net/VAT/gross, payment method, date) printed via the shared hidden-iframe `printDocument` helper (extracted from US-FP-028's `printTicket`). A "Print receipt" action on the POS confirmation screen triggers print and doubles as reprint (AC3). New nullable `Shop.VatNumber` (domain + EF + brand migration `AddShopVatNumber` + shop create/update DTOs/endpoints/validators + admin ShopEdit field). The seller legal block is denormalised onto `OrderResponse` (populated on the create + GET-order paths; null on the kitchen status-advance/list paths) — this also lays the groundwork for US-FP-051 (digital receipt). Note: the receipt button is fed the order via router state, so reprint is available on the confirmation screen but not after a hard refresh (acceptable for MVP). 284 unit + 45 integration + 84 frontend tests green.
 - **US-FP-071** → ✅ done. Shop chooser + shop-slug routes; FE/BE verified at runtime. PR #128 merged.
@@ -33,7 +35,7 @@
 
 **Partial (🚧) — specific remaining gaps:**
 - **US-FP-069** — per-endpoint RBAC not enforced (62 endpoints `AllowAnonymous`; roles only checked at the BFF proxy). ⚠ security hardening needed before production.
-- **US-FP-024** — table-number capture + 21% VAT done; missing `Shop.IsEatInEnabled` gating + group-kitchen-cards-by-table.
+- **US-FP-024** — eat-in gating (`Shop.EatIn` settings, US-FP-066) + table-number capture (online **and** POS) + 21% VAT done; only group-kitchen-cards-by-table remains.
 - **US-FP-037** — mock auth + BFF login work; customer self-registration not implemented.
 - **US-FP-039** — session timeout configurable; missing dynamic per-brand login UI, role-based redirect, failed-login errors.
 - **US-FP-055** — static manifest only; needs per-brand manifest (logo/colors/icons).
@@ -104,10 +106,10 @@ Once brands + shops exist, these streams are **independent of each other**.
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-040** | Set shop opening hours | 002 |
 | ⬜ | **US-FP-041** | Set special hours and holiday overrides | 040 |
-| ⬜ | **US-FP-020** | Configure time slot settings | 002 |
+| ✅ | **US-FP-020** | Configure time slot settings | 002 |
 | ⬜ | **US-FP-021** | Configure estimated wait times | 002 |
 | ✅ | **US-FP-022** | Configure order lifecycle statuses | 002 |
-| ⬜ | **US-FP-066** | Enable or disable eat-in ordering | 002 |
+| ✅ | **US-FP-066** | Enable or disable eat-in ordering | 002 |
 | ⬜ | **US-FP-065** | Generate QR codes for tables | 002 |
 
 ### Stream D: Branding & i18n

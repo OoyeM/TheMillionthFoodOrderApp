@@ -162,7 +162,7 @@ describe('ComboProductEdit', () => {
     // Submit
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     expect(capturedBody).toMatchObject({
       basePrice: 12.99,
@@ -170,10 +170,10 @@ describe('ComboProductEdit', () => {
     });
 
     // Translations array must contain the NL entry with the original name
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(translations.some((t) => t.languageCode === 'nl' && t.name === 'Combo Friet+Drink')).toBe(
       true,
     );

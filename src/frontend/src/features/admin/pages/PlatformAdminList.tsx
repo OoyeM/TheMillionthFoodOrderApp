@@ -49,7 +49,7 @@ function AdminRow({ admin, onDeactivate }: AdminRowProps) {
       </td>
       <td style={{ padding: '0.75rem 1rem' }}>
         <button
-          onClick={() => onDeactivate(admin)}
+          onClick={() => { onDeactivate(admin); }}
           style={{
             padding: '0.25rem 0.75rem',
             fontSize: '0.875rem',
@@ -143,7 +143,7 @@ function InviteForm({ onCancel }: InviteFormProps) {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); }}
           style={{
             width: '100%',
             padding: '0.5rem 0.75rem',
@@ -165,7 +165,7 @@ function InviteForm({ onCancel }: InviteFormProps) {
         <input
           type="text"
           value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
+          onChange={(e) => { setDisplayName(e.target.value); }}
           style={{
             width: '100%',
             padding: '0.5rem 0.75rem',
@@ -350,7 +350,7 @@ export function PlatformAdminList() {
         </h1>
         {!showInviteForm && (
           <button
-            onClick={() => setShowInviteForm(true)}
+            onClick={() => { setShowInviteForm(true); }}
             style={{
               padding: '0.5rem 1rem',
               background: '#111827',
@@ -367,7 +367,7 @@ export function PlatformAdminList() {
       </div>
 
       {showInviteForm && (
-        <InviteForm onCancel={() => setShowInviteForm(false)} />
+        <InviteForm onCancel={() => { setShowInviteForm(false); }} />
       )}
 
       {isLoading && <p style={{ color: '#6b7280' }}>{t('loading')}</p>}
@@ -379,7 +379,7 @@ export function PlatformAdminList() {
         </p>
       )}
 
-      {!isLoading && !isError && admins !== undefined && admins.length === 0 && (
+      {!isLoading && !isError && admins?.length === 0 && (
         <p style={{ color: '#6b7280' }}>{t('admin.platformAdmins.empty')}</p>
       )}
 

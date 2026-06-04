@@ -96,16 +96,16 @@ describe('ProductCreate', () => {
     const createButton = screen.getByRole('button', { name: /product aanmaken/i });
     await user.click(createButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // Assert basePrice
     expect(capturedBody!.basePrice).toBe(3.5);
 
     // Assert NL translation is present
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(
       translations.some((t) => t.languageCode === 'nl' && t.name === 'Kleine friet'),
     ).toBe(true);

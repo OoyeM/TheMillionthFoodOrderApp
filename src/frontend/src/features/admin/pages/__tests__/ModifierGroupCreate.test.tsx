@@ -88,21 +88,21 @@ describe('ModifierGroupCreate', () => {
     const createButton = screen.getByRole('button', { name: /modifier-groep aanmaken/i });
     await user.click(createButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // Assert the POST body contains the NL group name
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(translations.some((t) => t.languageCode === 'nl' && t.name === 'Sauzen')).toBe(true);
 
     // Assert the POST body contains at least one modifier with NL name
-    const modifiers = capturedBody!.modifiers as Array<{
-      translations: Array<{ languageCode: string; name: string }>;
+    const modifiers = capturedBody!.modifiers as {
+      translations: { languageCode: string; name: string }[];
       priceAdjustment: number;
       sortOrder: number;
-    }>;
+    }[];
     expect(modifiers.length).toBeGreaterThanOrEqual(1);
     const firstModifier = modifiers[0]!;
     expect(

@@ -55,11 +55,12 @@ public sealed class CreateInStoreOrderRequestValidator : Validator<CreateInStore
             .MaximumLength(100)
             .When(x => x.CustomerLastName is not null);
 
-        // TableNumber is required and must be > 0 only when OrderType is EatIn
+        // A supplied table number must be positive. Whether a table number is *required* for
+        // EatIn depends on the shop's eat-in settings (US-FP-066) and is enforced server-side
+        // in OrderService against the loaded shop.
         RuleFor(x => x.TableNumber)
-            .NotNull().WithMessage("TableNumber is required for EatIn orders.")
             .GreaterThan(0).WithMessage("TableNumber must be greater than zero.")
-            .When(x => string.Equals(x.OrderType, "EatIn", StringComparison.OrdinalIgnoreCase));
+            .When(x => x.TableNumber is not null);
     }
 }
 

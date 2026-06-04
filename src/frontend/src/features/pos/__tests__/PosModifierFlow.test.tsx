@@ -146,13 +146,13 @@ function SubmitTrigger({
 // ── Test ─────────────────────────────────────────────────────────────────────
 
 describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
-  afterEach(() => server.resetHandlers());
+  afterEach(() => { server.resetHandlers(); });
 
   it('selects a modifier via PosModifierModal UI and the POST body reflects selectedModifierIds', async () => {
     setupProductWithModifiers();
 
     let capturedBody: {
-      items?: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items?: { productId: string; quantity: number; selectedModifierIds: string[] }[];
       orderType?: string;
       paymentMethod?: string;
     } | null = null;
@@ -268,7 +268,7 @@ describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
     setupProductWithModifiers();
 
     let capturedBody: {
-      items?: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items?: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     } | null = null;
 
     server.use(
@@ -349,7 +349,7 @@ describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
     setupProductWithModifiers();
 
     let capturedBody: {
-      items?: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items?: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     } | null = null;
 
     server.use(

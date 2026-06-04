@@ -58,7 +58,7 @@ export function SelectedComponentsList({
           </span>
           <button
             type="button"
-            onClick={() => onMoveUp(index)}
+            onClick={() => { onMoveUp(index); }}
             disabled={index === 0}
             style={{
               ...reorderButtonStyle,
@@ -70,7 +70,7 @@ export function SelectedComponentsList({
           </button>
           <button
             type="button"
-            onClick={() => onMoveDown(index)}
+            onClick={() => { onMoveDown(index); }}
             disabled={index === selectedProducts.length - 1}
             style={{
               ...reorderButtonStyle,
@@ -82,7 +82,7 @@ export function SelectedComponentsList({
           </button>
           <button
             type="button"
-            onClick={() => onRemove(product)}
+            onClick={() => { onRemove(product); }}
             style={{
               padding: '0.125rem 0.5rem',
               fontSize: '0.75rem',

@@ -39,7 +39,7 @@ function buildTranslationsMap(
     de: { name: '' },
   };
   for (const tr of apiTranslations) {
-    const loc = tr.languageCode as SupportedLocale;
+    const loc = tr.languageCode;
     if (loc in map) {
       map[loc] = { name: tr.name };
     }
@@ -129,7 +129,7 @@ export function MenuCategoryEdit() {
         })),
     }),
     invalidate: [menuCategoryKeys.all(resolvedBrandSlug)],
-    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/menu-categories`),
+    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/menu-categories`); },
   });
 
   // ---------------------------------------------------------------------------
@@ -272,7 +272,7 @@ export function MenuCategoryEdit() {
             <button
               key={l.code}
               type="button"
-              onClick={() => setActiveTab(l.code)}
+              onClick={() => { setActiveTab(l.code); }}
               style={{
                 padding: '0.5rem 1rem',
                 fontWeight: activeTab === l.code ? 700 : 400,
@@ -458,7 +458,7 @@ export function MenuCategoryEdit() {
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button
                         type="button"
-                        onClick={() => moveProduct(index, 'up')}
+                        onClick={() => { moveProduct(index, 'up'); }}
                         disabled={index === 0}
                         aria-label={t('admin.menuCategories.productsSection.moveUp')}
                         style={moveButtonStyle(index === 0)}
@@ -467,7 +467,7 @@ export function MenuCategoryEdit() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => moveProduct(index, 'down')}
+                        onClick={() => { moveProduct(index, 'down'); }}
                         disabled={index === orderedProducts.length - 1}
                         aria-label={t('admin.menuCategories.productsSection.moveDown')}
                         style={moveButtonStyle(index === orderedProducts.length - 1)}

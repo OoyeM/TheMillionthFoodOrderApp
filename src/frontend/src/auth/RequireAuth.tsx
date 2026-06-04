@@ -34,7 +34,7 @@ export function RequireAuth({ roles, children }: RequireAuthProps) {
         <p className="text-lg font-medium">You must be signed in to access this page.</p>
         <button
           type="button"
-          onClick={() => login(undefined, window.location.pathname)}
+          onClick={() => { login(undefined, window.location.pathname); }}
           className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           Sign in

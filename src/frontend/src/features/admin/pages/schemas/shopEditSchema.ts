@@ -16,6 +16,15 @@ export const shopEditSchema = z.object({
   ticketPrinterEnabled: z.boolean(),
   pushNotificationEnabled: z.boolean(),
   soundAlertEnabled: z.boolean(),
+  // Eat-in ordering (US-FP-066)
+  eatInEnabled: z.boolean(),
+  eatInRequiresTableNumber: z.boolean(),
+  // Time-slot ordering (US-FP-020). The interval <select> constrains the value to 5/10/15;
+  // max-orders is only meaningful (and only rendered) when time-slot ordering is enabled,
+  // but a sensible default keeps it valid while disabled.
+  timeSlotOrderingEnabled: z.boolean(),
+  timeSlotIntervalMinutes: z.number(),
+  maxOrdersPerTimeSlot: z.number().int().min(1, { message: 'Max orders per slot must be at least 1.' }),
 });
 
 export type ShopEditFormValues = z.infer<typeof shopEditSchema>;

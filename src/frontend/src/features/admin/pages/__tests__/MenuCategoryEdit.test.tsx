@@ -128,15 +128,15 @@ describe('MenuCategoryEdit', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     expect(capturedBody).toMatchObject({ sortOrder: 7 });
 
     // Translations array must contain the NL entry with the original name
-    const translations = capturedBody!.translations as Array<{
+    const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
-    }>;
+    }[];
     expect(
       translations.some((t) => t.languageCode === 'nl' && t.name === 'Frietjes'),
     ).toBe(true);

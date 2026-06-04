@@ -158,7 +158,7 @@ export function TaxConfiguration() {
                   min="0"
                   max="100"
                   value={rates[mode]}
-                  onChange={(e) => handleRateChange(mode, e.target.value)}
+                  onChange={(e) => { handleRateChange(mode, e.target.value); }}
                   style={{ ...inputStyle, width: '7rem', textAlign: 'right' }}
                 />
                 <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>%</span>
@@ -215,7 +215,7 @@ export function TaxConfiguration() {
                 step="0.01"
                 min="0"
                 value={calcGrossAmount}
-                onChange={(e) => setCalcGrossAmount(e.target.value)}
+                onChange={(e) => { setCalcGrossAmount(e.target.value); }}
                 style={{ ...inputStyle, width: '8rem' }}
               />
             </div>
@@ -242,7 +242,7 @@ export function TaxConfiguration() {
                       name="calc-mode"
                       value={mode}
                       checked={calcMode === mode}
-                      onChange={() => setCalcMode(mode)}
+                      onChange={() => { setCalcMode(mode); }}
                     />
                     {t(`admin.taxConfiguration.consumptionModes.${mode}`)}
                   </label>

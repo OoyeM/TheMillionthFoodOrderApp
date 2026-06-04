@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { EatInSettings } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // ResolvedShop type and context
@@ -13,6 +14,8 @@ export interface ResolvedShop {
   name: string;
   slug: string;
   isOpen: boolean;
+  /** Eat-in ordering configuration — gates the eat-in option at checkout (US-FP-066). */
+  eatIn: EatInSettings;
 }
 
 /**

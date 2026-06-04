@@ -49,7 +49,7 @@ export function LanguageSelector() {
         return (
           <button
             key={locale}
-            onClick={() => handleSelect(locale)}
+            onClick={() => { handleSelect(locale); }}
             aria-current={isActive ? 'true' : undefined}
             disabled={isActive}
             style={{

@@ -51,6 +51,7 @@ function makeShop(overrides: Partial<StorefrontShop> = {}): StorefrontShop {
       country: 'BE',
     },
     isOpen: true,
+    eatIn: { isEnabled: true, requiresTableNumber: true },
     ...overrides,
   };
 }

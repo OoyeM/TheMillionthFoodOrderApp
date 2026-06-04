@@ -149,7 +149,7 @@ function MockDevToolbar({ currentRole, onRoleChange }: MockDevToolbarProps) {
       <span style={{ color: '#a6e3a1', fontWeight: 'bold' }}>MOCK AUTH</span>
       <select
         value={currentRole}
-        onChange={(e) => onRoleChange(e.target.value as UserRole)}
+        onChange={(e) => { onRoleChange(e.target.value as UserRole); }}
         style={{
           background: '#313244',
           color: '#cdd6f4',

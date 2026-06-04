@@ -17,12 +17,12 @@ export function AdminDashboard() {
         <NavCard
           title="Brands"
           description="Manage brands on the platform."
-          onClick={() => navigate(`/${brandSlug}/${lang}/admin/brands`)}
+          onClick={() => { navigate(`/${brandSlug}/${lang}/admin/brands`); }}
         />
         <NavCard
           title="Manage Shops"
           description="Create and manage shops within this brand."
-          onClick={() => navigate(`/${brandSlug}/${lang}/admin/shops`)}
+          onClick={() => { navigate(`/${brandSlug}/${lang}/admin/shops`); }}
         />
       </div>
     </main>

@@ -90,7 +90,7 @@ describe('BrandList', () => {
     const deactivateButton = screen.getByRole('button', { name: /deactivate/i });
     await user.click(deactivateButton);
 
-    await waitFor(() => expect(deactivateCalled).toBe(true));
+    await waitFor(() => { expect(deactivateCalled).toBe(true); });
   });
 
   it('activate button calls the activate API', async () => {
@@ -116,7 +116,7 @@ describe('BrandList', () => {
     const activateButton = screen.getByRole('button', { name: /^activate$/i });
     await user.click(activateButton);
 
-    await waitFor(() => expect(activateCalled).toBe(true));
+    await waitFor(() => { expect(activateCalled).toBe(true); });
   });
 
   it('Create Brand button is present', async () => {

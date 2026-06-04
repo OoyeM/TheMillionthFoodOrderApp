@@ -30,7 +30,7 @@ export function printHtmlDocument(html: string): void {
       frameWindow.print();
     } finally {
       // Give the print dialog time to grab the document before tearing it down.
-      window.setTimeout(() => iframe.remove(), 1000);
+      window.setTimeout(() => { iframe.remove(); }, 1000);
     }
   });
 

@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children?: ReactNode }) {
   useEffect(() => {
     const links = fontLinksRef.current;
     return () => {
-      links.forEach((el) => el.remove());
+      links.forEach((el) => { el.remove(); });
       links.clear();
     };
   }, []);

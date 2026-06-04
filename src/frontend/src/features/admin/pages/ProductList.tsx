@@ -25,7 +25,7 @@ function ProductRow({ product, onRowClick, onDelete, isDeleting }: ProductRowPro
 
   return (
     <tr
-      onClick={() => onRowClick(product.id)}
+      onClick={() => { onRowClick(product.id); }}
       style={{ cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
     >
       <td style={{ padding: '0.75rem 1rem' }}>{product.name}</td>
@@ -168,7 +168,7 @@ export function ProductList() {
         </p>
       )}
 
-      {!isLoading && !isError && products !== undefined && products.length === 0 && (
+      {!isLoading && !isError && products?.length === 0 && (
         <p style={{ color: '#6b7280' }}>No products yet. Create the first one.</p>
       )}
 

@@ -30,7 +30,7 @@ function ShopRow({ shop, brandSlug, onRowClick }: ShopRowProps) {
 
   return (
     <tr
-      onClick={() => onRowClick(shop.id)}
+      onClick={() => { onRowClick(shop.id); }}
       style={{
         cursor: 'pointer',
         borderBottom: '1px solid #e5e7eb',
@@ -133,7 +133,7 @@ export function ShopList() {
         </p>
       )}
 
-      {!isLoading && !isError && shops !== undefined && shops.length === 0 && (
+      {!isLoading && !isError && shops?.length === 0 && (
         <p style={{ color: '#6b7280' }}>No shops yet. Create the first one.</p>
       )}
 

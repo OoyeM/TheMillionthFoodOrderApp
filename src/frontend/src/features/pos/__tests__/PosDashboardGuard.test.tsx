@@ -85,7 +85,7 @@ function renderDashboard() {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('PosDashboard — EatIn submit guard (t-17, AC4)', () => {
-  afterEach(() => server.resetHandlers());
+  afterEach(() => { server.resetHandlers(); });
 
   it('Place Order button is disabled when no items are in the cart', async () => {
     renderDashboard();

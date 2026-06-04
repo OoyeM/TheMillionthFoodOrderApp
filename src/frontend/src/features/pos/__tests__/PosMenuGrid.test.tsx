@@ -117,7 +117,7 @@ function setupNoModifiersHandler() {
 }
 
 describe('PosMenuGrid (t-9)', () => {
-  afterEach(() => server.resetHandlers());
+  afterEach(() => { server.resetHandlers(); });
 
   it('renders a grid of product tiles from the menu', async () => {
     setupProductsHandler([simpleProduct, productWithModifiers]);
@@ -150,7 +150,7 @@ describe('PosMenuGrid (t-9)', () => {
 });
 
 describe('PosMenuGrid product interactions (t-10)', () => {
-  afterEach(() => server.resetHandlers());
+  afterEach(() => { server.resetHandlers(); });
 
   it('tapping a product without modifiers adds it directly to the order', async () => {
     setupProductsHandler([simpleProduct]);
@@ -216,7 +216,7 @@ describe('PosMenuGrid product interactions (t-10)', () => {
     setupProductsHandler([productWithModifiers]);
     setupWithModifiersHandler('prod-modifiers');
 
-    let orderItems: Array<{ productId: string; selectedModifiers: unknown[] }> = [];
+    let orderItems: { productId: string; selectedModifiers: unknown[] }[] = [];
     function OrderSpy() {
       const { state } = useOrderState();
       orderItems = state.items.map((i) => ({
@@ -267,7 +267,7 @@ describe('PosMenuGrid product interactions (t-10)', () => {
     setupProductsHandler([comboProduct]);
     setupNoModifiersHandler();
 
-    let orderItems: Array<{ productId: string; quantity: number }> = [];
+    let orderItems: { productId: string; quantity: number }[] = [];
     function OrderSpy() {
       const { state } = useOrderState();
       orderItems = state.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
@@ -299,7 +299,7 @@ describe('PosMenuGrid product interactions (t-10)', () => {
     setupProductsHandler([simpleProduct]);
     setupNoModifiersHandler();
 
-    let orderItems: Array<{ productId: string; quantity: number }> = [];
+    let orderItems: { productId: string; quantity: number }[] = [];
     function OrderSpy() {
       const { state } = useOrderState();
       orderItems = state.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
@@ -331,7 +331,7 @@ describe('PosMenuGrid product interactions (t-10)', () => {
     setupProductsHandler([comboProduct]);
     setupNoModifiersHandler();
 
-    let orderItems: Array<{ productId: string; quantity: number }> = [];
+    let orderItems: { productId: string; quantity: number }[] = [];
     function OrderSpy() {
       const { state } = useOrderState();
       orderItems = state.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));

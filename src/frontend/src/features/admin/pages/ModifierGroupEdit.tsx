@@ -26,7 +26,7 @@ const LANGUAGES: { code: SupportedLocale; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 function buildTranslationsMap(
-  apiTranslations: Array<{ languageCode: string; name: string }>,
+  apiTranslations: { languageCode: string; name: string }[],
 ): { nl: { name: string }; fr: { name: string }; de: { name: string } } {
   const map = { nl: { name: '' }, fr: { name: '' }, de: { name: '' } };
   for (const t of apiTranslations) {
@@ -107,7 +107,7 @@ export function ModifierGroupEdit() {
       modifierGroupKeys.all(resolvedBrandSlug),
       modifierGroupKeys.detail(resolvedBrandSlug, resolvedId),
     ],
-    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/modifier-groups`),
+    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/modifier-groups`); },
   });
 
   const {
@@ -200,10 +200,10 @@ export function ModifierGroupEdit() {
             <button
               type="button"
               onClick={() =>
-                append({
+                { append({
                   translations: { nl: { name: '' }, fr: { name: '' }, de: { name: '' } },
                   priceAdjustment: 0,
-                })
+                }); }
               }
               style={{
                 padding: '0.25rem 0.75rem',
@@ -370,7 +370,7 @@ function ModifierRow({ index, register, activeTab, onRemove }: ModifierRowProps)
         </span>
         <button
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => { onRemove(index); }}
           style={{
             padding: '0.125rem 0.5rem',
             fontSize: '0.75rem',
@@ -482,7 +482,7 @@ function TabBar({ activeTab, onTabChange }: TabBarProps) {
         <button
           key={l.code}
           type="button"
-          onClick={() => onTabChange(l.code)}
+          onClick={() => { onTabChange(l.code); }}
           style={{
             padding: '0.5rem 1rem',
             fontWeight: activeTab === l.code ? 700 : 400,

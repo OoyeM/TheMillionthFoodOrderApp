@@ -159,12 +159,12 @@ export function PosOrderConfirmation() {
   // Redirect to /pos dashboard if the orderNumber param is missing (e.g. direct navigation)
   useEffect(() => {
     if (!orderNumber) {
-      void navigate(`/${brandSlug}/${lang}/pos`, { replace: true });
+      navigate(`/${brandSlug}/${lang}/pos`, { replace: true });
     }
   }, [orderNumber, navigate, brandSlug, lang]);
 
   function handleBackToMenu() {
-    void navigate(`/${brandSlug}/${lang}/pos`);
+    navigate(`/${brandSlug}/${lang}/pos`);
   }
 
   function handlePrintReceipt() {

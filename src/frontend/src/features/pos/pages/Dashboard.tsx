@@ -6,6 +6,8 @@ import { PosOrderProvider, useOrderState } from '../context/PosOrderContext';
 import { PosMenuGrid } from '../components/PosMenuGrid';
 import { PosOrderPanel } from '../components/PosOrderPanel';
 import { useCreateInStoreOrder } from '../hooks/useCreateInStoreOrder';
+import { useActiveShops } from '@features/storefront/hooks/useActiveShops';
+import type { EatInSettings } from '@/types/common';
 
 // ---------------------------------------------------------------------------
 // Inner dashboard — must be inside PosOrderProvider
@@ -14,9 +16,10 @@ import { useCreateInStoreOrder } from '../hooks/useCreateInStoreOrder';
 interface PosDashboardInnerProps {
   brandSlug: string;
   shopId: string;
+  eatIn: EatInSettings;
 }
 
-function PosDashboardInner({ brandSlug, shopId }: PosDashboardInnerProps) {
+function PosDashboardInner({ brandSlug, shopId, eatIn }: PosDashboardInnerProps) {
   const { t } = useTranslation('common');
   const { user } = useAuth();
   const { state } = useOrderState();
@@ -25,9 +28,10 @@ function PosDashboardInner({ brandSlug, shopId }: PosDashboardInnerProps) {
 
   const mutation = useCreateInStoreOrder(brandSlug, shopId);
 
-  // Client-side guard: block submit when order is empty or EatIn without table number
+  // Client-side guard: block submit when order is empty, or EatIn without a table number
+  // when this shop requires one (US-FP-066).
   const isEatInMissingTable =
-    state.orderType === 'EatIn' && !state.tableNumber;
+    state.orderType === 'EatIn' && eatIn.requiresTableNumber && !state.tableNumber;
   const canSubmit =
     state.items.length > 0 && !isEatInMissingTable && !mutation.isPending;
 
@@ -37,7 +41,7 @@ function PosDashboardInner({ brandSlug, shopId }: PosDashboardInnerProps) {
       const order = await mutation.mutateAsync({});
       // Carry the full order to the confirmation screen so counter staff can print/reprint
       // the customer receipt (US-FP-052) without an extra round-trip.
-      void navigate(`/${paramBrandSlug}/${lang}/pos/confirmation/${order.orderNumber}`, {
+      navigate(`/${paramBrandSlug}/${lang}/pos/confirmation/${order.orderNumber}`, {
         state: { order },
       });
     } catch {
@@ -102,7 +106,7 @@ function PosDashboardInner({ brandSlug, shopId }: PosDashboardInnerProps) {
         }}
       >
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <PosOrderPanel />
+          <PosOrderPanel eatIn={eatIn} />
         </div>
 
         {/* Validation feedback */}
@@ -185,9 +189,18 @@ export function PosDashboard() {
   // shopId is optional in the route for now; fall back to 'shop-1' for dev
   const resolvedShopId = shopId ?? 'shop-1';
 
+  // Resolve this shop's eat-in configuration from the active-shops list (US-FP-066).
+  // Default to enabled + table required while loading or if the shop isn't found, matching the
+  // backend default so the POS never wrongly hides eat-in before the config has loaded.
+  const { data: shops } = useActiveShops(resolvedBrandSlug);
+  const eatIn: EatInSettings = shops?.find((s) => s.id === resolvedShopId)?.eatIn ?? {
+    isEnabled: true,
+    requiresTableNumber: true,
+  };
+
   return (
     <PosOrderProvider>
-      <PosDashboardInner brandSlug={resolvedBrandSlug} shopId={resolvedShopId} />
+      <PosDashboardInner brandSlug={resolvedBrandSlug} shopId={resolvedShopId} eatIn={eatIn} />
     </PosOrderProvider>
   );
 }

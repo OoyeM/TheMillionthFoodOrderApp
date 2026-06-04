@@ -24,7 +24,7 @@ const STAFF_ROLES: StaffRole[] = [
 const ALL_ROLES: StaffRole[] = [...STAFF_ROLES, 'Customer'];
 
 /** Maps numeric role values (from API) back to the role name string. */
-const ROLE_BY_VALUE: Map<number, StaffRole> = new Map(
+const ROLE_BY_VALUE = new Map<number, StaffRole>(
   ALL_ROLES.map((r) => [StaffRoleValue[r], r]),
 );
 
@@ -108,7 +108,7 @@ function StaffRow({ member, onDeactivate }: StaffRowProps) {
       </td>
       <td style={{ padding: '0.75rem 1rem' }}>
         <button
-          onClick={() => onDeactivate(member)}
+          onClick={() => { onDeactivate(member); }}
           style={{
             padding: '0.25rem 0.75rem',
             fontSize: '0.875rem',
@@ -221,7 +221,7 @@ function InviteForm({ brandSlug, shops, onCancel }: InviteFormProps) {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); }}
           style={{
             width: '100%',
             padding: '0.5rem 0.75rem',
@@ -244,7 +244,7 @@ function InviteForm({ brandSlug, shops, onCancel }: InviteFormProps) {
         <input
           type="text"
           value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
+          onChange={(e) => { setDisplayName(e.target.value); }}
           style={{
             width: '100%',
             padding: '0.5rem 0.75rem',
@@ -299,7 +299,7 @@ function InviteForm({ brandSlug, shops, onCancel }: InviteFormProps) {
           </label>
           <select
             value={shopId}
-            onChange={(e) => setShopId(e.target.value)}
+            onChange={(e) => { setShopId(e.target.value); }}
             style={{
               width: '100%',
               padding: '0.5rem 0.75rem',
@@ -505,7 +505,7 @@ export function StaffList() {
         </h1>
         {!showInviteForm && (
           <button
-            onClick={() => setShowInviteForm(true)}
+            onClick={() => { setShowInviteForm(true); }}
             style={{
               padding: '0.5rem 1rem',
               background: '#111827',
@@ -525,7 +525,7 @@ export function StaffList() {
         <InviteForm
           brandSlug={resolvedBrandSlug}
           shops={shops}
-          onCancel={() => setShowInviteForm(false)}
+          onCancel={() => { setShowInviteForm(false); }}
         />
       )}
 
@@ -538,7 +538,7 @@ export function StaffList() {
         </p>
       )}
 
-      {!isLoading && !isError && staff !== undefined && staff.length === 0 && (
+      {!isLoading && !isError && staff?.length === 0 && (
         <p style={{ color: '#6b7280' }}>{t('admin.staff.empty')}</p>
       )}
 

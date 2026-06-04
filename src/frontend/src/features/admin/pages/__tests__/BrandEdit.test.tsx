@@ -98,7 +98,7 @@ describe('BrandEdit', () => {
     const saveButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
       name: 'Frietjes Updated',
       contactEmail: 'contact@frietjes.be',

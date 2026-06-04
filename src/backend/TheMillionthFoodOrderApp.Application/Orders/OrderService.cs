@@ -54,7 +54,7 @@ public sealed class OrderService(
             paymentMethod,
             request.CustomerFirstName,
             request.CustomerLastName,
-            tableNumber: null,
+            tableNumber: request.TableNumber,
             createdByStaffId: null,
             request.Items,
             cancellationToken,
@@ -83,14 +83,8 @@ public sealed class OrderService(
         if (request.Items.Count == 0)
             throw new ArgumentException("An order must contain at least one item.");
 
-        // 2. EatIn requires a valid table number
-        if (orderType == OrderType.EatIn)
-        {
-            if (request.TableNumber is null)
-                throw new ArgumentException("TableNumber is required for EatIn orders.");
-            if (request.TableNumber.Value <= 0)
-                throw new ArgumentException("TableNumber must be greater than zero.");
-        }
+        // 2. Table-number rules (presence requirement + positivity) are enforced centrally in
+        //    CreateOrderCoreAsync against the shop's eat-in settings (US-FP-066).
 
         // 3. Force payment method to CashAtPickup for in-store orders
         var paymentMethod = PaymentMethod.CashAtPickup;
@@ -250,6 +244,20 @@ public sealed class OrderService(
         var shop = await shopRepository.GetByIdAsync(shopId, cancellationToken);
         if (shop is null)
             throw new KeyNotFoundException($"Shop with id '{shopId}' was not found.");
+
+        // 3a. Eat-in gating (US-FP-066) — applies identically to online and in-store orders:
+        //     the shop must accept eat-in, and a table number is required when the shop mandates one.
+        if (orderType == OrderType.EatIn)
+        {
+            if (!shop.EatIn.IsEnabled)
+                throw new InvalidOperationException("This shop does not currently accept eat-in orders.");
+            if (shop.EatIn.RequiresTableNumber && tableNumber is null)
+                throw new ArgumentException("A table number is required for eat-in orders at this shop.");
+        }
+
+        // A supplied table number must be positive, regardless of order type.
+        if (tableNumber is { } providedTableNumber && providedTableNumber <= 0)
+            throw new ArgumentException("Table number must be greater than zero.");
 
         // 3b. Online customer orders are rejected when the shop is currently closed (US-FP-071 / #127).
         //     In-store staff orders are exempt — staff are physically present at the counter.

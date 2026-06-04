@@ -55,7 +55,7 @@ export function BrandEdit() {
         : {}),
     }),
     invalidate: [brandKeys.all, brandKeys.detail(resolvedBrandId)],
-    onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/brands`),
+    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/brands`); },
   });
 
   const { register, formState: { errors } } = form;
@@ -103,7 +103,7 @@ export function BrandEdit() {
       if (e.key === 'Escape') cancelAuthMethodChange();
     }
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('keydown', handleKeyDown); };
   }, [pendingAuthMethod, cancelAuthMethodChange]);
 
   // ---------------------------------------------------------------------------
@@ -250,7 +250,7 @@ export function BrandEdit() {
                   name="staffAuthMethod"
                   value={method}
                   checked={displayBrand.staffAuthMethod === method}
-                  onChange={() => handleAuthMethodChange(method)}
+                  onChange={() => { handleAuthMethodChange(method); }}
                   disabled={configureStaffAuth.isPending}
                 />
                 <span style={{ fontSize: '0.875rem' }}>

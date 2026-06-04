@@ -58,19 +58,21 @@ public sealed class CreateInStoreOrderEndpointTests
         await Assert.That(result.IsValid).IsTrue();
     }
 
-    // ── Validator: EatIn without table — invalid ──────────────────────────────
+    // ── Validator: EatIn without table — now valid (presence is enforced server-side) ─────────
 
     [Test]
-    public async Task Validator_EatIn_WithoutTableNumber_FailsValidation()
+    public async Task Validator_EatIn_WithoutTableNumber_IsValid()
     {
+        // US-FP-066: whether a table number is *required* for EatIn now depends on the shop's
+        // eat-in settings, enforced server-side in OrderService — not by this stateless validator,
+        // which only checks that a supplied table number is positive.
         var result = await new CreateInStoreOrderRequestValidator().ValidateAsync(
             new CreateInStoreOrderApiRequest(
                 "frietjes", Guid.NewGuid(), "EatIn", "CashAtPickup",
                 null, null, null,
                 [new OrderItemApiInput(Guid.NewGuid(), 1, null)]));
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors.Any(e => e.PropertyName == "TableNumber")).IsTrue();
+        await Assert.That(result.IsValid).IsTrue();
     }
 
     // ── Validator: EatIn with valid table — valid ─────────────────────────────

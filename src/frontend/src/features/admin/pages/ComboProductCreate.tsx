@@ -239,7 +239,7 @@ function LanguageTabBar({ activeTab, onTabChange }: LanguageTabBarProps) {
         <button
           key={l.code}
           type="button"
-          onClick={() => onTabChange(l.code)}
+          onClick={() => { onTabChange(l.code); }}
           style={{
             padding: '0.5rem 1rem',
             fontWeight: activeTab === l.code ? 700 : 400,

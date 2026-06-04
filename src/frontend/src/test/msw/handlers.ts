@@ -230,6 +230,27 @@ export const handlers = [
     ]),
   ),
 
+  // Active shops for the storefront chooser + POS shop-config lookup (US-FP-071 / US-FP-066).
+  // Must precede the /shops/:shopId handler so "active" is not matched as a shopId.
+  http.get('/api/brands/:slug/shops/active', () =>
+    HttpResponse.json([
+      {
+        id: 'shop-1',
+        name: 'Gent Centrum',
+        slug: 'gent-centrum',
+        address: {
+          street: 'Veldstraat',
+          number: '1',
+          city: 'Gent',
+          postalCode: '9000',
+          country: 'BE',
+        },
+        isOpen: true,
+        eatIn: { isEnabled: true, requiresTableNumber: true },
+      },
+    ]),
+  ),
+
   http.get('/api/brands/:slug/shops/:shopId', ({ params }) =>
     HttpResponse.json({
       id: params.shopId,
@@ -245,6 +266,8 @@ export const handlers = [
       contactEmail: 'gent@frietjes.be',
       contactPhone: null,
       isActive: true,
+      eatIn: { isEnabled: true, requiresTableNumber: true },
+      timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     }),
@@ -685,7 +708,7 @@ export const handlers = [
       customerEmail?: string | null;
       customerPhone?: string | null;
       languageCode?: string;
-      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     };
 
     const validOrderTypes = ['Pickup', 'EatIn', 'Delivery'];
@@ -757,7 +780,7 @@ export const handlers = [
       tableNumber?: number;
       customerFirstName?: string;
       customerLastName?: string;
-      items: Array<{ productId: string; quantity: number; selectedModifierIds: string[] }>;
+      items: { productId: string; quantity: number; selectedModifierIds: string[] }[];
     };
 
     // Minimal server-side validation: reject obviously malformed payloads in tests

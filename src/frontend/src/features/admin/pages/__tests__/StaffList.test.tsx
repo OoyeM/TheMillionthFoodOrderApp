@@ -64,7 +64,7 @@ describe('StaffList', () => {
     const confirmBtn = confirmButtons[confirmButtons.length - 1]!;
     await user.click(confirmBtn);
 
-    await waitFor(() => expect(deactivateCalled).toBe(true));
+    await waitFor(() => { expect(deactivateCalled).toBe(true); });
     expect(capturedRoleId).toBe('role-1');
   });
 
@@ -117,7 +117,7 @@ describe('StaffList', () => {
     const submitBtn = screen.getByRole('button', { name: /^medewerker uitnodigen$/i });
     await user.click(submitBtn);
 
-    await waitFor(() => expect(capturedBody).not.toBeNull());
+    await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     expect(capturedBody!.email).toBe('new@frietjes.be');
     expect(capturedBody!.displayName).toBe('New Staff');

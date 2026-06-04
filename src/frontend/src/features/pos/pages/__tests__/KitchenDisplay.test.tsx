@@ -80,7 +80,7 @@ function makeOrder(overrides: Partial<{
   orderType: 'Pickup' | 'EatIn' | 'Delivery';
   tableNumber: string | null;
   customerName: string | null;
-  items: Array<{ productName: string; quantity: number; modifiers: Array<{ name: string }> }>;
+  items: { productName: string; quantity: number; modifiers: { name: string }[] }[];
 }>) {
   const items = overrides.items ?? [
     { productName: 'Frietje', quantity: 1, modifiers: [] },
@@ -220,7 +220,7 @@ describe('KitchenDisplay', () => {
     renderPage();
 
     await waitFor(() =>
-      expect(screen.getAllByTestId('kitchen-order-card')).toHaveLength(2),
+      { expect(screen.getAllByTestId('kitchen-order-card')).toHaveLength(2); },
     );
 
     const tableBadges = screen.queryAllByTestId('kitchen-order-table');
@@ -234,7 +234,7 @@ describe('KitchenDisplay', () => {
   });
 
   it('renders an advance button per allowed next status and posts the transition on tap', async () => {
-    const advanceCalls: Array<{ orderId: string; toStatusId: string }> = [];
+    const advanceCalls: { orderId: string; toStatusId: string }[] = [];
     server.use(
       http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
         HttpResponse.json({
@@ -272,7 +272,7 @@ describe('KitchenDisplay', () => {
 
     await user.click(advanceBtn);
 
-    await waitFor(() => expect(advanceCalls).toHaveLength(1));
+    await waitFor(() => { expect(advanceCalls).toHaveLength(1); });
     expect(advanceCalls[0]).toEqual({ orderId: 'a', toStatusId: 's-prep' });
   });
 
@@ -314,7 +314,7 @@ describe('KitchenDisplay', () => {
     );
     triggerStatusChange?.();
 
-    await waitFor(() => expect(printTicketMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => { expect(printTicketMock).toHaveBeenCalledTimes(1); });
     expect(printTicketMock.mock.calls[0]![0]).toMatchObject({ id: 'new-1', orderNumber: '0042' });
   });
 
@@ -356,7 +356,7 @@ describe('KitchenDisplay', () => {
     );
     triggerStatusChange?.();
 
-    await waitFor(() => expect(playSoundMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => { expect(playSoundMock).toHaveBeenCalledTimes(1); });
     await waitFor(() =>
       expect(screen.getByTestId('kitchen-order-card')).toHaveAttribute('data-highlight', 'true'),
     );
@@ -382,7 +382,7 @@ describe('KitchenDisplay', () => {
     );
     triggerStatusChange?.();
 
-    await waitFor(() => expect(showNotificationMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => { expect(showNotificationMock).toHaveBeenCalledTimes(1); });
     // Notification carries a title, a body and the order id as the dedupe tag.
     expect(showNotificationMock.mock.calls[0]![2]).toBe('new-2');
   });
@@ -426,7 +426,7 @@ describe('KitchenDisplay', () => {
     await user.click(enableButton);
 
     expect(primeAudioMock).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(requestPermissionMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => { expect(requestPermissionMock).toHaveBeenCalledTimes(1); });
     // Once armed, the control disappears.
     await waitFor(() =>
       expect(screen.queryByTestId('kitchen-enable-alerts')).not.toBeInTheDocument(),

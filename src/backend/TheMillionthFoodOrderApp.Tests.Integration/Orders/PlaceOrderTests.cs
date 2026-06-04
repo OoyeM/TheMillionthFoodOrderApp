@@ -263,6 +263,8 @@ public sealed class PlaceOrderTests(IntegrationTestBase fixture)
             CustomerLastName = "InCustomer",
             CustomerEmail = "eatin@example.com",
             CustomerPhone = "+32470000003",
+            // Default shops have eat-in enabled and require a table number (US-FP-066).
+            TableNumber = 12,
             Items = new[]
             {
                 new { ProductId = productId, Quantity = 1, SelectedModifierIds = Array.Empty<Guid>() }

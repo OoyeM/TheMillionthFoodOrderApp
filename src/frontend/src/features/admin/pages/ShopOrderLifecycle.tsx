@@ -90,8 +90,8 @@ export function ShopOrderLifecycle() {
   // Auto-dismiss success message
   useEffect(() => {
     if (!successMessage) return;
-    const timer = setTimeout(() => setSuccessMessage(''), 3000);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => { setSuccessMessage(''); }, 3000);
+    return () => { clearTimeout(timer); };
   }, [successMessage]);
 
   // ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ export function ShopOrderLifecycle() {
   }
 
   function handleRemoveStatus(index: number) {
-    const removing = statuses[index] as LocalStatus | undefined;
+    const removing = statuses[index];
     if (!removing) return;
     // Don't allow removing if only 2 left
     if (statuses.length <= 2) return;
@@ -284,7 +284,7 @@ export function ShopOrderLifecycle() {
       >
         <button
           type="button"
-          onClick={() => navigate(`/${brandSlug}/${lang}/admin/shops/${shopId}`)}
+          onClick={() => { navigate(`/${brandSlug}/${lang}/admin/shops/${shopId}`); }}
           style={{
             background: 'none',
             border: 'none',
@@ -468,7 +468,7 @@ export function ShopOrderLifecycle() {
           {/* Move buttons */}
           <button
             type="button"
-            onClick={() => handleMoveStatus(index, 'up')}
+            onClick={() => { handleMoveStatus(index, 'up'); }}
             disabled={index === 0}
             style={{
               padding: '0.25rem 0.5rem',
@@ -484,7 +484,7 @@ export function ShopOrderLifecycle() {
           </button>
           <button
             type="button"
-            onClick={() => handleMoveStatus(index, 'down')}
+            onClick={() => { handleMoveStatus(index, 'down'); }}
             disabled={index === statuses.length - 1}
             style={{
               padding: '0.25rem 0.5rem',
@@ -502,7 +502,7 @@ export function ShopOrderLifecycle() {
           {/* Remove (only custom statuses, only if > 2) */}
           <button
             type="button"
-            onClick={() => handleRemoveStatus(index)}
+            onClick={() => { handleRemoveStatus(index); }}
             disabled={statuses.length <= 2}
             style={{
               padding: '0.25rem 0.5rem',
@@ -609,7 +609,7 @@ export function ShopOrderLifecycle() {
 
           <button
             type="button"
-            onClick={() => handleRemoveTransition(index)}
+            onClick={() => { handleRemoveTransition(index); }}
             style={{
               padding: '0.25rem 0.5rem',
               border: '1px solid #fca5a5',
@@ -667,7 +667,7 @@ export function ShopOrderLifecycle() {
 
         <button
           type="button"
-          onClick={() => setShowResetConfirm(true)}
+          onClick={() => { setShowResetConfirm(true); }}
           disabled={resetMutation.isPending}
           style={{
             padding: '0.5rem 1.5rem',
@@ -724,7 +724,7 @@ export function ShopOrderLifecycle() {
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button
                 type="button"
-                onClick={() => setShowResetConfirm(false)}
+                onClick={() => { setShowResetConfirm(false); }}
                 style={{
                   padding: '0.375rem 1rem',
                   border: '1px solid #d1d5db',

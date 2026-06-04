@@ -17,6 +17,8 @@ public sealed record UpdateShopRequest(
     bool TicketPrinterEnabled,
     bool PushNotificationEnabled,
     bool SoundAlertEnabled,
+    EatInSettingsDto EatIn,
+    TimeSlotOrderingSettingsDto TimeSlotOrdering,
     string? VatNumber = null);
 
 public sealed record AddressRequest(
@@ -33,6 +35,16 @@ public sealed record AddressResponse(
     string PostalCode,
     string Country);
 
+/// <summary>Eat-in ordering configuration for a shop (US-FP-066).</summary>
+public sealed record EatInSettingsDto(bool IsEnabled, bool RequiresTableNumber);
+
+/// <summary>
+/// Time-slot ordering configuration for a shop (US-FP-020).
+/// <see cref="IntervalMinutes"/> (5, 10, or 15) and <see cref="MaxOrdersPerInterval"/> are
+/// null when time-slot ordering is disabled.
+/// </summary>
+public sealed record TimeSlotOrderingSettingsDto(bool IsEnabled, int? IntervalMinutes, int? MaxOrdersPerInterval);
+
 public sealed record ShopResponse(
     Guid Id,
     string Name,
@@ -45,6 +57,8 @@ public sealed record ShopResponse(
     bool TicketPrinterEnabled,
     bool PushNotificationEnabled,
     bool SoundAlertEnabled,
+    EatInSettingsDto EatIn,
+    TimeSlotOrderingSettingsDto TimeSlotOrdering,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     string? VatNumber = null);
@@ -58,4 +72,5 @@ public sealed record StorefrontShopResponse(
     string Name,
     string Slug,
     AddressResponse Address,
-    bool IsOpen);
+    bool IsOpen,
+    EatInSettingsDto EatIn);
