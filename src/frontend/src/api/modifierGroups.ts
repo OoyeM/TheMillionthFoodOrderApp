@@ -33,7 +33,8 @@ export interface ProductModifierGroupInput {
 }
 
 export interface SetProductModifierGroupsRequest {
-  modifierGroups: ProductModifierGroupInput[];
+  /** Wire field name must match the API contract (`assignments`), not `modifierGroups`. */
+  assignments: ProductModifierGroupInput[];
 }
 
 /**

@@ -500,9 +500,19 @@ export const handlers = [
     ]),
   ),
 
-  http.put('/api/brands/:slug/products/:productId/modifier-groups', () =>
-    new HttpResponse(null, { status: 200 }),
-  ),
+  http.put('/api/brands/:slug/products/:productId/modifier-groups', async ({ request }) => {
+    // Mirror the backend contract: the body must carry an `assignments` array
+    // (SetProductModifierGroupsApiRequest.Assignments), else 400 — guards against
+    // the field-name regression where the client sent `modifierGroups`.
+    const body = (await request.json().catch(() => null)) as { assignments?: unknown } | null;
+    if (!body || !Array.isArray(body.assignments)) {
+      return HttpResponse.json(
+        { assignments: ['Assignments list is required.'] },
+        { status: 400 },
+      );
+    }
+    return new HttpResponse(null, { status: 200 });
+  }),
 
   // ── Products (/api/brands/:slug/products) ────────────────────────────────
 

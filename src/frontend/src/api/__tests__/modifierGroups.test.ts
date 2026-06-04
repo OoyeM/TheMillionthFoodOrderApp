@@ -94,9 +94,29 @@ describe('modifierGroupsApi', () => {
     it('sets modifier groups on a product without throwing', async () => {
       await expect(
         modifierGroupsApi.setProductModifierGroups(BRAND_SLUG, 'prod-1', {
-          modifierGroups: [{ modifierGroupId: 'mg-1', sortOrder: 1 }],
+          assignments: [{ modifierGroupId: 'mg-1', sortOrder: 1 }],
         }),
       ).resolves.toBeUndefined();
+    });
+
+    it('sends the assignments under the API-contract field name', async () => {
+      let sentBody: Record<string, unknown> | null = null;
+      server.use(
+        http.put(
+          '/api/brands/:slug/products/:productId/modifier-groups',
+          async ({ request }) => {
+            sentBody = (await request.json()) as Record<string, unknown>;
+            return new HttpResponse(null, { status: 200 });
+          },
+        ),
+      );
+
+      await modifierGroupsApi.setProductModifierGroups(BRAND_SLUG, 'prod-1', {
+        assignments: [{ modifierGroupId: 'mg-1', sortOrder: 1 }],
+      });
+
+      expect(sentBody).toHaveProperty('assignments');
+      expect(sentBody).not.toHaveProperty('modifierGroups');
     });
   });
 });

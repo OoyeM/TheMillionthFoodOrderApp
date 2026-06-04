@@ -241,7 +241,7 @@ export function ComboProductEdit() {
 
   function handleSaveAssignments() {
     setProductModifierGroups.mutate({
-      modifierGroups: assignedGroups.map((g) => ({
+      assignments: assignedGroups.map((g) => ({
         modifierGroupId: g.modifierGroupId,
         sortOrder: g.sortOrder,
       })),
