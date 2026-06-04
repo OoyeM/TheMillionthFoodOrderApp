@@ -27,7 +27,10 @@ const mockShop = {
   contactEmail: 'gent@frietjes.be',
   contactPhone: null,
   isActive: true,
+  kitchenDisplayEnabled: false,
   ticketPrinterEnabled: false,
+  pushNotificationEnabled: false,
+  soundAlertEnabled: false,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
@@ -136,6 +139,48 @@ describe('ShopEdit', () => {
 
     await waitFor(() => expect(capturedBody).not.toBeNull());
     expect(capturedBody).toMatchObject({ ticketPrinterEnabled: true });
+  });
+
+  it('renders all four notification channel toggles', async () => {
+    renderPage();
+
+    expect(await screen.findByLabelText(/highlight new orders on the kitchen display/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/auto-print order tickets/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/push notifications for new orders/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/sound alert for new orders/i)).toBeInTheDocument();
+  });
+
+  it('toggles the new notification channels independently and includes them in the payload', async () => {
+    const user = userEvent.setup();
+
+    let capturedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.put('/api/brands/:brandSlug/shops/:id', async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(mockShop);
+      }),
+    );
+
+    renderPage();
+
+    // Enable kitchen-display highlight and sound, but leave push off — channels are independent.
+    const kitchenToggle = await screen.findByLabelText(/highlight new orders on the kitchen display/i);
+    const soundToggle = screen.getByLabelText(/sound alert for new orders/i);
+    await user.click(kitchenToggle);
+    await user.click(soundToggle);
+    expect(kitchenToggle).toBeChecked();
+    expect(soundToggle).toBeChecked();
+    expect(screen.getByLabelText(/push notifications for new orders/i)).not.toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(capturedBody).not.toBeNull());
+    expect(capturedBody).toMatchObject({
+      kitchenDisplayEnabled: true,
+      soundAlertEnabled: true,
+      pushNotificationEnabled: false,
+      ticketPrinterEnabled: false,
+    });
   });
 
   it('shows a validation error when name is cleared', async () => {

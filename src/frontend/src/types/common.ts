@@ -76,8 +76,14 @@ export interface Shop {
   contactEmail: string;
   contactPhone: string | null;
   isActive: boolean;
+  /** When true, new orders are highlighted on the kitchen display (US-FP-026). */
+  kitchenDisplayEnabled: boolean;
   /** When true, new orders auto-print on the kitchen display (US-FP-028). */
   ticketPrinterEnabled: boolean;
+  /** When true, the kitchen display raises a browser push notification per new order (US-FP-026). */
+  pushNotificationEnabled: boolean;
+  /** When true, the kitchen display plays a sound alert per new order (US-FP-026). */
+  soundAlertEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -117,6 +117,9 @@
       "advanceTo": "→ {{status}}",
       "advanceError": "Status konnte nicht aktualisiert werden. Bitte erneut versuchen.",
       "reprint": "Bon drucken",
+      "enableAlerts": "Benachrichtigungen aktivieren",
+      "newOrderTitle": "Neue Bestellung",
+      "newOrderBody": "Bestellung #{{number}}",
       "orderType": {
         "Pickup": "Abholung",
         "EatIn": "Vor Ort",

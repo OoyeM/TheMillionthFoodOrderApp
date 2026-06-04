@@ -13,6 +13,8 @@ interface KitchenOrderCardProps {
   advanceError?: boolean;
   /** Called when staff taps "print ticket" — reprints this order's kitchen ticket (US-FP-028). */
   onReprint?: () => void;
+  /** True to briefly highlight a newly-arrived order on the kitchen display (US-FP-026). */
+  highlight?: boolean;
 }
 
 const orderTypeColor: Record<OrderType, string> = {
@@ -42,6 +44,7 @@ export function KitchenOrderCard({
   isAdvancing = false,
   advanceError = false,
   onReprint,
+  highlight = false,
 }: KitchenOrderCardProps) {
   const { t } = useTranslation('common');
   const typeLabel = t(`pos.kitchen.orderType.${order.orderType}`);
@@ -53,15 +56,19 @@ export function KitchenOrderCard({
   return (
     <article
       data-testid="kitchen-order-card"
+      data-highlight={highlight ? 'true' : undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '0.75rem',
         padding: '1rem',
-        background: '#ffffff',
+        background: highlight ? '#eff6ff' : '#ffffff',
         borderRadius: '0.75rem',
-        border: '1px solid #e5e7eb',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+        border: highlight ? '2px solid #2563eb' : '1px solid #e5e7eb',
+        boxShadow: highlight
+          ? '0 0 0 3px rgba(37,99,235,0.25)'
+          : '0 1px 2px rgba(0,0,0,0.05)',
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
         minHeight: '12rem',
       }}
     >

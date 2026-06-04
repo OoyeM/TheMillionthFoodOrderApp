@@ -11,7 +11,10 @@ public sealed record UpdateShopRequest(
     AddressRequest Address,
     string ContactEmail,
     string? ContactPhone,
-    bool TicketPrinterEnabled);
+    bool KitchenDisplayEnabled,
+    bool TicketPrinterEnabled,
+    bool PushNotificationEnabled,
+    bool SoundAlertEnabled);
 
 public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
 {
@@ -90,7 +93,10 @@ public sealed class UpdateShopEndpoint(IShopService shopService)
                     req.Address.Country),
                 req.ContactEmail,
                 req.ContactPhone,
-                req.TicketPrinterEnabled);
+                req.KitchenDisplayEnabled,
+                req.TicketPrinterEnabled,
+                req.PushNotificationEnabled,
+                req.SoundAlertEnabled);
 
             var response = await shopService.UpdateShopAsync(req.Id, appRequest, ct);
 

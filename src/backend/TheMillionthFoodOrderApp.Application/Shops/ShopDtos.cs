@@ -12,7 +12,10 @@ public sealed record UpdateShopRequest(
     AddressRequest Address,
     string ContactEmail,
     string? ContactPhone,
-    bool TicketPrinterEnabled);
+    bool KitchenDisplayEnabled,
+    bool TicketPrinterEnabled,
+    bool PushNotificationEnabled,
+    bool SoundAlertEnabled);
 
 public sealed record AddressRequest(
     string Street,
@@ -36,7 +39,10 @@ public sealed record ShopResponse(
     string ContactEmail,
     string? ContactPhone,
     bool IsActive,
+    bool KitchenDisplayEnabled,
     bool TicketPrinterEnabled,
+    bool PushNotificationEnabled,
+    bool SoundAlertEnabled,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

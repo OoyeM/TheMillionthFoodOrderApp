@@ -33,7 +33,10 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             s =>
             {
                 s.UpdateMetadata(request.Name, address, request.ContactEmail, request.ContactPhone);
+                s.SetKitchenDisplayEnabled(request.KitchenDisplayEnabled);
                 s.SetTicketPrinterEnabled(request.TicketPrinterEnabled);
+                s.SetPushNotificationEnabled(request.PushNotificationEnabled);
+                s.SetSoundAlertEnabled(request.SoundAlertEnabled);
             },
             cancellationToken);
 
@@ -100,7 +103,10 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             shop.ContactEmail,
             shop.ContactPhone,
             shop.IsActive,
+            shop.KitchenDisplayEnabled,
             shop.TicketPrinterEnabled,
+            shop.PushNotificationEnabled,
+            shop.SoundAlertEnabled,
             shop.CreatedAt,
             shop.UpdatedAt);
 

@@ -144,6 +144,103 @@ public sealed class ShopTests
         await Assert.That(shop.TicketPrinterEnabled).IsFalse();
     }
 
+    // ── Notification settings (US-FP-026) ───────────────────────────────────────
+
+    [Test]
+    public async Task Create_NotificationChannels_AllDefaultToFalse()
+    {
+        var shop = CreateValidShop();
+
+        await Assert.That(shop.KitchenDisplayEnabled).IsFalse();
+        await Assert.That(shop.TicketPrinterEnabled).IsFalse();
+        await Assert.That(shop.PushNotificationEnabled).IsFalse();
+        await Assert.That(shop.SoundAlertEnabled).IsFalse();
+    }
+
+    [Test]
+    public async Task SetKitchenDisplayEnabled_True_EnablesAndBumpsUpdatedAt()
+    {
+        var shop = CreateValidShop();
+        var originalUpdatedAt = shop.UpdatedAt;
+
+        shop.SetKitchenDisplayEnabled(true);
+
+        await Assert.That(shop.KitchenDisplayEnabled).IsTrue();
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
+    }
+
+    [Test]
+    public async Task SetKitchenDisplayEnabled_CanToggleBackToFalse()
+    {
+        var shop = CreateValidShop();
+        shop.SetKitchenDisplayEnabled(true);
+
+        shop.SetKitchenDisplayEnabled(false);
+
+        await Assert.That(shop.KitchenDisplayEnabled).IsFalse();
+    }
+
+    [Test]
+    public async Task SetPushNotificationEnabled_True_EnablesAndBumpsUpdatedAt()
+    {
+        var shop = CreateValidShop();
+        var originalUpdatedAt = shop.UpdatedAt;
+
+        shop.SetPushNotificationEnabled(true);
+
+        await Assert.That(shop.PushNotificationEnabled).IsTrue();
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
+    }
+
+    [Test]
+    public async Task SetPushNotificationEnabled_CanToggleBackToFalse()
+    {
+        var shop = CreateValidShop();
+        shop.SetPushNotificationEnabled(true);
+
+        shop.SetPushNotificationEnabled(false);
+
+        await Assert.That(shop.PushNotificationEnabled).IsFalse();
+    }
+
+    [Test]
+    public async Task SetSoundAlertEnabled_True_EnablesAndBumpsUpdatedAt()
+    {
+        var shop = CreateValidShop();
+        var originalUpdatedAt = shop.UpdatedAt;
+
+        shop.SetSoundAlertEnabled(true);
+
+        await Assert.That(shop.SoundAlertEnabled).IsTrue();
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
+    }
+
+    [Test]
+    public async Task SetSoundAlertEnabled_CanToggleBackToFalse()
+    {
+        var shop = CreateValidShop();
+        shop.SetSoundAlertEnabled(true);
+
+        shop.SetSoundAlertEnabled(false);
+
+        await Assert.That(shop.SoundAlertEnabled).IsFalse();
+    }
+
+    [Test]
+    public async Task SetNotificationChannels_AreIndependent()
+    {
+        var shop = CreateValidShop();
+
+        shop.SetKitchenDisplayEnabled(true);
+        shop.SetSoundAlertEnabled(true);
+
+        // Only the two toggled channels flip; the others stay off (AC: independent + multiple at once).
+        await Assert.That(shop.KitchenDisplayEnabled).IsTrue();
+        await Assert.That(shop.SoundAlertEnabled).IsTrue();
+        await Assert.That(shop.TicketPrinterEnabled).IsFalse();
+        await Assert.That(shop.PushNotificationEnabled).IsFalse();
+    }
+
     // ── Deactivate ────────────────────────────────────────────────────────────
 
     [Test]

@@ -117,6 +117,9 @@
       "advanceTo": "→ {{status}}",
       "advanceError": "Status bijwerken mislukt. Probeer opnieuw.",
       "reprint": "Bon afdrukken",
+      "enableAlerts": "Meldingen inschakelen",
+      "newOrderTitle": "Nieuwe bestelling",
+      "newOrderBody": "Bestelling #{{number}}",
       "orderType": {
         "Pickup": "Afhalen",
         "EatIn": "Ter plaatse",
