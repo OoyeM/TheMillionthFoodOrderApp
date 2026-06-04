@@ -46,6 +46,11 @@ export function ShopEdit() {
       ticketPrinterEnabled: false,
       pushNotificationEnabled: false,
       soundAlertEnabled: false,
+      eatInEnabled: true,
+      eatInRequiresTableNumber: true,
+      timeSlotOrderingEnabled: false,
+      timeSlotIntervalMinutes: 15,
+      maxOrdersPerTimeSlot: 10,
     },
     toFormValues: (shop) => ({
       name: shop.name,
@@ -63,6 +68,11 @@ export function ShopEdit() {
       ticketPrinterEnabled: shop.ticketPrinterEnabled,
       pushNotificationEnabled: shop.pushNotificationEnabled,
       soundAlertEnabled: shop.soundAlertEnabled,
+      eatInEnabled: shop.eatIn.isEnabled,
+      eatInRequiresTableNumber: shop.eatIn.requiresTableNumber,
+      timeSlotOrderingEnabled: shop.timeSlotOrdering.isEnabled,
+      timeSlotIntervalMinutes: shop.timeSlotOrdering.intervalMinutes ?? 15,
+      maxOrdersPerTimeSlot: shop.timeSlotOrdering.maxOrdersPerInterval ?? 10,
     }),
     toUpdatePayload: (values) => ({
       name: values.name.trim(),
@@ -78,6 +88,17 @@ export function ShopEdit() {
       ticketPrinterEnabled: values.ticketPrinterEnabled,
       pushNotificationEnabled: values.pushNotificationEnabled,
       soundAlertEnabled: values.soundAlertEnabled,
+      eatIn: {
+        isEnabled: values.eatInEnabled,
+        requiresTableNumber: values.eatInRequiresTableNumber,
+      },
+      timeSlotOrdering: values.timeSlotOrderingEnabled
+        ? {
+            isEnabled: true,
+            intervalMinutes: values.timeSlotIntervalMinutes,
+            maxOrdersPerInterval: values.maxOrdersPerTimeSlot,
+          }
+        : { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
       ...(values.contactPhone.trim().length > 0
         ? { contactPhone: values.contactPhone.trim() }
         : {}),
@@ -89,7 +110,9 @@ export function ShopEdit() {
     onSuccess: () => navigate(`/${brandSlug}/${lang}/admin/shops`),
   });
 
-  const { register, formState: { errors } } = form;
+  const { register, watch, formState: { errors } } = form;
+  const eatInEnabled = watch('eatInEnabled');
+  const timeSlotEnabled = watch('timeSlotOrderingEnabled');
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -380,6 +403,115 @@ export function ShopEdit() {
             </span>
           </label>
         </div>
+
+        {/* Eat-in ordering (US-FP-066) */}
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', marginTop: '1.5rem' }}>
+          Eat-in ordering
+        </p>
+        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+          Control whether customers can order to eat in. When disabled, eat-in is hidden from both the
+          storefront and the in-store POS.
+        </p>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="eatInEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="eatInEnabled"
+              type="checkbox"
+              {...register('eatInEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Accept eat-in orders</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                Show the eat-in order type to customers and counter staff.
+              </span>
+            </span>
+          </label>
+        </div>
+        {eatInEnabled && (
+          <div style={{ marginBottom: '0.5rem', marginLeft: '1.5rem' }}>
+            <label
+              htmlFor="eatInRequiresTableNumber"
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+            >
+              <input
+                id="eatInRequiresTableNumber"
+                type="checkbox"
+                {...register('eatInRequiresTableNumber')}
+                style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+              />
+              <span>
+                <span style={{ fontWeight: 500 }}>Require a table number</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                  Customers and staff must enter a table number for eat-in orders.
+                </span>
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* Time-slot ordering (US-FP-020) */}
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', marginTop: '1.5rem' }}>
+          Time-slot ordering
+        </p>
+        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+          Limit how many orders are accepted per time slot so order flow matches your kitchen&apos;s capacity.
+        </p>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="timeSlotOrderingEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="timeSlotOrderingEnabled"
+              type="checkbox"
+              {...register('timeSlotOrderingEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Enable time-slot ordering</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                Online orders are placed into fixed-length slots, each capped at a maximum number of orders.
+              </span>
+            </span>
+          </label>
+        </div>
+        {timeSlotEnabled && (
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', marginLeft: '1.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle} htmlFor="timeSlotIntervalMinutes">
+                Slot interval
+              </label>
+              <select
+                id="timeSlotIntervalMinutes"
+                {...register('timeSlotIntervalMinutes', { valueAsNumber: true })}
+                style={inputStyle(false)}
+              >
+                <option value={5}>5 minutes</option>
+                <option value={10}>10 minutes</option>
+                <option value={15}>15 minutes</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle} htmlFor="maxOrdersPerTimeSlot">
+                Max orders per slot
+              </label>
+              <input
+                id="maxOrdersPerTimeSlot"
+                type="number"
+                min={1}
+                {...register('maxOrdersPerTimeSlot', { valueAsNumber: true })}
+                style={inputStyle(!!errors.maxOrdersPerTimeSlot)}
+              />
+              {errors.maxOrdersPerTimeSlot?.message && (
+                <FieldError message={errors.maxOrdersPerTimeSlot.message} />
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Quick links to shop config pages */}
         <div style={{ marginBottom: '1.5rem', marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>

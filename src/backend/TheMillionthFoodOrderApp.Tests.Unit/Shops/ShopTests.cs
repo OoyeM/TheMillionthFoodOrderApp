@@ -481,4 +481,76 @@ public sealed class ShopTests
 
         await Assert.That(shop.IsOpenAt(anyTime)).IsFalse();
     }
+
+    // ── Eat-in settings (US-FP-066) ─────────────────────────────────────────────
+
+    [Test]
+    public async Task Create_EatIn_DefaultsToEnabledAndRequiresTable()
+    {
+        var shop = CreateValidShop();
+
+        await Assert.That(shop.EatIn.IsEnabled).IsTrue();
+        await Assert.That(shop.EatIn.RequiresTableNumber).IsTrue();
+    }
+
+    [Test]
+    public async Task SetEatInSettings_DisableEatIn_UpdatesAndBumpsUpdatedAt()
+    {
+        var shop = CreateValidShop();
+        var originalUpdatedAt = shop.UpdatedAt;
+
+        shop.SetEatInSettings(isEnabled: false, requiresTableNumber: false);
+
+        await Assert.That(shop.EatIn.IsEnabled).IsFalse();
+        await Assert.That(shop.EatIn.RequiresTableNumber).IsFalse();
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
+    }
+
+    [Test]
+    public async Task SetEatInSettings_EnabledButTableOptional_IsSupported()
+    {
+        var shop = CreateValidShop();
+
+        shop.SetEatInSettings(isEnabled: true, requiresTableNumber: false);
+
+        await Assert.That(shop.EatIn.IsEnabled).IsTrue();
+        await Assert.That(shop.EatIn.RequiresTableNumber).IsFalse();
+    }
+
+    // ── Time-slot ordering (US-FP-020) ──────────────────────────────────────────
+
+    [Test]
+    public async Task Create_TimeSlotOrdering_DefaultsToDisabled()
+    {
+        var shop = CreateValidShop();
+
+        await Assert.That(shop.TimeSlotOrdering.IsEnabled).IsFalse();
+        await Assert.That(shop.TimeSlotOrdering.Interval).IsNull();
+        await Assert.That(shop.TimeSlotOrdering.MaxOrdersPerInterval).IsNull();
+    }
+
+    [Test]
+    public async Task SetTimeSlotOrdering_Enabled_PersistsIntervalAndMax()
+    {
+        var shop = CreateValidShop();
+
+        shop.SetTimeSlotOrdering(TimeSlotOrderingSettings.Enabled(TimeSlotInterval.FifteenMinutes, 4));
+
+        await Assert.That(shop.TimeSlotOrdering.IsEnabled).IsTrue();
+        await Assert.That(shop.TimeSlotOrdering.Interval).IsEqualTo(TimeSlotInterval.FifteenMinutes);
+        await Assert.That(shop.TimeSlotOrdering.MaxOrdersPerInterval).IsEqualTo(4);
+    }
+
+    [Test]
+    public async Task SetTimeSlotOrdering_Disabled_ClearsIntervalAndMax()
+    {
+        var shop = CreateValidShop();
+        shop.SetTimeSlotOrdering(TimeSlotOrderingSettings.Enabled(TimeSlotInterval.TenMinutes, 2));
+
+        shop.SetTimeSlotOrdering(TimeSlotOrderingSettings.Disabled());
+
+        await Assert.That(shop.TimeSlotOrdering.IsEnabled).IsFalse();
+        await Assert.That(shop.TimeSlotOrdering.Interval).IsNull();
+        await Assert.That(shop.TimeSlotOrdering.MaxOrdersPerInterval).IsNull();
+    }
 }

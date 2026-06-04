@@ -15,6 +15,8 @@ public sealed record UpdateShopRequest(
     bool TicketPrinterEnabled,
     bool PushNotificationEnabled,
     bool SoundAlertEnabled,
+    EatInSettingsDto EatIn,
+    TimeSlotOrderingSettingsDto TimeSlotOrdering,
     string? VatNumber = null);
 
 public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
@@ -62,6 +64,21 @@ public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
         RuleFor(x => x.VatNumber)
             .MaximumLength(30)
             .When(x => x.VatNumber is not null);
+
+        RuleFor(x => x.EatIn).NotNull().WithMessage("Eat-in settings are required.");
+        RuleFor(x => x.TimeSlotOrdering).NotNull().WithMessage("Time-slot ordering settings are required.");
+
+        // Interval and capacity only matter — and are only required — when time-slot ordering is on.
+        When(x => x.TimeSlotOrdering is { IsEnabled: true }, () =>
+        {
+            RuleFor(x => x.TimeSlotOrdering.IntervalMinutes)
+                .Must(m => m is 5 or 10 or 15)
+                .WithMessage("Time-slot interval must be 5, 10, or 15 minutes when time-slot ordering is enabled.");
+
+            RuleFor(x => x.TimeSlotOrdering.MaxOrdersPerInterval)
+                .NotNull().WithMessage("Max orders per slot is required when time-slot ordering is enabled.")
+                .GreaterThan(0).WithMessage("Max orders per slot must be a positive number.");
+        });
     }
 }
 
@@ -102,6 +119,8 @@ public sealed class UpdateShopEndpoint(IShopService shopService)
                 req.TicketPrinterEnabled,
                 req.PushNotificationEnabled,
                 req.SoundAlertEnabled,
+                req.EatIn,
+                req.TimeSlotOrdering,
                 req.VatNumber);
 
             var response = await shopService.UpdateShopAsync(req.Id, appRequest, ct);

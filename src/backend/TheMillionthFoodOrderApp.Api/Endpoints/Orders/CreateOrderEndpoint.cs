@@ -19,7 +19,8 @@ public sealed record CreateOrderApiRequest(
     List<OrderItemApiInput> Items,
     string? CustomerEmail = null,
     string? CustomerPhone = null,
-    string? LanguageCode = null);
+    string? LanguageCode = null,
+    int? TableNumber = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -72,6 +73,12 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
             .Must(v => v is "nl" or "fr" or "de")
             .WithMessage("LanguageCode must be one of: nl, fr, de.")
             .When(x => !string.IsNullOrWhiteSpace(x.LanguageCode));
+
+        // A supplied table number must be positive. Whether it is *required* for eat-in depends on
+        // the shop's eat-in settings (US-FP-066) and is enforced server-side in OrderService.
+        RuleFor(x => x.TableNumber)
+            .GreaterThan(0).WithMessage("TableNumber must be greater than zero.")
+            .When(x => x.TableNumber is not null);
     }
 }
 
@@ -163,7 +170,8 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                     .AsReadOnly(),
                 email,
                 phone,
-                req.LanguageCode);
+                req.LanguageCode,
+                req.TableNumber);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 

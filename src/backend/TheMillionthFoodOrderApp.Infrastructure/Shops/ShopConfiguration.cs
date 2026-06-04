@@ -59,6 +59,37 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
             .IsRequired()
             .HasDefaultValue(false);
 
+        // Eat-in ordering config (US-FP-066) — owned, embedded in the Shops table.
+        builder.OwnsOne(s => s.EatIn, eatIn =>
+        {
+            eatIn.Property(e => e.IsEnabled)
+                .HasColumnName("EatIn_IsEnabled")
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            eatIn.Property(e => e.RequiresTableNumber)
+                .HasColumnName("EatIn_RequiresTableNumber")
+                .IsRequired()
+                .HasDefaultValue(true);
+        });
+        builder.Navigation(s => s.EatIn).IsRequired();
+
+        // Time-slot ordering config (US-FP-020) — owned; interval/max are null when disabled.
+        builder.OwnsOne(s => s.TimeSlotOrdering, timeSlot =>
+        {
+            timeSlot.Property(t => t.IsEnabled)
+                .HasColumnName("TimeSlotOrdering_IsEnabled")
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            timeSlot.Property(t => t.Interval)
+                .HasColumnName("TimeSlotOrdering_Interval");
+
+            timeSlot.Property(t => t.MaxOrdersPerInterval)
+                .HasColumnName("TimeSlotOrdering_MaxOrdersPerInterval");
+        });
+        builder.Navigation(s => s.TimeSlotOrdering).IsRequired();
+
         builder.Property(s => s.CreatedAt)
             .IsRequired();
 

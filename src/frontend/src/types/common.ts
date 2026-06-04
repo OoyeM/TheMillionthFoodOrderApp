@@ -64,6 +64,24 @@ export interface ShopAddress {
   country: string;
 }
 
+/** Per-shop eat-in ordering configuration (US-FP-066). */
+export interface EatInSettings {
+  /** Whether the shop accepts eat-in orders. */
+  isEnabled: boolean;
+  /** When true (and eat-in is enabled), a table number is mandatory for eat-in orders. */
+  requiresTableNumber: boolean;
+}
+
+/** Per-shop time-slot ordering configuration (US-FP-020). */
+export interface TimeSlotOrderingSettings {
+  /** Whether time-slot ordering is enabled. */
+  isEnabled: boolean;
+  /** Slot length in minutes (5, 10, or 15). Null when disabled. */
+  intervalMinutes: number | null;
+  /** Maximum orders permitted per slot. Null when disabled. */
+  maxOrdersPerInterval: number | null;
+}
+
 /**
  * Shop entity as returned by the brand-scoped API.
  * Shops belong to a single brand and are stored in the brand's isolated database.
@@ -86,6 +104,10 @@ export interface Shop {
   pushNotificationEnabled: boolean;
   /** When true, the kitchen display plays a sound alert per new order (US-FP-026). */
   soundAlertEnabled: boolean;
+  /** Eat-in ordering configuration (US-FP-066). */
+  eatIn: EatInSettings;
+  /** Time-slot ordering configuration (US-FP-020). */
+  timeSlotOrdering: TimeSlotOrderingSettings;
   createdAt: string;
   updatedAt: string;
 }

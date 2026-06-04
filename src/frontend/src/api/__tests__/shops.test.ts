@@ -81,6 +81,8 @@ describe('shopsApi', () => {
         ticketPrinterEnabled: false,
         pushNotificationEnabled: false,
         soundAlertEnabled: false,
+        eatIn: { isEnabled: true, requiresTableNumber: true },
+        timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
       });
 
       expect(shop).toMatchObject({ name: 'Gent Centrum Updated' });

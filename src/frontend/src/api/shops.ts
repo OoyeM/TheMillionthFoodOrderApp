@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Shop, ShopAddress } from '../types/common';
+import type { Shop, ShopAddress, EatInSettings, TimeSlotOrderingSettings } from '../types/common';
 
 // ---------------------------------------------------------------------------
 // Storefront-only shop DTO (returned by GET /brands/:brandSlug/shops/active)
@@ -15,6 +15,8 @@ export interface StorefrontShop {
   slug: string;
   address: ShopAddress;
   isOpen: boolean;
+  /** Eat-in ordering configuration — used to gate the eat-in option at checkout (US-FP-066). */
+  eatIn: EatInSettings;
 }
 
 export interface CreateShopRequest {
@@ -54,6 +56,10 @@ export interface UpdateShopRequest {
   pushNotificationEnabled: boolean;
   /** Play a sound alert per new order (US-FP-026). */
   soundAlertEnabled: boolean;
+  /** Eat-in ordering configuration (US-FP-066). */
+  eatIn: EatInSettings;
+  /** Time-slot ordering configuration (US-FP-020). */
+  timeSlotOrdering: TimeSlotOrderingSettings;
 }
 
 /**

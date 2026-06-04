@@ -110,6 +110,41 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
         return (scope, service);
     }
 
+    /// <summary>
+    /// Updates a shop's eat-in settings (US-FP-066) via the application service, preserving its
+    /// other fields. Used to arrange shops with eat-in disabled or with the table number optional.
+    /// </summary>
+    private async Task SetEatInSettingsAsync(string brandSlug, Guid shopId, bool isEnabled, bool requiresTableNumber)
+    {
+        var scope = fixture.Factory.Services.CreateAsyncScope();
+        await using (scope)
+        {
+            var accessor = scope.ServiceProvider.GetRequiredService<BrandContextAccessor>();
+            accessor.BrandSlug = brandSlug;
+
+            var shopService = scope.ServiceProvider.GetRequiredService<IShopService>();
+            var shop = await shopService.GetShopAsync(shopId);
+
+            await shopService.UpdateShopAsync(shopId, new UpdateShopRequest(
+                shop.Name,
+                new AddressRequest(
+                    shop.Address.Street, shop.Address.Number, shop.Address.City,
+                    shop.Address.PostalCode, shop.Address.Country),
+                shop.ContactEmail,
+                shop.ContactPhone,
+                shop.KitchenDisplayEnabled,
+                shop.TicketPrinterEnabled,
+                shop.PushNotificationEnabled,
+                shop.SoundAlertEnabled,
+                new EatInSettingsDto(isEnabled, requiresTableNumber),
+                new TimeSlotOrderingSettingsDto(
+                    shop.TimeSlotOrdering.IsEnabled,
+                    shop.TimeSlotOrdering.IntervalMinutes,
+                    shop.TimeSlotOrdering.MaxOrdersPerInterval),
+                shop.VatNumber));
+        }
+    }
+
     // ── EatIn table 5: persists TableNumber=5 + CreatedByStaffId + correct pricing ─
 
     [Test]
@@ -324,6 +359,80 @@ public sealed class CreateInStoreOrderServiceTests(IntegrationTestBase fixture)
             }
 
             await Assert.That(threwExpected).IsTrue();
+        }
+    }
+
+    // ── Eat-in gating: eat-in disabled → rejected (US-FP-066) ─────────────────
+
+    [Test]
+    public async Task CreateInStoreOrder_EatIn_WhenEatInDisabled_ThrowsInvalidOperation()
+    {
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var productId = await CreateProductAsync(client, brand, price: 2.00m, name: "Burger");
+
+        await SetEatInSettingsAsync(brand, shopId, isEnabled: false, requiresTableNumber: false);
+
+        var (scope, service) = CreateOrderServiceScope(brand);
+        await using (scope)
+        {
+            var request = new CreateInStoreOrderRequest(
+                ShopId: shopId,
+                BrandSlug: brand,
+                OrderType: "EatIn",
+                PaymentMethod: "CashAtPickup",
+                CustomerFirstName: null,
+                CustomerLastName: null,
+                TableNumber: 3,
+                Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
+
+            var threwExpected = false;
+            try
+            {
+                await service.CreateInStoreOrderAsync(request, createdByStaffId: null);
+            }
+            catch (InvalidOperationException)
+            {
+                threwExpected = true;
+            }
+
+            await Assert.That(threwExpected).IsTrue();
+        }
+    }
+
+    // ── Eat-in gating: table optional → EatIn without table succeeds (US-FP-066) ─
+
+    [Test]
+    public async Task CreateInStoreOrder_EatIn_WhenTableNotRequired_SucceedsWithoutTable()
+    {
+        var client = CreateClient();
+        var brand = IntegrationTestBase.BetaSlug;
+
+        var shopId = await CreateShopAsync(client, brand);
+        var productId = await CreateProductAsync(client, brand, price: 2.00m, name: "Cone");
+
+        await SetEatInSettingsAsync(brand, shopId, isEnabled: true, requiresTableNumber: false);
+
+        var (scope, service) = CreateOrderServiceScope(brand);
+        await using (scope)
+        {
+            var request = new CreateInStoreOrderRequest(
+                ShopId: shopId,
+                BrandSlug: brand,
+                OrderType: "EatIn",
+                PaymentMethod: "CashAtPickup",
+                CustomerFirstName: null,
+                CustomerLastName: null,
+                TableNumber: null,
+                Items: [new OrderItemInput(productId, 1, Array.Empty<Guid>().ToList().AsReadOnly())]);
+
+            var order = await service.CreateInStoreOrderAsync(request, createdByStaffId: null);
+
+            await Assert.That(order).IsNotNull();
+            await Assert.That(order.OrderType).IsEqualTo("EatIn");
+            await Assert.That(order.TableNumber).IsNull();
         }
     }
 

@@ -10,7 +10,7 @@ import { useResolvedShop } from '../hooks/useResolvedShop';
 import { useCreateOrder } from '../hooks/useCreateOrder';
 import { MockPaymentScreen } from '../components/MockPaymentScreen';
 import type { OrderType } from '@api/orders';
-import type { SupportedLocale } from '@/types/common';
+import type { SupportedLocale, EatInSettings } from '@/types/common';
 
 // ---------------------------------------------------------------------------
 // Language normalisation helper
@@ -38,53 +38,64 @@ function normalizeLang(lang: string | undefined): SupportedLocale {
  * - Authenticated: fields come from the profile and are pre-filled; schema stays
  *   permissive because the form renders them read-only (still submitted).
  */
-function makeCheckoutSchema(isAuthenticated: boolean, t: (key: string) => string) {
-  if (!isAuthenticated) {
-    return z.object({
-      orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
-      customerFirstName: z
-        .string()
-        .trim()
-        .min(1, t('storefront.checkout.customerFirstNameRequired')),
-      customerLastName: z
-        .string()
-        .trim()
-        .min(1, t('storefront.checkout.customerLastNameRequired')),
-      customerEmail: z
-        .string()
-        .trim()
-        .min(1, t('storefront.checkout.customerEmailRequired'))
-        .refine(
-          (v) => z.string().email().safeParse(v).success,
-          { message: t('storefront.checkout.customerEmailInvalid') },
-        ),
-      customerPhone: z
-        .string()
-        .trim()
-        .min(1, t('storefront.checkout.customerPhoneRequired')),
-      paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
-    });
-  }
+function makeCheckoutSchema(
+  isAuthenticated: boolean,
+  t: (key: string) => string,
+  eatIn: EatInSettings,
+) {
+  // Guest checkout requires the full contact record; authenticated customers have it pre-filled
+  // from their profile (still submitted), so only phone is independently required.
+  const contactFields = isAuthenticated
+    ? {
+        customerFirstName: z.string().trim().min(1),
+        customerLastName: z.string().trim().min(1),
+        customerEmail: z
+          .string()
+          .trim()
+          .refine((v) => !v || z.string().email().safeParse(v).success, {
+            message: t('storefront.checkout.customerEmailInvalid'),
+          }),
+        customerPhone: z.string().trim().min(1, t('storefront.checkout.customerPhoneRequired')),
+      }
+    : {
+        customerFirstName: z.string().trim().min(1, t('storefront.checkout.customerFirstNameRequired')),
+        customerLastName: z.string().trim().min(1, t('storefront.checkout.customerLastNameRequired')),
+        customerEmail: z
+          .string()
+          .trim()
+          .min(1, t('storefront.checkout.customerEmailRequired'))
+          .refine((v) => z.string().email().safeParse(v).success, {
+            message: t('storefront.checkout.customerEmailInvalid'),
+          }),
+        customerPhone: z.string().trim().min(1, t('storefront.checkout.customerPhoneRequired')),
+      };
 
-  // Authenticated: profile fields are pre-filled and read-only; still require
-  // non-empty values (they come from the profile) but treat phone as editable + required.
-  return z.object({
-    orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
-    customerFirstName: z.string().trim().min(1),
-    customerLastName: z.string().trim().min(1),
-    customerEmail: z
-      .string()
-      .trim()
-      .refine(
-        (v) => !v || z.string().email().safeParse(v).success,
-        { message: t('storefront.checkout.customerEmailInvalid') },
-      ),
-    customerPhone: z
-      .string()
-      .trim()
-      .min(1, t('storefront.checkout.customerPhoneRequired')),
-    paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
-  });
+  return z
+    .object({
+      orderType: z.enum(['Pickup', 'EatIn', 'Delivery']),
+      ...contactFields,
+      tableNumber: z.string(),
+      paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
+    })
+    // Eat-in is only an allowed order type when the shop accepts it (US-FP-066).
+    .refine((v) => eatIn.isEnabled || v.orderType !== 'EatIn', {
+      message: t('storefront.checkout.eatInUnavailable'),
+      path: ['orderType'],
+    })
+    .refine(
+      (v) =>
+        !(eatIn.requiresTableNumber && v.orderType === 'EatIn') ||
+        v.tableNumber.trim().length > 0,
+      { message: t('storefront.checkout.tableNumberRequired'), path: ['tableNumber'] },
+    )
+    .refine(
+      (v) => {
+        if (v.orderType !== 'EatIn' || v.tableNumber.trim().length === 0) return true;
+        const parsed = Number(v.tableNumber);
+        return Number.isInteger(parsed) && parsed > 0;
+      },
+      { message: t('storefront.checkout.tableNumberInvalid'), path: ['tableNumber'] },
+    );
 }
 
 type CheckoutFormValues = {
@@ -93,6 +104,7 @@ type CheckoutFormValues = {
   customerLastName: string;
   customerEmail: string;
   customerPhone: string;
+  tableNumber: string;
   paymentMethod: 'CashAtPickup' | 'CreditCard' | 'Bancontact';
 };
 
@@ -105,9 +117,10 @@ interface CheckoutFormProps {
   shopId: string;
   shopSlug: string;
   shopIsOpen: boolean;
+  eatIn: EatInSettings;
 }
 
-function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormProps) {
+function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: CheckoutFormProps) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { brandSlug: paramSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
@@ -127,8 +140,8 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
 
   // Build auth-aware schema (memoised so it only rebuilds when auth state or t changes)
   const schema = useMemo(
-    () => makeCheckoutSchema(isAuthenticated, t),
-    [isAuthenticated, t],
+    () => makeCheckoutSchema(isAuthenticated, t, eatIn),
+    [isAuthenticated, t, eatIn],
   );
 
   const defaultValues: CheckoutFormValues = {
@@ -137,6 +150,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
     customerLastName: user?.lastName ?? '',
     customerEmail: user?.email ?? '',
     customerPhone: user?.phoneNumber ?? '',
+    tableNumber: '',
     paymentMethod: 'CashAtPickup',
   };
 
@@ -153,6 +167,9 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
   });
 
   const orderType = watch('orderType');
+  const orderTypeOptions = eatIn.isEnabled
+    ? (['Pickup', 'EatIn', 'Delivery'] as const)
+    : (['Pickup', 'Delivery'] as const);
 
   const vatNotice =
     orderType === 'EatIn'
@@ -189,6 +206,10 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
       items: orderItems,
       paymentMethod: values.paymentMethod,
       languageCode: normalizeLang(lang),
+      tableNumber:
+        values.orderType === 'EatIn' && values.tableNumber.trim().length > 0
+          ? Number(values.tableNumber)
+          : null,
     });
 
     clearCart();
@@ -272,7 +293,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
             control={control}
             render={({ field }) => (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {(['Pickup', 'EatIn', 'Delivery'] as const).map((type) => (
+                {orderTypeOptions.map((type) => (
                   <label
                     key={type}
                     style={{
@@ -318,6 +339,49 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen }: CheckoutFormP
             }}
           >
             {vatNotice}
+          </div>
+        )}
+
+        {/* Table number — shown for eat-in; required when the shop mandates it (US-FP-066) */}
+        {orderType === 'EatIn' && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label
+              htmlFor="tableNumber"
+              style={{
+                display: 'block',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                color: '#374151',
+                marginBottom: '0.375rem',
+              }}
+            >
+              {t('storefront.checkout.tableNumberLabel')}
+              {eatIn.requiresTableNumber && (
+                <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+              )}
+            </label>
+            <input
+              id="tableNumber"
+              type="number"
+              min={1}
+              inputMode="numeric"
+              {...register('tableNumber')}
+              placeholder={t('storefront.checkout.tableNumberPlaceholder')}
+              style={{
+                width: '100%',
+                padding: '0.625rem 0.875rem',
+                borderRadius: '0.375rem',
+                border: `1px solid ${errors.tableNumber ? '#ef4444' : '#d1d5db'}`,
+                fontSize: '0.9375rem',
+                color: '#111827',
+                boxSizing: 'border-box',
+              }}
+            />
+            {errors.tableNumber && (
+              <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+                {errors.tableNumber.message}
+              </p>
+            )}
           </div>
         )}
 
@@ -691,6 +755,7 @@ export function CheckoutPage() {
         shopId={shop.id}
         shopSlug={shop.slug}
         shopIsOpen={shop.isOpen}
+        eatIn={shop.eatIn}
       />
     </CartProvider>
   );

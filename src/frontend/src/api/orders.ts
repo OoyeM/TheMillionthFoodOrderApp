@@ -26,6 +26,8 @@ export interface CreateOrderRequest {
   paymentMethod: PaymentMethod;
   /** Storefront language used to render the receipt (US-FP-051). */
   languageCode?: 'nl' | 'fr' | 'de';
+  /** Table number for eat-in orders (US-FP-024/066); omitted for takeaway/delivery. */
+  tableNumber?: number | null;
 }
 
 // ---------------------------------------------------------------------------

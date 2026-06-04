@@ -1,6 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useOrderState } from '../context/PosOrderContext';
 import type { CartItem, CartModifier } from '../context/PosOrderContext';
+import type { EatInSettings } from '@/types/common';
+
+interface PosOrderPanelProps {
+  /** Shop eat-in configuration — gates the eat-in toggle and table-number requirement (US-FP-066). */
+  eatIn: EatInSettings;
+}
 
 /**
  * Sidebar / bottom panel showing the running POS order.
@@ -11,7 +17,7 @@ import type { CartItem, CartModifier } from '../context/PosOrderContext';
  * - Subtotal + VAT (colour-coded by order type) + total
  * - All amounts formatted via Intl.NumberFormat nl-BE
  */
-export function PosOrderPanel() {
+export function PosOrderPanel({ eatIn }: PosOrderPanelProps) {
   const { t } = useTranslation('common');
   const {
     state,
@@ -27,6 +33,11 @@ export function PosOrderPanel() {
     new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(amount);
 
   const vatColor = state.orderType === 'EatIn' ? '#7c3aed' : '#059669';
+
+  // Eat-in is only offered when the shop accepts it (US-FP-066).
+  const orderTypes: readonly ('Pickup' | 'EatIn')[] = eatIn.isEnabled
+    ? ['Pickup', 'EatIn']
+    : ['Pickup'];
 
   return (
     <div
@@ -57,7 +68,7 @@ export function PosOrderPanel() {
           {t('pos.order.orderType')}
         </p>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {(['Pickup', 'EatIn'] as const).map((type) => {
+          {orderTypes.map((type) => {
             const isActive = state.orderType === type;
             return (
               <button
@@ -99,6 +110,9 @@ export function PosOrderPanel() {
               }}
             >
               {t('pos.order.tableNumber')}
+              {eatIn.requiresTableNumber && (
+                <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+              )}
             </label>
             <input
               id="pos-table-number"

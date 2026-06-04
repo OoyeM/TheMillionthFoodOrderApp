@@ -53,6 +53,7 @@ const defaultShop: ResolvedShop = {
   name: 'Gent Centrum',
   slug: 'gent-centrum',
   isOpen: true,
+  eatIn: { isEnabled: true, requiresTableNumber: true },
 };
 
 /** Unauthenticated context (guest). */

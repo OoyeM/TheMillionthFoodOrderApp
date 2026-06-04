@@ -59,6 +59,7 @@ export function ShopResolver() {
     name: shop.name,
     slug: shop.slug,
     isOpen: shop.isOpen,
+    eatIn: shop.eatIn,
   };
 
   return (

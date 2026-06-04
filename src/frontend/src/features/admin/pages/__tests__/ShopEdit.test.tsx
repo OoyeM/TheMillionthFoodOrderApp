@@ -31,6 +31,8 @@ const mockShop = {
   ticketPrinterEnabled: false,
   pushNotificationEnabled: false,
   soundAlertEnabled: false,
+  eatIn: { isEnabled: true, requiresTableNumber: true },
+  timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };

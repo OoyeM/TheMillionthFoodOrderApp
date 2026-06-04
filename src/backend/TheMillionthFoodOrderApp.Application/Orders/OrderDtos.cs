@@ -24,7 +24,9 @@ public sealed record CreateOrderRequest(
     string? CustomerEmail = null,
     string? CustomerPhone = null,
     /// <summary>BCP-47 checkout language (e.g. "nl-BE") for the digital receipt; falls back to the brand default (US-FP-051).</summary>
-    string? LanguageCode = null);
+    string? LanguageCode = null,
+    /// <summary>Table number for eat-in orders (US-FP-024/066); null for takeaway/delivery or when not captured.</summary>
+    int? TableNumber = null);
 
 /// <summary>
 /// Application-layer DTO for placing a new in-store order via counter staff.
