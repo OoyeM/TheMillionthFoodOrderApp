@@ -116,10 +116,18 @@
       "status": "Status: {{name}}",
       "advanceTo": "→ {{status}}",
       "advanceError": "Status konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+      "reprint": "Bon drucken",
       "orderType": {
         "Pickup": "Abholung",
         "EatIn": "Vor Ort",
         "Delivery": "Lieferung"
+      },
+      "ticket": {
+        "heading": "Bestellbon",
+        "table": "Tisch",
+        "timeSlot": "Zeitfenster",
+        "placedAt": "Aufgegeben",
+        "customer": "Kunde"
       },
       "connection": {
         "connected": "Live",

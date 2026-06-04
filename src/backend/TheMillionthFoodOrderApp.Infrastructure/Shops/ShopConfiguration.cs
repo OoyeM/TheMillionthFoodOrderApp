@@ -39,6 +39,10 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
             .HasMaxLength(100)
             .HasDefaultValue("Europe/Brussels");
 
+        builder.Property(s => s.TicketPrinterEnabled)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(s => s.CreatedAt)
             .IsRequired();
 

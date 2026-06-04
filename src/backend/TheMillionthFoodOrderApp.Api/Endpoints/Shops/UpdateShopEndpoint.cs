@@ -10,7 +10,8 @@ public sealed record UpdateShopRequest(
     string Name,
     AddressRequest Address,
     string ContactEmail,
-    string? ContactPhone);
+    string? ContactPhone,
+    bool TicketPrinterEnabled);
 
 public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
 {
@@ -88,7 +89,8 @@ public sealed class UpdateShopEndpoint(IShopService shopService)
                     req.Address.PostalCode,
                     req.Address.Country),
                 req.ContactEmail,
-                req.ContactPhone);
+                req.ContactPhone,
+                req.TicketPrinterEnabled);
 
             var response = await shopService.UpdateShopAsync(req.Id, appRequest, ct);
 

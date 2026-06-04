@@ -24,6 +24,13 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     /// </summary>
     public string TimeZoneId { get; private set; } = "Europe/Brussels";
 
+    /// <summary>
+    /// When true, new orders are automatically printed to the shop's ticket printer
+    /// on the kitchen display (US-FP-028). Off by default. Note: the kitchen display
+    /// device drives the actual browser print; this flag gates whether it does so.
+    /// </summary>
+    public bool TicketPrinterEnabled { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -74,6 +81,18 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
         Address = address;
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Enables or disables automatic ticket printing for new orders (US-FP-028).
+    /// </summary>
+    public void SetTicketPrinterEnabled(bool enabled)
+    {
+        if (TicketPrinterEnabled == enabled)
+            return;
+
+        TicketPrinterEnabled = enabled;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

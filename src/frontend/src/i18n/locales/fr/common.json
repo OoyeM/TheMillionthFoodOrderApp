@@ -116,10 +116,18 @@
       "status": "Statut : {{name}}",
       "advanceTo": "→ {{status}}",
       "advanceError": "Échec de la mise à jour du statut. Réessayez.",
+      "reprint": "Imprimer le ticket",
       "orderType": {
         "Pickup": "À emporter",
         "EatIn": "Sur place",
         "Delivery": "Livraison"
+      },
+      "ticket": {
+        "heading": "Ticket de commande",
+        "table": "Table",
+        "timeSlot": "Créneau",
+        "placedAt": "Passée le",
+        "customer": "Client"
       },
       "connection": {
         "connected": "En direct",

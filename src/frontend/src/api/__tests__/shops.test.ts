@@ -77,6 +77,7 @@ describe('shopsApi', () => {
         name: 'Gent Centrum Updated',
         address: SHOP_ADDRESS,
         contactEmail: 'gent-updated@frietjes.be',
+        ticketPrinterEnabled: false,
       });
 
       expect(shop).toMatchObject({ name: 'Gent Centrum Updated' });

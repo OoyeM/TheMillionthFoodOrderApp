@@ -115,6 +115,10 @@ public sealed class BrandDbSeeder(
                 _ => throw new InvalidOperationException($"Unknown seed slug: {slug}")
             };
 
+            // Demo: auto-print new orders so the kitchen ticket flow (US-FP-028) is visible
+            // out of the box. Toggle off per shop in admin if it gets noisy.
+            shop.SetTicketPrinterEnabled(true);
+
             await context.Shops.AddAsync(shop, cancellationToken);
             logger.LogInformation("Seed: Created shop '{Name}' (slug: {Slug}).", shop.Name, shop.Slug);
         }

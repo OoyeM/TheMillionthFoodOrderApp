@@ -11,7 +11,8 @@ public sealed record UpdateShopRequest(
     string Name,
     AddressRequest Address,
     string ContactEmail,
-    string? ContactPhone);
+    string? ContactPhone,
+    bool TicketPrinterEnabled);
 
 public sealed record AddressRequest(
     string Street,
@@ -35,6 +36,7 @@ public sealed record ShopResponse(
     string ContactEmail,
     string? ContactPhone,
     bool IsActive,
+    bool TicketPrinterEnabled,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

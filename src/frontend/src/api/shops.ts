@@ -42,6 +42,8 @@ export interface UpdateShopRequest {
   };
   contactEmail: string;
   contactPhone?: string;
+  /** Auto-print new orders on the kitchen display (US-FP-028). */
+  ticketPrinterEnabled: boolean;
 }
 
 /**

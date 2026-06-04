@@ -9,16 +9,42 @@ import { server } from '../../../../test/msw/server';
 import '../../../../i18n/config';
 
 // The SignalR hub is exercised end-to-end elsewhere — for the kitchen page we mock
-// it so the test never touches a real WebSocket. Keep this mock at module-top so it
-// applies before the component imports it.
+// it so the test never touches a real WebSocket. We capture the onStatusChange
+// callback so a test can simulate a new order arriving over the hub.
+let triggerStatusChange: (() => void) | undefined;
 vi.mock('../../../../api/useOrderUpdates', () => ({
-  useOrderUpdates: () => ({ status: 'connected' as const }),
+  useOrderUpdates: (opts: { onStatusChange?: () => void }) => {
+    triggerStatusChange = opts.onStatusChange;
+    return { status: 'connected' as const };
+  },
 }));
 
+// printTicket drives a real iframe + window.print(), neither of which exist in
+// jsdom — mock it so we can assert *what* would print without side effects.
+vi.mock('../../utils/printTicket', () => ({ printTicket: vi.fn() }));
+
 import { KitchenDisplay } from '../KitchenDisplay';
+import { printTicket } from '../../utils/printTicket';
+
+const printTicketMock = vi.mocked(printTicket);
 
 const brandSlug = 'frietjes';
 const shopId = '00000000-0000-0000-0000-000000000001';
+
+function shopResponse(ticketPrinterEnabled: boolean) {
+  return {
+    id: shopId,
+    name: 'Frietjes Gent',
+    slug: 'frietjes-gent',
+    address: { street: 'Veldstraat', number: '42', city: 'Gent', postalCode: '9000', country: 'BE' },
+    contactEmail: 'gent@frietjes.be',
+    contactPhone: null,
+    isActive: true,
+    ticketPrinterEnabled,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  };
+}
 
 function makeOrder(overrides: Partial<{
   id: string;
@@ -78,9 +104,15 @@ function renderPage() {
 
 describe('KitchenDisplay', () => {
   beforeEach(() => {
+    triggerStatusChange = undefined;
+    printTicketMock.mockClear();
     server.use(
       http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
         HttpResponse.json({ orders: [] }),
+      ),
+      // Ticket printing off by default so most tests never trigger auto-print.
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}`, () =>
+        HttpResponse.json(shopResponse(false)),
       ),
     );
   });
@@ -210,5 +242,65 @@ describe('KitchenDisplay', () => {
 
     await waitFor(() => expect(advanceCalls).toHaveLength(1));
     expect(advanceCalls[0]).toEqual({ orderId: 'a', toStatusId: 's-prep' });
+  });
+
+  it('reprints a ticket when the print button on a card is tapped', async () => {
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
+        HttpResponse.json({ orders: [makeOrder({ id: 'a', orderNumber: '0001' })] }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    renderPage();
+
+    const reprintBtn = await screen.findByTestId('kitchen-reprint-button');
+    await user.click(reprintBtn);
+
+    expect(printTicketMock).toHaveBeenCalledTimes(1);
+    expect(printTicketMock.mock.calls[0]![0]).toMatchObject({ id: 'a', orderNumber: '0001' });
+  });
+
+  it('auto-prints a newly arrived order when ticket printing is enabled', async () => {
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}`, () =>
+        HttpResponse.json(shopResponse(true)),
+      ),
+    );
+
+    renderPage();
+
+    // Initial load is empty — seeds the "seen" set without printing.
+    await screen.findByTestId('kitchen-empty');
+    expect(printTicketMock).not.toHaveBeenCalled();
+
+    // A new order arrives; the next refetch (triggered by the hub) returns it.
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
+        HttpResponse.json({ orders: [makeOrder({ id: 'new-1', orderNumber: '0042' })] }),
+      ),
+    );
+    triggerStatusChange?.();
+
+    await waitFor(() => expect(printTicketMock).toHaveBeenCalledTimes(1));
+    expect(printTicketMock.mock.calls[0]![0]).toMatchObject({ id: 'new-1', orderNumber: '0042' });
+  });
+
+  it('does not auto-print the existing backlog on first load', async () => {
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}`, () =>
+        HttpResponse.json(shopResponse(true)),
+      ),
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
+        HttpResponse.json({ orders: [makeOrder({ id: 'a', orderNumber: '0001' })] }),
+      ),
+    );
+
+    renderPage();
+
+    await screen.findByTestId('kitchen-order-card');
+    // Give the auto-print effect a chance to (incorrectly) fire.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(printTicketMock).not.toHaveBeenCalled();
   });
 });

@@ -30,7 +30,11 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
 
         var shop = await shopRepository.UpdateAsync(
             id,
-            s => s.UpdateMetadata(request.Name, address, request.ContactEmail, request.ContactPhone),
+            s =>
+            {
+                s.UpdateMetadata(request.Name, address, request.ContactEmail, request.ContactPhone);
+                s.SetTicketPrinterEnabled(request.TicketPrinterEnabled);
+            },
             cancellationToken);
 
         if (shop is null)
@@ -96,6 +100,7 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             shop.ContactEmail,
             shop.ContactPhone,
             shop.IsActive,
+            shop.TicketPrinterEnabled,
             shop.CreatedAt,
             shop.UpdatedAt);
 

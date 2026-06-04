@@ -11,6 +11,8 @@ interface KitchenOrderCardProps {
   isAdvancing?: boolean;
   /** True when the last advance attempt for this order failed. */
   advanceError?: boolean;
+  /** Called when staff taps "print ticket" — reprints this order's kitchen ticket (US-FP-028). */
+  onReprint?: () => void;
 }
 
 const orderTypeColor: Record<OrderType, string> = {
@@ -39,6 +41,7 @@ export function KitchenOrderCard({
   onAdvance,
   isAdvancing = false,
   advanceError = false,
+  onReprint,
 }: KitchenOrderCardProps) {
   const { t } = useTranslation('common');
   const typeLabel = t(`pos.kitchen.orderType.${order.orderType}`);
@@ -71,9 +74,32 @@ export function KitchenOrderCard({
         }}
       >
         <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>#{order.orderNumber}</h2>
-        <div style={{ fontSize: '0.875rem', color: '#6b7280', textAlign: 'right' }}>
-          <div style={{ fontWeight: 600 }}>{formatRelative(order.createdAt, now)}</div>
-          <div>{formatTime(order.createdAt)}</div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+          <div style={{ fontSize: '0.875rem', color: '#6b7280', textAlign: 'right' }}>
+            <div style={{ fontWeight: 600 }}>{formatRelative(order.createdAt, now)}</div>
+            <div>{formatTime(order.createdAt)}</div>
+          </div>
+          {onReprint && (
+            <button
+              type="button"
+              data-testid="kitchen-reprint-button"
+              onClick={onReprint}
+              title={t('pos.kitchen.reprint')}
+              aria-label={t('pos.kitchen.reprint')}
+              style={{
+                padding: '0.25rem 0.5rem',
+                background: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '1rem',
+                lineHeight: 1,
+                cursor: 'pointer',
+              }}
+            >
+              🖨
+            </button>
+          )}
         </div>
       </header>
 
