@@ -70,6 +70,14 @@ export interface OrderResponse {
   tableNumber?: number;
   /** Staff member who created the order (set by the server from the auth token). */
   createdByStaffId?: string;
+  /**
+   * Seller legal block for receipts (US-FP-052) — the shop's name, VAT number, and a
+   * single-line address. Present on order-create and order-tracking responses; absent on
+   * the status-advance response consumed by the kitchen display.
+   */
+  shopName?: string | null;
+  shopVatNumber?: string | null;
+  shopAddressLine?: string | null;
 }
 
 export interface ListActiveOrdersResponse {

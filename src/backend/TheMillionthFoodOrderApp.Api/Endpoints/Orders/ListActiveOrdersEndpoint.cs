@@ -40,8 +40,10 @@ public sealed class ListActiveOrdersEndpoint(IOrderRepository orderRepository)
     {
         var orders = await orderRepository.GetActiveByShopAsync(req.ShopId, ct);
 
+        // Kitchen display renders order tickets (not customer receipts), so the seller
+        // legal block is left null — MapOrder is called with the order only.
         var response = new ListActiveOrdersResponse(
-            orders.Select(OrderTrackingMapper.MapOrder).ToList().AsReadOnly());
+            orders.Select(o => OrderTrackingMapper.MapOrder(o)).ToList().AsReadOnly());
 
         await HttpContext.Response.SendAsync(response, statusCode: 200, cancellation: ct);
     }

@@ -112,4 +112,22 @@ public sealed class AddressTests
         await Assert.That(address.PostalCode).IsEqualTo("9000");
         await Assert.That(address.Country).IsEqualTo("BE");
     }
+
+    // ── ToSingleLine (receipt rendering, US-FP-052) ─────────────────────────────
+
+    [Test]
+    public async Task ToSingleLine_BelgianAddress_OmitsCountry()
+    {
+        var address = new Address("Vrijdagmarkt", "1", "Gent", "9000", "BE");
+
+        await Assert.That(address.ToSingleLine()).IsEqualTo("Vrijdagmarkt 1, 9000 Gent");
+    }
+
+    [Test]
+    public async Task ToSingleLine_NonBelgianAddress_AppendsCountry()
+    {
+        var address = new Address("Dam", "1", "Amsterdam", "1012", "NL");
+
+        await Assert.That(address.ToSingleLine()).IsEqualTo("Dam 1, 1012 Amsterdam, NL");
+    }
 }

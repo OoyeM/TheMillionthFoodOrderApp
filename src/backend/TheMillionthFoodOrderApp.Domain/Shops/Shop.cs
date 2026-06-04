@@ -16,6 +16,14 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     public Address Address { get; private set; } = null!;
     public string ContactEmail { get; private set; } = string.Empty;
     public string? ContactPhone { get; private set; }
+
+    /// <summary>
+    /// VAT / enterprise number of the legal entity operating this shop (e.g. "BE0123456789").
+    /// Optional — printed on customer receipts as a legal requirement (US-FP-052). Null when
+    /// not yet configured.
+    /// </summary>
+    public string? VatNumber { get; private set; }
+
     public bool IsActive { get; private set; } = true;
 
     /// <summary>
@@ -70,7 +78,8 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
         string slug,
         Address address,
         string contactEmail,
-        string? contactPhone)
+        string? contactPhone,
+        string? vatNumber = null)
     {
         var now = DateTimeOffset.UtcNow;
         var shop = new Shop
@@ -81,6 +90,7 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
             Address = address,
             ContactEmail = contactEmail,
             ContactPhone = contactPhone,
+            VatNumber = vatNumber,
             IsActive = true,
             CreatedAt = now,
             UpdatedAt = now,
@@ -96,12 +106,14 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
         string name,
         Address address,
         string contactEmail,
-        string? contactPhone)
+        string? contactPhone,
+        string? vatNumber = null)
     {
         Name = name;
         Address = address;
         ContactEmail = contactEmail;
         ContactPhone = contactPhone;
+        VatNumber = vatNumber;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

@@ -140,7 +140,9 @@ public sealed class OrderService(
         order.AdvanceTo(targetStatus.Name);
         await orderRepository.SaveChangesAsync(cancellationToken);
 
-        return MapToResponse(order);
+        // The status-advance response feeds the kitchen display, which renders an order
+        // ticket (not a customer receipt), so the seller legal block is not needed here.
+        return MapToResponse(order, shop: null);
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -321,7 +323,7 @@ public sealed class OrderService(
             }
         }
 
-        return MapToResponse(order!);
+        return MapToResponse(order!, shop);
     }
 
     private static Domain.OrderLifecycle.OrderStatus GetOpeningStatus(OrderLifecycleConfig config)
@@ -349,7 +351,12 @@ public sealed class OrderService(
         return Guid.CreateVersion7().ToString("N")[..16].ToUpperInvariant();
     }
 
-    private static OrderResponse MapToResponse(Order order) =>
+    /// <summary>
+    /// Maps an order to its response DTO. When <paramref name="shop"/> is supplied, the
+    /// seller legal block (name, VAT number, address) is included for receipt rendering
+    /// (US-FP-052); pass null on paths that do not render a receipt.
+    /// </summary>
+    private static OrderResponse MapToResponse(Order order, Shop? shop) =>
         new(
             order.Id,
             order.OrderNumber,
@@ -383,5 +390,8 @@ public sealed class OrderService(
             order.TableNumber,
             order.CreatedByStaffId,
             order.CustomerEmail,
-            order.CustomerPhone);
+            order.CustomerPhone,
+            shop?.Name,
+            shop?.VatNumber,
+            shop?.Address.ToSingleLine());
 }

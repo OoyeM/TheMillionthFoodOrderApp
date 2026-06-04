@@ -11,7 +11,8 @@ public sealed record CreateShopRequest(
     string Slug,
     AddressRequest Address,
     string ContactEmail,
-    string? ContactPhone);
+    string? ContactPhone,
+    string? VatNumber = null);
 
 public sealed record AddressRequest(
     string Street,
@@ -64,6 +65,10 @@ public sealed class CreateShopRequestValidator : Validator<CreateShopRequest>
         RuleFor(x => x.ContactPhone)
             .MaximumLength(30)
             .When(x => x.ContactPhone is not null);
+
+        RuleFor(x => x.VatNumber)
+            .MaximumLength(30)
+            .When(x => x.VatNumber is not null);
     }
 }
 
@@ -100,7 +105,8 @@ public sealed class CreateShopEndpoint(IShopService shopService)
                     req.Address.PostalCode,
                     req.Address.Country),
                 req.ContactEmail,
-                req.ContactPhone);
+                req.ContactPhone,
+                req.VatNumber);
 
             var response = await shopService.CreateShopAsync(appRequest, ct);
 

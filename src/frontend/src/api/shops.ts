@@ -29,6 +29,8 @@ export interface CreateShopRequest {
   };
   contactEmail: string;
   contactPhone?: string;
+  /** VAT / enterprise number printed on customer receipts (US-FP-052). */
+  vatNumber?: string;
 }
 
 export interface UpdateShopRequest {
@@ -42,6 +44,8 @@ export interface UpdateShopRequest {
   };
   contactEmail: string;
   contactPhone?: string;
+  /** VAT / enterprise number printed on customer receipts (US-FP-052). */
+  vatNumber?: string;
   /** Highlight new orders on the kitchen display (US-FP-026). */
   kitchenDisplayEnabled: boolean;
   /** Auto-print new orders on the kitchen display (US-FP-028). */

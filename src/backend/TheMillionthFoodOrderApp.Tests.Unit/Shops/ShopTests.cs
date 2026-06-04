@@ -35,6 +35,23 @@ public sealed class ShopTests
     }
 
     [Test]
+    public async Task Create_WithoutVatNumber_DefaultsToNull()
+    {
+        var shop = CreateValidShop();
+
+        await Assert.That(shop.VatNumber).IsNull();
+    }
+
+    [Test]
+    public async Task Create_WithVatNumber_SetsVatNumber()
+    {
+        var shop = Shop.Create(
+            "Frietjes Gent", "frietjes-gent", ValidAddress, "gent@frietjes.be", null, "BE0123456789");
+
+        await Assert.That(shop.VatNumber).IsEqualTo("BE0123456789");
+    }
+
+    [Test]
     public async Task Create_OpeningHours_IsEmpty()
     {
         var shop = CreateValidShop();
@@ -109,6 +126,16 @@ public sealed class ShopTests
         shop.UpdateMetadata("Frietjes Gent", ValidAddress, "gent@frietjes.be", null);
 
         await Assert.That(shop.ContactPhone).IsNull();
+    }
+
+    [Test]
+    public async Task UpdateMetadata_SetsVatNumber()
+    {
+        var shop = CreateValidShop();
+
+        shop.UpdateMetadata("Frietjes Gent", ValidAddress, "gent@frietjes.be", null, "BE0987654321");
+
+        await Assert.That(shop.VatNumber).IsEqualTo("BE0987654321");
     }
 
     // ── SetTicketPrinterEnabled ─────────────────────────────────────────────────

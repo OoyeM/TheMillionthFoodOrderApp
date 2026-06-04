@@ -73,7 +73,8 @@ public sealed class GetOrderTests(IntegrationTestBase fixture)
                 Country = "BE"
             },
             ContactEmail = "track@frietjes.be",
-            ContactPhone = (string?)null
+            ContactPhone = (string?)null,
+            VatNumber = "BE0123456789"
         };
 
         var response = await client.PostAsJsonAsync(ShopsUrl(brandSlug), request);
@@ -254,6 +255,37 @@ public sealed class GetOrderTests(IntegrationTestBase fixture)
         var response = await client.GetAsync(GetOrderByIdUrl(brand, wrongShopId, placed.Id));
 
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+    }
+
+    // ── Test 7: Receipt seller legal block is present (US-FP-052) ────────────
+
+    [Test]
+    public async Task OrderResponses_IncludeShopLegalBlockForReceipt()
+    {
+        var client = CreateClient();
+        var brand = IntegrationTestBase.AlphaSlug;
+
+        await SeedTaxConfigAsync(client, brand);
+        var shopId = await CreateShopAsync(client, brand);
+        var productId = await CreateProductAsync(client, brand, price: 4.00m, name: "Receipt Frietje");
+        var placed = await PlaceOrderAsync(client, brand, shopId, productId);
+
+        // The create-order response already carries the seller legal block so the POS can
+        // print a receipt immediately after placing the order.
+        await Assert.That(placed.ShopName).IsNotNull();
+        await Assert.That(placed.ShopName!).StartsWith("Tracking Shop");
+        await Assert.That(placed.ShopVatNumber).IsEqualTo("BE0123456789");
+        await Assert.That(placed.ShopAddressLine).IsEqualTo("Frietstraat 42, 9000 Gent");
+
+        // ...and so does the get-by-number response, which backs receipt reprints.
+        var response = await client.GetAsync(GetOrderByNumberUrl(brand, shopId, placed.OrderNumber));
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var tracking = await response.Content.ReadFromJsonAsync<OrderTrackingResponse>();
+        await Assert.That(tracking).IsNotNull();
+        await Assert.That(tracking!.Order.ShopName).IsEqualTo(placed.ShopName);
+        await Assert.That(tracking.Order.ShopVatNumber).IsEqualTo("BE0123456789");
+        await Assert.That(tracking.Order.ShopAddressLine).IsEqualTo("Frietstraat 42, 9000 Gent");
     }
 
     // ── Bonus Test 6: Lifecycle statuses are ordered by SortOrder ────────────

@@ -31,6 +31,10 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
         builder.Property(s => s.ContactPhone)
             .HasMaxLength(30);
 
+        // Optional VAT / enterprise number printed on customer receipts (US-FP-052).
+        builder.Property(s => s.VatNumber)
+            .HasMaxLength(30);
+
         builder.Property(s => s.IsActive)
             .IsRequired();
 

@@ -162,6 +162,29 @@
       "title": "Bestelling geplaatst!",
       "orderNumber": "Bestelnummer: {{number}}",
       "back": "Terug naar menu"
+    },
+    "receipt": {
+      "heading": "Kasticket",
+      "print": "Bon afdrukken",
+      "vatNumber": "Btw-nr.",
+      "table": "Tafel",
+      "timeSlot": "Tijdslot",
+      "customer": "Klant",
+      "placedAt": "Datum",
+      "subtotalNet": "Totaal excl. btw",
+      "vat": "Btw {{rate}}%",
+      "total": "Totaal incl. btw",
+      "paymentMethod": "Betaling",
+      "orderType": {
+        "Pickup": "Afhalen",
+        "EatIn": "Ter plaatse",
+        "Delivery": "Bezorging"
+      },
+      "payment": {
+        "CashAtPickup": "Contant",
+        "CreditCard": "Kredietkaart",
+        "Bancontact": "Bancontact"
+      }
     }
   },
   "allergens": {

@@ -11,6 +11,7 @@ export const shopEditSchema = z.object({
   }),
   contactEmail: z.string().email({ message: 'Enter a valid email address.' }),
   contactPhone: z.string(),
+  vatNumber: z.string(),
   kitchenDisplayEnabled: z.boolean(),
   ticketPrinterEnabled: z.boolean(),
   pushNotificationEnabled: z.boolean(),

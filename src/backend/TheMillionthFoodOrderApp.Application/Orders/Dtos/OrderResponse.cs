@@ -49,4 +49,13 @@ public sealed record OrderResponse(
     /// <summary>Optional customer email address for digital receipts (US-FP-017).</summary>
     string? CustomerEmail = null,
     /// <summary>Optional customer phone number (US-FP-017).</summary>
-    string? CustomerPhone = null);
+    string? CustomerPhone = null,
+    /// <summary>
+    /// Seller legal block for receipts (US-FP-052): the shop's name, VAT number, and a
+    /// single-line address. Populated on the order-create and order-tracking responses
+    /// (where the shop is loaded); null on the status-advance response which the kitchen
+    /// display consumes and which does not render a receipt.
+    /// </summary>
+    string? ShopName = null,
+    string? ShopVatNumber = null,
+    string? ShopAddressLine = null);

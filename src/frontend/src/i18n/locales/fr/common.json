@@ -162,6 +162,29 @@
       "title": "Commande passée !",
       "orderNumber": "Numéro de commande : {{number}}",
       "back": "Retour au menu"
+    },
+    "receipt": {
+      "heading": "Ticket de caisse",
+      "print": "Imprimer le ticket",
+      "vatNumber": "N° TVA",
+      "table": "Table",
+      "timeSlot": "Créneau",
+      "customer": "Client",
+      "placedAt": "Date",
+      "subtotalNet": "Total hors TVA",
+      "vat": "TVA {{rate}}%",
+      "total": "Total TTC",
+      "paymentMethod": "Paiement",
+      "orderType": {
+        "Pickup": "À emporter",
+        "EatIn": "Sur place",
+        "Delivery": "Livraison"
+      },
+      "payment": {
+        "CashAtPickup": "Espèces",
+        "CreditCard": "Carte de crédit",
+        "Bancontact": "Bancontact"
+      }
     }
   },
   "allergens": {

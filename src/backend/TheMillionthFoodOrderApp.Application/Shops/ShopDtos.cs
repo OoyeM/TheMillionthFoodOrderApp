@@ -5,7 +5,8 @@ public sealed record CreateShopRequest(
     string Slug,
     AddressRequest Address,
     string ContactEmail,
-    string? ContactPhone);
+    string? ContactPhone,
+    string? VatNumber = null);
 
 public sealed record UpdateShopRequest(
     string Name,
@@ -15,7 +16,8 @@ public sealed record UpdateShopRequest(
     bool KitchenDisplayEnabled,
     bool TicketPrinterEnabled,
     bool PushNotificationEnabled,
-    bool SoundAlertEnabled);
+    bool SoundAlertEnabled,
+    string? VatNumber = null);
 
 public sealed record AddressRequest(
     string Street,
@@ -44,7 +46,8 @@ public sealed record ShopResponse(
     bool PushNotificationEnabled,
     bool SoundAlertEnabled,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string? VatNumber = null);
 
 /// <summary>
 /// Lightweight shop summary returned by the public storefront endpoint.

@@ -162,6 +162,29 @@
       "title": "Bestellung aufgegeben!",
       "orderNumber": "Bestellnummer: {{number}}",
       "back": "Zurück zum Menü"
+    },
+    "receipt": {
+      "heading": "Kassenbon",
+      "print": "Bon drucken",
+      "vatNumber": "USt-IdNr.",
+      "table": "Tisch",
+      "timeSlot": "Zeitfenster",
+      "customer": "Kunde",
+      "placedAt": "Datum",
+      "subtotalNet": "Summe ohne MwSt.",
+      "vat": "MwSt. {{rate}}%",
+      "total": "Summe inkl. MwSt.",
+      "paymentMethod": "Zahlung",
+      "orderType": {
+        "Pickup": "Abholung",
+        "EatIn": "Vor Ort",
+        "Delivery": "Lieferung"
+      },
+      "payment": {
+        "CashAtPickup": "Bar",
+        "CreditCard": "Kreditkarte",
+        "Bancontact": "Bancontact"
+      }
     }
   },
   "allergens": {
