@@ -15,7 +15,8 @@ import {
   DIETARY_TAG_KEYS,
 } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
-import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
 import { ProductTranslationFields } from '../forms/ProductTranslationFields';
 
 // ---------------------------------------------------------------------------
@@ -294,35 +295,16 @@ export function ProductCreate() {
         />
 
         {/* API error */}
-        {mutation.error != null && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {mutation.error instanceof Error
-              ? mutation.error.message
-              : t('admin.products.createError')}
-          </p>
-        )}
+        <FormError error={mutation.error} fallback={t('admin.products.createError')} />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="submit"
-            disabled={isSubmitting || mutation.isPending}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: isSubmitting || mutation.isPending ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              opacity: isSubmitting || mutation.isPending ? 0.6 : 1,
-            }}
-          >
-            {mutation.isPending ? t('admin.products.creating') : t('admin.products.create')}
-          </button>
-          <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            {t('admin.products.cancel')}
-          </button>
-        </div>
+        <FormActions
+          isPending={mutation.isPending}
+          isSubmitting={isSubmitting}
+          onCancel={handleCancel}
+          submitLabel={t('admin.products.create')}
+          pendingLabel={t('admin.products.creating')}
+          cancelLabel={t('admin.products.cancel')}
+        />
       </form>
     </main>
   );

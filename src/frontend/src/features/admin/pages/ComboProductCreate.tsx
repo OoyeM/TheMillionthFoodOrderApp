@@ -9,7 +9,8 @@ import type { CreateComboProductRequest } from '@api/products';
 import { comboProductEditSchema, type ComboProductEditFormValues } from './schemas/comboProductEditSchema';
 import { productKeys, useProducts } from '../hooks/useProducts';
 import type { SupportedLocale, ProductListItem } from '../../../types/common';
-import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
 import { ComboTranslationFields } from '../forms/ComboTranslationFields';
 import { SelectedComponentsList } from '../forms/SelectedComponentsList';
 import { ComponentProductPicker } from '../forms/ComponentProductPicker';
@@ -152,11 +153,7 @@ export function ComboProductCreate() {
           onMoveDown={handleMoveDown}
           onToggle={handleToggleComponent}
         />
-        {mutation.error != null && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {mutation.error instanceof Error ? mutation.error.message : 'Failed to create combo product. Please try again.'}
-          </p>
-        )}
+        <FormError error={mutation.error} fallback="Failed to create combo product. Please try again." />
         <FormActions
           isPending={mutation.isPending}
           isSubmitting={isSubmitting}
@@ -257,41 +254,6 @@ function LanguageTabBar({ activeTab, onTabChange }: LanguageTabBarProps) {
           {l.code === 'nl' ? ' *' : null}
         </button>
       ))}
-    </div>
-  );
-}
-
-interface FormActionsProps {
-  isPending: boolean;
-  isSubmitting: boolean;
-  onCancel: () => void;
-  submitLabel: string;
-  pendingLabel: string;
-}
-
-function FormActions({ isPending, isSubmitting, onCancel, submitLabel, pendingLabel }: FormActionsProps) {
-  const busy = isSubmitting || isPending;
-  return (
-    <div style={{ display: 'flex', gap: '0.75rem' }}>
-      <button
-        type="submit"
-        disabled={busy}
-        style={{
-          padding: '0.5rem 1.25rem',
-          background: '#111827',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '0.375rem',
-          cursor: busy ? 'not-allowed' : 'pointer',
-          fontWeight: 600,
-          opacity: busy ? 0.6 : 1,
-        }}
-      >
-        {isPending ? pendingLabel : submitLabel}
-      </button>
-      <button type="button" onClick={onCancel} style={secondaryButtonStyle}>
-        Cancel
-      </button>
     </div>
   );
 }

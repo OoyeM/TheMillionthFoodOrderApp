@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateBrand } from '../hooks/useBrands';
-import { labelStyle, inputStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
+import { nameToSlug } from '../forms/slug';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Converts a brand name into a URL-safe slug. */
-function nameToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -180,46 +173,14 @@ export function BrandCreate() {
         </div>
 
         {/* API error */}
-        {createBrand.isError && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {createBrand.error instanceof Error
-              ? createBrand.error.message
-              : 'Failed to create brand. Please try again.'}
-          </p>
-        )}
+        <FormError error={createBrand.error} fallback="Failed to create brand. Please try again." />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="submit"
-            disabled={createBrand.isPending}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: createBrand.isPending ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              opacity: createBrand.isPending ? 0.6 : 1,
-            }}
-          >
-            {createBrand.isPending ? 'Creating…' : 'Create Brand'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#fff',
-              color: '#374151',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-            }}
-          >
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          isPending={createBrand.isPending}
+          onCancel={handleCancel}
+          submitLabel="Create Brand"
+          pendingLabel="Creating…"
+        />
       </form>
     </main>
   );

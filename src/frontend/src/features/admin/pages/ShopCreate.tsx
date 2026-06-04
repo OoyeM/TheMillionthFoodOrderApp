@@ -7,20 +7,13 @@ import { shopsApi } from '@api/shops';
 import type { CreateShopRequest } from '@api/shops';
 import { shopCreateSchema, type ShopCreateFormValues } from './schemas/shopCreateSchema';
 import { shopKeys } from '../hooks/useShops';
-import { labelStyle, inputStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
+import { nameToSlug } from '../forms/slug';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Converts a shop name into a URL-safe slug. */
-function nameToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 function toCreatePayload(values: ShopCreateFormValues): CreateShopRequest {
   return {
@@ -267,46 +260,15 @@ export function ShopCreate() {
         </div>
 
         {/* API error */}
-        {mutation.error != null && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {mutation.error instanceof Error
-              ? mutation.error.message
-              : 'Failed to create shop. Please try again.'}
-          </p>
-        )}
+        <FormError error={mutation.error} fallback="Failed to create shop. Please try again." />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="submit"
-            disabled={isSubmitting || mutation.isPending}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: isSubmitting || mutation.isPending ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              opacity: isSubmitting || mutation.isPending ? 0.6 : 1,
-            }}
-          >
-            {mutation.isPending ? 'Creating…' : 'Create Shop'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#fff',
-              color: '#374151',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-            }}
-          >
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          isPending={mutation.isPending}
+          isSubmitting={isSubmitting}
+          onCancel={handleCancel}
+          submitLabel="Create Shop"
+          pendingLabel="Creating…"
+        />
       </form>
     </main>
   );
