@@ -32,9 +32,9 @@ function formatRelative(iso: string, now: number): string {
   const elapsedMs = now - new Date(iso).getTime();
   const minutes = Math.max(0, Math.floor(elapsedMs / 60_000));
   if (minutes < 1) return '<1m';
-  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 60) return `${String(minutes)}m`;
   const hours = Math.floor(minutes / 60);
-  return `${hours}h ${minutes % 60}m`;
+  return `${String(hours)}h ${String(minutes % 60)}m`;
 }
 
 export function KitchenOrderCard({
@@ -177,7 +177,7 @@ export function KitchenOrderCard({
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.375rem' }}>
         {order.items.map((item, idx) => (
-          <li key={`${order.id}-${item.productId}-${idx}`}>
+          <li key={`${order.id}-${item.productId}-${String(idx)}`}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
               <span style={{ fontWeight: 700, fontSize: '1rem', minWidth: '2rem' }}>
                 {item.quantity}×

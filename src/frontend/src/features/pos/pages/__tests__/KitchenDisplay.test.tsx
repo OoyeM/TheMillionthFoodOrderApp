@@ -94,7 +94,7 @@ function makeOrder(overrides: Partial<{
     statusName: 'Placed',
     customerName: overrides.customerName ?? null,
     items: items.map((it, idx) => ({
-      productId: `prod-${idx}`,
+      productId: `prod-${String(idx)}`,
       productName: it.productName,
       quantity: it.quantity,
       unitGrossPrice: 3.5,
@@ -102,7 +102,7 @@ function makeOrder(overrides: Partial<{
       unitVatAmount: 0.2,
       lineTotal: 3.5 * it.quantity,
       selectedModifiers: it.modifiers.map((m, mIdx) => ({
-        modifierId: `mod-${idx}-${mIdx}`,
+        modifierId: `mod-${String(idx)}-${String(mIdx)}`,
         modifierName: m.name,
         priceAdjustment: 0,
       })),
@@ -171,9 +171,11 @@ describe('KitchenDisplay', () => {
 
     const cards = await screen.findAllByTestId('kitchen-order-card');
     expect(cards).toHaveLength(3);
+    /* eslint-disable @typescript-eslint/no-non-null-assertion -- exactly three cards guaranteed by toHaveLength(3) above */
     expect(within(cards[0]!).getByText('#0001')).toBeInTheDocument();
     expect(within(cards[1]!).getByText('#0002')).toBeInTheDocument();
     expect(within(cards[2]!).getByText('#0003')).toBeInTheDocument();
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
   });
 
   it('renders each item with its modifiers', async () => {
@@ -290,6 +292,7 @@ describe('KitchenDisplay', () => {
     await user.click(reprintBtn);
 
     expect(printTicketMock).toHaveBeenCalledTimes(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- first call exists per toHaveBeenCalledTimes(1) above
     expect(printTicketMock.mock.calls[0]![0]).toMatchObject({ id: 'a', orderNumber: '0001' });
   });
 
@@ -315,6 +318,7 @@ describe('KitchenDisplay', () => {
     triggerStatusChange?.();
 
     await waitFor(() => { expect(printTicketMock).toHaveBeenCalledTimes(1); });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- first call exists per the toHaveBeenCalledTimes(1) assertion above
     expect(printTicketMock.mock.calls[0]![0]).toMatchObject({ id: 'new-1', orderNumber: '0042' });
   });
 
@@ -384,6 +388,7 @@ describe('KitchenDisplay', () => {
 
     await waitFor(() => { expect(showNotificationMock).toHaveBeenCalledTimes(1); });
     // Notification carries a title, a body and the order id as the dedupe tag.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- first call exists per the toHaveBeenCalledTimes(1) assertion above
     expect(showNotificationMock.mock.calls[0]![2]).toBe('new-2');
   });
 

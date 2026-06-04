@@ -52,7 +52,9 @@ describe('useActiveOrders', () => {
     expect(callCount).toBe(1);
     expect(capturedOnStatusChange).toBeDefined();
 
+    // eslint-disable-next-line @typescript-eslint/require-await -- async act() flushes pending effects/microtasks after firing the callback; the sync overload would not
     await act(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- asserted defined via expect(capturedOnStatusChange).toBeDefined() above
       capturedOnStatusChange!({ orderId: 'x', newStatus: 'Preparing' });
     });
 

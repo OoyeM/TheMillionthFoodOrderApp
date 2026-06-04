@@ -39,7 +39,7 @@ describe('BffAuthProvider', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows loading state while /bff/user is being fetched', async () => {
+  it('shows loading state while /bff/user is being fetched', () => {
     // Make /bff/user hang for a moment
     server.use(
       http.get('/bff/user', async () => {

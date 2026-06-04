@@ -71,6 +71,7 @@ describe('auth API', () => {
       Object.defineProperty(window, 'location', {
         configurable: true,
         value: {
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- intentional shallow copy of Location's own enumerable props for a test stub; prototype not needed
           ...window.location,
           set href(url: string) {
             capturedHref = url;
@@ -87,6 +88,7 @@ describe('auth API', () => {
       Object.defineProperty(window, 'location', {
         configurable: true,
         value: {
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- intentional shallow copy of Location's own enumerable props for a test stub; prototype not needed
           ...window.location,
           set href(url: string) {
             capturedHref = url;
@@ -103,6 +105,7 @@ describe('auth API', () => {
       Object.defineProperty(window, 'location', {
         configurable: true,
         value: {
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- intentional shallow copy of Location's own enumerable props for a test stub; prototype not needed
           ...window.location,
           set href(url: string) {
             capturedHref = url;
@@ -129,6 +132,7 @@ describe('auth API', () => {
       Object.defineProperty(window, 'location', {
         configurable: true,
         value: {
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- intentional shallow copy of Location's own enumerable props for a test stub; prototype not needed
           ...window.location,
           reload: () => {
             reloadCalled = true;

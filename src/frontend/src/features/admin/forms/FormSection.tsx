@@ -16,7 +16,7 @@ export function FormSection({
   description,
   defaultOpen = true,
   children,
-}: FormSectionProps): JSX.Element {
+}: FormSectionProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (

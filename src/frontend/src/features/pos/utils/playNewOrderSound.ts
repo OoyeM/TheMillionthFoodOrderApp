@@ -17,6 +17,7 @@ let sharedContext: AudioContext | null = null;
 function getAudioContextCtor(): AudioContextCtor | undefined {
   if (typeof window === 'undefined') return undefined;
   const w = window as typeof window & { webkitAudioContext?: AudioContextCtor };
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- window.AudioContext is typed as always-present but is genuinely absent in older browsers/SSR; the ?? falls back to the prefixed ctor.
   return w.AudioContext ?? w.webkitAudioContext;
 }
 

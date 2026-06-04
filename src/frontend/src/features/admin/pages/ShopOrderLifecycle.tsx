@@ -33,7 +33,7 @@ interface LocalTransition {
 let _localIdCounter = 0;
 function nextLocalId(): string {
   _localIdCounter += 1;
-  return `local-${_localIdCounter}`;
+  return `local-${String(_localIdCounter)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -284,7 +284,7 @@ export function ShopOrderLifecycle() {
       >
         <button
           type="button"
-          onClick={() => { navigate(`/${brandSlug}/${lang}/admin/shops/${shopId}`); }}
+          onClick={() => { navigate(`/${brandSlug}/${String(lang)}/admin/shops/${shopId}`); }}
           style={{
             background: 'none',
             border: 'none',
@@ -354,7 +354,7 @@ export function ShopOrderLifecycle() {
                 border: `1px solid ${s.isTerminal ? '#bbf7d0' : '#bfdbfe'}`,
               }}
             >
-              {s.name || `Status ${s.sortOrder}`}
+              {s.name || `Status ${String(s.sortOrder)}`}
               {s.isTerminal ? ' *' : ''}
             </span>
             {i < statuses.length - 1 && (
@@ -577,7 +577,7 @@ export function ShopOrderLifecycle() {
           >
             {statuses.map((s) => (
               <option key={s.sortOrder} value={s.sortOrder}>
-                {s.name || `Status ${s.sortOrder}`}
+                {s.name || `Status ${String(s.sortOrder)}`}
               </option>
             ))}
           </select>
@@ -602,7 +602,7 @@ export function ShopOrderLifecycle() {
           >
             {statuses.map((s) => (
               <option key={s.sortOrder} value={s.sortOrder}>
-                {s.name || `Status ${s.sortOrder}`}
+                {s.name || `Status ${String(s.sortOrder)}`}
               </option>
             ))}
           </select>

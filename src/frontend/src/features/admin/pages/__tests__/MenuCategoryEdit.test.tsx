@@ -133,6 +133,7 @@ describe('MenuCategoryEdit', () => {
     expect(capturedBody).toMatchObject({ sortOrder: 7 });
 
     // Translations array must contain the NL entry with the original name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;

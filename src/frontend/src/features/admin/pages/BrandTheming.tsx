@@ -31,7 +31,7 @@ export function BrandTheming() {
   // Clean up any pending blob URL on unmount
   useEffect(() => {
     return () => {
-      if (logoPreview && logoPreview.startsWith('blob:')) {
+      if (logoPreview?.startsWith('blob:')) {
         URL.revokeObjectURL(logoPreview);
       }
     };

@@ -99,9 +99,11 @@ describe('ProductCreate', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // Assert basePrice
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.basePrice).toBe(3.5);
 
     // Assert NL translation is present
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;

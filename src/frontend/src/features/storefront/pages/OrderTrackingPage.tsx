@@ -83,7 +83,7 @@ export function OrderTrackingPage() {
       <main style={{ maxWidth: '40rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
         <p style={{ color: '#ef4444' }}>{t('error')}</p>
         <Link
-          to={`/${resolvedBrandSlug}/${lang}`}
+          to={`/${resolvedBrandSlug}/${String(lang)}`}
           style={{ color: 'var(--brand-color-primary, #111827)', fontWeight: 600 }}
         >
           {t('storefront.order.backToHome')}

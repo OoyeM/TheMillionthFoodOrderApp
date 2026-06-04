@@ -55,7 +55,7 @@ export function BrandEdit() {
         : {}),
     }),
     invalidate: [brandKeys.all, brandKeys.detail(resolvedBrandId)],
-    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/brands`); },
+    onSuccess: () => { navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands`); },
   });
 
   const { register, formState: { errors } } = form;
@@ -111,7 +111,7 @@ export function BrandEdit() {
   // ---------------------------------------------------------------------------
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/brands`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands`);
   }
 
   // ---------------------------------------------------------------------------

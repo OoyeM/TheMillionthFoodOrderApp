@@ -95,14 +95,14 @@ export function BrandCreate() {
       },
       {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/brands`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands`);
         },
       },
     );
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/brands`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands`);
   }
 
   return (

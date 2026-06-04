@@ -100,7 +100,7 @@ describe('BrandTheming', () => {
 
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
-      colors: expect.objectContaining({ primary: '#111827' }),
+      colors: expect.objectContaining({ primary: '#111827' }) as unknown,
     });
   });
 

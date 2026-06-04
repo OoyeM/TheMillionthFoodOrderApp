@@ -118,6 +118,7 @@ describe('ModifierGroupEdit', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain the updated NL translation
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
@@ -148,6 +149,7 @@ describe('ModifierGroupEdit', () => {
     // The page renders multiple "Verwijderen" buttons (one per modifier row plus
     // the group-level delete). The group delete button is the last one in the DOM.
     const verwijderenButtons = screen.getAllByRole('button', { name: /verwijderen/i });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the last index exists
     const deleteButton = verwijderenButtons[verwijderenButtons.length - 1]!;
     await user.click(deleteButton);
 

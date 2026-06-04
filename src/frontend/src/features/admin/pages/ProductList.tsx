@@ -96,19 +96,19 @@ export function ProductList() {
   const deleteProduct = useDeleteProduct(resolvedBrandSlug);
 
   function handleCreateClick() {
-    navigate(`/${brandSlug}/${lang}/admin/products/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/products/new`);
   }
 
   function handleCreateComboClick() {
-    navigate(`/${brandSlug}/${lang}/admin/combo-products/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/combo-products/new`);
   }
 
   function handleRowClick(id: string) {
     const product = products?.find((p) => p.id === id);
     if (product?.productType === 'Combo') {
-      navigate(`/${brandSlug}/${lang}/admin/combo-products/${id}`);
+      navigate(`/${String(brandSlug)}/${String(lang)}/admin/combo-products/${id}`);
     } else {
-      navigate(`/${brandSlug}/${lang}/admin/products/${id}`);
+      navigate(`/${String(brandSlug)}/${String(lang)}/admin/products/${id}`);
     }
   }
 

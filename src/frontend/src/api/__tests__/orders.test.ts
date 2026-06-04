@@ -71,10 +71,14 @@ describe('ordersApi', () => {
 
       // Verify outgoing payload
       expect(capturedBody).not.toBeNull();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect(capturedBody!.customerFirstName).toBe('Jane');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect(capturedBody!.customerLastName).toBe('Doe');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect(capturedBody!.languageCode).toBe('nl');
       // customerName must NOT be in the request body (backend derives it)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect('customerName' in capturedBody!).toBe(false);
 
       // Verify that the response customerName is preserved (display compat)
@@ -140,9 +144,12 @@ describe('ordersApi', () => {
       await ordersApi.createInStore('frietjes', 'shop-1', payload);
 
       expect(capturedBody).not.toBeNull();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect(capturedBody!.customerFirstName).toBe('Staff');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect(capturedBody!.customerLastName).toBe('Member');
       // Old field must not be present in the request body
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed non-null by the assertion above
       expect('customerName' in capturedBody!).toBe(false);
     });
   });

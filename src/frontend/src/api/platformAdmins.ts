@@ -18,5 +18,5 @@ export const platformAdminsApi = {
     apiClient.post<PlatformAdmin>('/platform-admins', data).then((r) => r.data),
 
   deactivate: (id: string): Promise<void> =>
-    apiClient.post<void>(`/platform-admins/${id}/deactivate`).then(() => undefined),
+    apiClient.post(`/platform-admins/${id}/deactivate`).then(() => undefined),
 };

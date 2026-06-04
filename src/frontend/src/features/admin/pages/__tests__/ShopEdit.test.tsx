@@ -115,6 +115,7 @@ describe('ShopEdit', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
     expect(capturedBody).toMatchObject({
       name: 'Frietjes Gent Updated',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining is typed as any by vitest; the asymmetric matcher is used as-is
       address: expect.objectContaining({ city: 'Gent' }),
     });
   });

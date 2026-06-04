@@ -156,11 +156,13 @@ export function PosOrderPanel({ eatIn }: PosOrderPanelProps) {
             onIncrease={() =>
               { updateQuantity(item.productId, item.selectedModifiers, item.quantity + 1); }
             }
-            onDecrease={() =>
-              { item.quantity <= 1
-                ? removeItem(item.productId, item.selectedModifiers)
-                : updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1); }
-            }
+            onDecrease={() => {
+              if (item.quantity <= 1) {
+                removeItem(item.productId, item.selectedModifiers);
+              } else {
+                updateQuantity(item.productId, item.selectedModifiers, item.quantity - 1);
+              }
+            }}
             formatCurrency={formatCurrency}
           />
         ))}

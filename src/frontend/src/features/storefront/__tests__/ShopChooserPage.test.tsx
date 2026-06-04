@@ -21,9 +21,7 @@ vi.mock('../hooks/useActiveShops', () => ({
 }));
 
 // Import after mock registration
-// eslint-disable-next-line import/first
 import { useActiveShops } from '../hooks/useActiveShops';
-// eslint-disable-next-line import/first
 import { ShopChooserPage } from '../pages/ShopChooserPage';
 
 // ---------------------------------------------------------------------------

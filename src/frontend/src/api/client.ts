@@ -59,6 +59,7 @@ apiClient.interceptors.response.use(
         window.dispatchEvent(new CustomEvent('auth:access-denied'));
       }
     }
+    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- must re-reject the original axios error unchanged so downstream axios.isAxiosError checks and callers see the real rejection value
     return Promise.reject(error);
   },
 );

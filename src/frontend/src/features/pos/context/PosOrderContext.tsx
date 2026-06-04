@@ -51,6 +51,7 @@ interface PosOrderContextValue {
  * Creates a stable deduplication key from selected modifiers.
  * Same product + same modifiers = same line item.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- HMR boundary rule; helper co-located with the context it serves
 export function modifierKey(selectedModifiers: CartModifier[]): string {
   return selectedModifiers
     .map((m) => m.modifierId)
@@ -273,6 +274,7 @@ export function PosOrderProvider({
  * Returns the current POS order context.
  * Throws if called outside a PosOrderProvider.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- HMR boundary rule; hook co-located with the context it consumes
 export function useOrderState(): PosOrderContextValue {
   const ctx = useContext(PosOrderContext);
   if (ctx === null) {

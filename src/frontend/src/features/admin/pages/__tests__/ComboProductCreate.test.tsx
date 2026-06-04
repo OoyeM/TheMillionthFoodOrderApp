@@ -150,6 +150,7 @@ describe('ComboProductCreate', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // Assert the POST body contains the name and the component product id
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const translations = capturedBody!.translations as {
       languageCode: string;
       name: string;
@@ -157,6 +158,7 @@ describe('ComboProductCreate', () => {
     expect(translations.some((t) => t.languageCode === 'nl' && t.name === 'Friet + Drank')).toBe(
       true,
     );
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody is non-null per the waitFor assertion above
     const componentIds = capturedBody!.componentProductIds as string[];
     expect(componentIds).toContain('prod-simple-1');
     expect(componentIds).toContain('prod-simple-2');

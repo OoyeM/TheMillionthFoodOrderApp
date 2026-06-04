@@ -74,6 +74,7 @@ describe('useSessionKeepalive', () => {
 
     renderHook(() => { useSessionKeepalive(true); });
     window.dispatchEvent(new MouseEvent('mousemove'));
+    // eslint-disable-next-line @typescript-eslint/require-await -- async act() flushes pending effects/microtasks after the timer advance; sync act() would not preserve that behavior
     await act(async () => {
       vi.advanceTimersByTime(600);
     });
@@ -91,6 +92,7 @@ describe('useSessionKeepalive', () => {
     await expectAuthSessionExpired(async () => {
       renderHook(() => { useSessionKeepalive(true); });
       window.dispatchEvent(new MouseEvent('mousemove'));
+      // eslint-disable-next-line @typescript-eslint/require-await -- async act() flushes pending effects/microtasks after the timer advance; sync act() would not preserve that behavior
       await act(async () => {
         vi.advanceTimersByTime(600);
       });

@@ -61,7 +61,7 @@ function TestOrderForm({ brandSlug, shopId }: TestOrderFormProps) {
       </button>
 
       {mutation.isSuccess && (
-        <p data-testid="success">Order placed: {mutation.data?.orderNumber}</p>
+        <p data-testid="success">Order placed: {mutation.data.orderNumber}</p>
       )}
       {mutation.isError && <p data-testid="error">Error</p>}
 
@@ -128,6 +128,7 @@ describe('useCreateInStoreOrder (t-13)', () => {
     // Verify payload shape
     expect(capturedUrl).toContain('/api/brands/frietjes/shops/shop-1/orders/in-store');
     expect(capturedBody).not.toBeNull();
+    /* eslint-disable @typescript-eslint/no-non-null-assertion -- capturedBody asserted non-null on the line above */
     expect(capturedBody!.orderType).toBe('Pickup');
     expect(capturedBody!.paymentMethod).toBe('CashAtPickup');
     expect(Array.isArray(capturedBody!.items)).toBe(true);
@@ -137,6 +138,7 @@ describe('useCreateInStoreOrder (t-13)', () => {
       quantity: number;
       selectedModifierIds: string[];
     }[];
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
     expect(items).toHaveLength(1);
     expect(items[0]?.productId).toBe('prod-1');
     expect(items[0]?.quantity).toBe(2);
@@ -188,8 +190,10 @@ describe('useCreateInStoreOrder (t-13)', () => {
     });
 
     expect(capturedBody).not.toBeNull();
+    /* eslint-disable @typescript-eslint/no-non-null-assertion -- capturedBody asserted non-null on the line above */
     expect(capturedBody!.orderType).toBe('EatIn');
     expect(capturedBody!.tableNumber).toBe(7);
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
   });
 
   it('clears the order items after successful submission', async () => {
@@ -252,8 +256,10 @@ describe('useCreateInStoreOrder (t-13)', () => {
 
     expect(capturedBody).not.toBeNull();
     // tableNumber must be absent for Pickup orders
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody asserted non-null on the line above
     expect('tableNumber' in capturedBody!).toBe(false);
     // Only the expected top-level keys should be present (no accidental extras)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- capturedBody asserted non-null above
     const topLevelKeys = Object.keys(capturedBody!).sort();
     expect(topLevelKeys).toEqual(['items', 'orderType', 'paymentMethod'].sort());
   });

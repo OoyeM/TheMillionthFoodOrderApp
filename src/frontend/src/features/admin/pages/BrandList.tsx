@@ -86,11 +86,11 @@ export function BrandList() {
   const { data: brands, isLoading, isError, error } = useBrands();
 
   function handleCreateClick() {
-    navigate(`/${brandSlug}/${lang}/admin/brands/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands/new`);
   }
 
   function handleRowClick(id: string) {
-    navigate(`/${brandSlug}/${lang}/admin/brands/${id}`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/brands/${id}`);
   }
 
   return (

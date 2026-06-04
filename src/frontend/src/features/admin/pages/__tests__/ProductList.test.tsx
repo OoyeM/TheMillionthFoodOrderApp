@@ -78,6 +78,7 @@ describe('ProductList', () => {
     const productName = await screen.findByText('Kleine friet');
 
     // Click the table row that contains the product name
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the product name cell is rendered inside a table row, so closest('tr') always resolves
     const row = productName.closest('tr')!;
     await user.click(row);
 

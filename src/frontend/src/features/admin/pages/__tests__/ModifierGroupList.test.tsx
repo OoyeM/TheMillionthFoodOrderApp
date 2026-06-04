@@ -84,6 +84,7 @@ describe('ModifierGroupList', () => {
     await screen.findByText('Sauzen');
 
     // Click the row — the <tr> element containing "Sauzen"
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the clickable row is rendered once "Sauzen" is found above
     const row = container.querySelector('tr[style*="cursor: pointer"]')!;
     await user.click(row);
 

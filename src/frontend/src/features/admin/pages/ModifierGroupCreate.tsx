@@ -150,14 +150,14 @@ export function ModifierGroupCreate() {
       },
       {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/modifier-groups`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups`);
         },
       },
     );
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/modifier-groups`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups`);
   }
 
   return (
@@ -341,12 +341,12 @@ function ModifierFormRow({
       </div>
 
       <div style={{ marginBottom: '0.5rem' }}>
-        <label style={labelStyle} htmlFor={`modifier-${index}-name-${activeTab}`}>
+        <label style={labelStyle} htmlFor={`modifier-${String(index)}-name-${activeTab}`}>
           {t('admin.modifierGroups.modifierName')} ({activeTab.toUpperCase()})
           {activeTab === primaryLocale && ' *'}
         </label>
         <input
-          id={`modifier-${index}-name-${activeTab}`}
+          id={`modifier-${String(index)}-name-${activeTab}`}
           type="text"
           value={modifier.translations[activeTab].name}
           onChange={(e) => { onUpdateTranslation(index, activeTab, e.target.value); }}
@@ -362,11 +362,11 @@ function ModifierFormRow({
       </div>
 
       <div>
-        <label style={labelStyle} htmlFor={`modifier-${index}-price`}>
+        <label style={labelStyle} htmlFor={`modifier-${String(index)}-price`}>
           {t('admin.modifierGroups.priceAdjustment')}
         </label>
         <input
-          id={`modifier-${index}-price`}
+          id={`modifier-${String(index)}-price`}
           type="number"
           step="0.01"
           value={modifier.priceAdjustment}

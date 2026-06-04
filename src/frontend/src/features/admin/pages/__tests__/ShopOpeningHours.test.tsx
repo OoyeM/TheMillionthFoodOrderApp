@@ -57,6 +57,7 @@ describe('ShopOpeningHours', () => {
 
     // Click the first "Tijdblok toevoegen" button (Monday's add button)
     const addButtons = screen.getAllByRole('button', { name: /tijdblok toevoegen/i });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByRole guarantees a non-empty array, so the first element exists
     await user.click(addButtons[0]!);
 
     // A new row should have been added — one more remove button
@@ -89,7 +90,9 @@ describe('ShopOpeningHours', () => {
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
     // The PUT body should contain the Monday block
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.timeBlocks).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const block = capturedBody!.timeBlocks[0] as {
       dayOfWeek: number;
       openTime: string;
@@ -111,7 +114,9 @@ describe('ShopOpeningHours', () => {
     // The existing block has openTime=09:00, closeTime=18:00 (valid).
     // Change closeTime to a value before openTime to trigger validation.
     const closeTimeInputs = screen.getAllByDisplayValue('18:00');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByDisplayValue guarantees a non-empty array, so the first element exists
     await user.clear(closeTimeInputs[0]!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAllByDisplayValue guarantees a non-empty array, so the first element exists
     await user.type(closeTimeInputs[0]!, '08:00');
 
     // Click Save — should not call PUT, should show validation error instead

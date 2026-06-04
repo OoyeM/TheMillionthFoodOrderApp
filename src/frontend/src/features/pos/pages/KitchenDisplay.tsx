@@ -315,7 +315,7 @@ export function KitchenDisplay() {
               }
               isAdvancing={
                 advanceMutation.isPending &&
-                advanceMutation.variables?.orderId === order.id
+                advanceMutation.variables.orderId === order.id
               }
               advanceError={failedOrderId === order.id}
               onReprint={() => { printOrder(order); }}

@@ -74,7 +74,7 @@ export function buildTicketHtml(order: OrderResponse, labels: TicketLabels): str
         .map((m) => `<div class="mod">+ ${escapeHtml(m.modifierName)}</div>`)
         .join('');
       return `<li class="item">
-          <div class="item-line"><span class="qty">${item.quantity}×</span><span class="name">${escapeHtml(item.productName)}</span></div>
+          <div class="item-line"><span class="qty">${String(item.quantity)}×</span><span class="name">${escapeHtml(item.productName)}</span></div>
           ${modifiers}
         </li>`;
     })

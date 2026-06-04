@@ -15,7 +15,7 @@ export const shopCreateSchema = z.object({
     postalCode: z.string().min(1, { message: 'Postal code is required.' }),
     country: z.string().min(1),
   }),
-  contactEmail: z.string().email({ message: 'Enter a valid email address.' }),
+  contactEmail: z.email({ message: 'Enter a valid email address.' }),
   contactPhone: z.string(),
 });
 
