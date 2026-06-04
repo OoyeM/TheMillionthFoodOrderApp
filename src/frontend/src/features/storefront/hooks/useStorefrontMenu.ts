@@ -7,7 +7,7 @@ import type { MenuCategoryListItem, ProductListItem, ProductModifierGroupRespons
 // Query key factories — storefront-scoped, separate from admin keys
 // ---------------------------------------------------------------------------
 
-export const storefrontMenuKeys = {
+const storefrontMenuKeys = {
   categories: (brandSlug: string) => ['storefront', 'menuCategories', brandSlug] as const,
   categoryProducts: (brandSlug: string, categoryId: string) =>
     ['storefront', 'menuCategories', brandSlug, categoryId, 'products'] as const,

@@ -1,11 +1,9 @@
-// fallow-ignore-file unused-file
-//
 // Hook subscribing to OrderHub events. Consumed by US-FP-068.
 
 import { useEffect, useRef } from 'react';
 import { useSignalR, type ConnectionStatus } from './useSignalR';
 
-export interface OrderStatusUpdate {
+interface OrderStatusUpdate {
   orderId: string;
   shopId: string;
   brandSlug: string;

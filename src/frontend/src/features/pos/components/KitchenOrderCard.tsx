@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import type { OrderResponse, OrderStatusResponse, OrderType } from '@api/orders';
+import type { OrderResponse, OrderType } from '@api/orders';
+import type { OrderStatusResponse } from '@/types/common';
 
 interface KitchenOrderCardProps {
   order: OrderResponse;

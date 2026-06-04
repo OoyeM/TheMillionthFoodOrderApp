@@ -4,10 +4,6 @@ import { useActiveShops } from '../hooks/useActiveShops';
 import { ShopContext } from './shopContextValue';
 import type { ResolvedShop } from './shopContextValue';
 
-// Re-export the type so callers can import from a single place
-export type { ResolvedShop };
-export { ShopContext };
-
 // ---------------------------------------------------------------------------
 // ShopResolver — layout route component
 // ---------------------------------------------------------------------------
