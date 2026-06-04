@@ -1,6 +1,3 @@
-// fallow-ignore-file unused-export
-// fallow-ignore-file unused-file
-//
 // Real-time SignalR client + hooks. Wired up by US-FP-068
 // (Real-time order updates infrastructure).
 
@@ -44,7 +41,8 @@ export function getOrderHubConnection(): HubConnection {
 }
 
 /**
- * Resets the singleton connection. Used by tests and HMR cleanup.
+ * Resets the singleton connection. Intended for tests and HMR cleanup.
+ * @expected-unused — retained as a test/HMR reset utility; not yet imported
  */
 export function resetOrderHubConnection(): void {
   connection = null;

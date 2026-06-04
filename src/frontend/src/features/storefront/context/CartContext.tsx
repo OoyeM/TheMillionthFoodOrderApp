@@ -25,7 +25,7 @@ export interface CartItem {
   selectedModifiers: CartModifier[];
 }
 
-export interface CartState {
+interface CartState {
   brandSlug: string;
   shopId: string;
   items: CartItem[];

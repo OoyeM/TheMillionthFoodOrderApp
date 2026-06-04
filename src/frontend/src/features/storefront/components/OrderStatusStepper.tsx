@@ -1,7 +1,7 @@
 // Presentational stepper component — renders the shop's configured order
 // lifecycle as a horizontal step progression for customer-facing tracking.
 
-import type { OrderStatusResponse } from '@api/orders';
+import type { OrderStatusResponse } from '@/types/common';
 
 interface Props {
   /** Statuses from the lifecycle, ordered by sortOrder. */

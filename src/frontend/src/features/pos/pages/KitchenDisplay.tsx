@@ -12,7 +12,8 @@ import {
   showNewOrderNotification,
 } from '../utils/notifyNewOrder';
 import { orderLifecycleApi } from '@api/orderLifecycle';
-import { ordersApi, type OrderResponse, type OrderStatusResponse } from '@api/orders';
+import { ordersApi, type OrderResponse } from '@api/orders';
+import type { OrderStatusResponse } from '@/types/common';
 import { shopsApi } from '@api/shops';
 import type { ConnectionStatus } from '@api/useSignalR';
 

@@ -16,14 +16,14 @@ export type { CartItem, CartModifier };
 // Types
 // ---------------------------------------------------------------------------
 
-export interface PosOrderState {
+interface PosOrderState {
   items: CartItem[];
   orderType: OrderType;
   tableNumber: number | undefined;
   paymentMethod: PaymentMethod;
 }
 
-export interface PosOrderTotals {
+interface PosOrderTotals {
   subtotalGross: number;
   vatPercent: number;
   vatAmount: number;
@@ -51,8 +51,7 @@ interface PosOrderContextValue {
  * Creates a stable deduplication key from selected modifiers.
  * Same product + same modifiers = same line item.
  */
-// eslint-disable-next-line react-refresh/only-export-components -- HMR boundary rule; helper co-located with the context it serves
-export function modifierKey(selectedModifiers: CartModifier[]): string {
+function modifierKey(selectedModifiers: CartModifier[]): string {
   return selectedModifiers
     .map((m) => m.modifierId)
     .sort()

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Controller, type UseFormRegister } from 'react-hook-form';
-import type { TFunction } from 'i18next';
+import { Controller } from 'react-hook-form';
 import { useDeleteProduct, productKeys } from '../hooks/useProducts';
 import {
   useProductModifierGroups,
@@ -22,6 +21,7 @@ import {
 import type { SupportedLocale, ProductModifierGroupResponse, Product } from '../../../types/common';
 import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
 import { ResourceFormShell } from '../forms/ResourceFormShell';
+import { ProductTranslationFields } from '../forms/ProductTranslationFields';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -433,7 +433,7 @@ export function ProductEdit() {
         </div>
 
         {/* Translation fields — rendered for all tabs, only the active one is visible */}
-        <TranslationFields
+        <ProductTranslationFields
           activeTab={activeTab}
           register={register}
           nlNameError={nlNameError}
@@ -661,114 +661,6 @@ export function ProductEdit() {
       </section>
     </main>
     </ResourceFormShell>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// TranslationFields — extracted so `register` call uses literal path strings,
-// which TypeScript resolves correctly (dynamic template-literal paths produce
-// unknown spreads in strict TSX).
-// ---------------------------------------------------------------------------
-
-interface TranslationFieldsProps {
-  activeTab: SupportedLocale;
-  register: UseFormRegister<ProductEditFormValues>;
-  nlNameError: string | undefined;
-  t: TFunction;
-}
-
-function TranslationFields({ activeTab, register, nlNameError, t }: TranslationFieldsProps) {
-  if (activeTab === 'nl') {
-    return (
-      <>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor="name-nl">
-            Name <RequiredMark />
-          </label>
-          <input
-            id="name-nl"
-            type="text"
-            {...register('translations.nl.name')}
-            style={inputStyle(!!nlNameError)}
-            placeholder={t('admin.products.namePlaceholder', { lang: 'NL' })}
-          />
-          {nlNameError && <FieldError message={nlNameError} />}
-        </div>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={labelStyle} htmlFor="desc-nl">
-            {t('admin.products.description')}{' '}
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
-          </label>
-          <textarea
-            id="desc-nl"
-            {...register('translations.nl.description')}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={t('admin.products.descriptionPlaceholder', { lang: 'NL' })}
-          />
-        </div>
-      </>
-    );
-  }
-  if (activeTab === 'fr') {
-    return (
-      <>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={labelStyle} htmlFor="name-fr">
-            Name
-          </label>
-          <input
-            id="name-fr"
-            type="text"
-            {...register('translations.fr.name')}
-            style={inputStyle(false)}
-            placeholder={t('admin.products.namePlaceholder', { lang: 'FR' })}
-          />
-        </div>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={labelStyle} htmlFor="desc-fr">
-            {t('admin.products.description')}{' '}
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
-          </label>
-          <textarea
-            id="desc-fr"
-            {...register('translations.fr.description')}
-            rows={3}
-            style={{ ...inputStyle(false), resize: 'vertical' }}
-            placeholder={t('admin.products.descriptionPlaceholder', { lang: 'FR' })}
-          />
-        </div>
-      </>
-    );
-  }
-  return (
-    <>
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle} htmlFor="name-de">
-          Name
-        </label>
-        <input
-          id="name-de"
-          type="text"
-          {...register('translations.de.name')}
-          style={inputStyle(false)}
-          placeholder={t('admin.products.namePlaceholder', { lang: 'DE' })}
-        />
-      </div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={labelStyle} htmlFor="desc-de">
-          {t('admin.products.description')}{' '}
-          <span style={{ color: '#9ca3af', fontWeight: 400 }}>{t('admin.products.optional')}</span>
-        </label>
-        <textarea
-          id="desc-de"
-          {...register('translations.de.description')}
-          rows={3}
-          style={{ ...inputStyle(false), resize: 'vertical' }}
-          placeholder={t('admin.products.descriptionPlaceholder', { lang: 'DE' })}
-        />
-      </div>
-    </>
   );
 }
 

@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { OrderLifecycleResponse } from '../types/common';
 
 // ---------------------------------------------------------------------------
 // Request types
@@ -94,7 +95,7 @@ export interface OrderResponse {
   shopAddressLine?: string | null;
 }
 
-export interface ListActiveOrdersResponse {
+interface ListActiveOrdersResponse {
   orders: OrderResponse[];
 }
 
@@ -117,28 +118,6 @@ export interface CreateInStoreOrderRequest {
 // ---------------------------------------------------------------------------
 // Order tracking response types (US-FP-063)
 // ---------------------------------------------------------------------------
-
-export interface OrderStatusResponse {
-  id: string;
-  name: string;
-  systemKey: string | null;
-  sortOrder: number;
-  isEnabled: boolean;
-  isTerminal: boolean;
-  colorHex: string | null;
-}
-
-export interface OrderStatusTransitionResponse {
-  id: string;
-  fromStatusId: string;
-  toStatusId: string;
-}
-
-export interface OrderLifecycleResponse {
-  shopId: string;
-  statuses: OrderStatusResponse[];
-  transitions: OrderStatusTransitionResponse[];
-}
 
 export interface OrderTrackingResponse {
   order: OrderResponse;
