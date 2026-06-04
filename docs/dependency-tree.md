@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-04 (US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
+> Last updated: 2026-06-04 (US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -24,6 +24,7 @@
 - **US-FP-023** → ✅ done. Status-advance endpoint + kitchen-card button shipped (commit `adf18f2`); SignalR negotiate CSRF fix (`7fb5299`). The keystone is complete.
 - **US-FP-016 / 017 / 038 / 058 / 063** → ✅ — entry-point blocker resolved by 071; these were already component-complete.
 - **US-FP-028** → ✅ done. Per-shop `TicketPrinterEnabled` flag (admin toggle on ShopEdit); kitchen display auto-prints new orders via a hidden print iframe when enabled, plus a manual reprint button on every order card. Ticket carries order number, items+modifiers, type, table (eat-in), time slot (when present), timestamp.
+- **US-FP-026** → ✅ done. Per-shop notification settings extended to four independent channels — `KitchenDisplayEnabled` (new-order highlight on the board), `TicketPrinterEnabled` (US-FP-028), `PushNotificationEnabled` (browser Notification API), `SoundAlertEnabled` (Web Audio chime). Admin toggles on ShopEdit; all channels hook the kitchen display's single new-order detection loop, so both online and in-store orders fire them (AC4 — shared `OrderService.CreateOrderCoreAsync` → `OrderCreatedHandler` → SignalR). Sound/push are armed once via an "enable alerts" control (browser gesture/permission policy).
 
 **Changed 2026-06-03:**
 - **US-FP-018** → ✅ done. Functionally complete; ticket-printer scope reclassified to US-FP-028. GitHub #18 closed.
@@ -39,7 +40,7 @@
 - **US-FP-060** — brand CRUD done; missing shop-count metrics + true platform-level dashboard.
 - **US-FP-067** — custom-domain field stored; missing DNS instructions, SSL provisioning, host→brand routing.
 
-**Everything else not marked ✅/🚧 below is not started** (33 stories).
+**Everything else not marked ✅/🚧 below is not started** (32 stories).
 
 ---
 
@@ -145,7 +146,7 @@ Once ordering works, these streams are **all independent**.
 | ✅ | **US-FP-027** | View order on kitchen display | 022, 068 |
 | ✅ | **US-FP-023** | Update order status (kitchen) | 022, 027 |
 | ✅ | **US-FP-028** | Print order ticket (incl. in-store POS ticket, reclassified from US-FP-018) | 022 |
-| ⬜ | **US-FP-026** | Configure order notifications | 022 |
+| ✅ | **US-FP-026** | Configure order notifications | 022 |
 
 ### Stream F: Customer Experience
 

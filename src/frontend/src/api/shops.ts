@@ -42,8 +42,14 @@ export interface UpdateShopRequest {
   };
   contactEmail: string;
   contactPhone?: string;
+  /** Highlight new orders on the kitchen display (US-FP-026). */
+  kitchenDisplayEnabled: boolean;
   /** Auto-print new orders on the kitchen display (US-FP-028). */
   ticketPrinterEnabled: boolean;
+  /** Raise a browser push notification per new order (US-FP-026). */
+  pushNotificationEnabled: boolean;
+  /** Play a sound alert per new order (US-FP-026). */
+  soundAlertEnabled: boolean;
 }
 
 /**

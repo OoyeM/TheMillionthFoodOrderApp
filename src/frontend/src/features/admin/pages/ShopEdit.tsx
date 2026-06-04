@@ -41,7 +41,10 @@ export function ShopEdit() {
       address: { street: '', number: '', city: '', postalCode: '', country: 'BE' },
       contactEmail: '',
       contactPhone: '',
+      kitchenDisplayEnabled: false,
       ticketPrinterEnabled: false,
+      pushNotificationEnabled: false,
+      soundAlertEnabled: false,
     },
     toFormValues: (shop) => ({
       name: shop.name,
@@ -54,7 +57,10 @@ export function ShopEdit() {
       },
       contactEmail: shop.contactEmail,
       contactPhone: shop.contactPhone ?? '',
+      kitchenDisplayEnabled: shop.kitchenDisplayEnabled,
       ticketPrinterEnabled: shop.ticketPrinterEnabled,
+      pushNotificationEnabled: shop.pushNotificationEnabled,
+      soundAlertEnabled: shop.soundAlertEnabled,
     }),
     toUpdatePayload: (values) => ({
       name: values.name.trim(),
@@ -66,7 +72,10 @@ export function ShopEdit() {
         country: values.address.country.trim() || 'BE',
       },
       contactEmail: values.contactEmail.trim(),
+      kitchenDisplayEnabled: values.kitchenDisplayEnabled,
       ticketPrinterEnabled: values.ticketPrinterEnabled,
+      pushNotificationEnabled: values.pushNotificationEnabled,
+      soundAlertEnabled: values.soundAlertEnabled,
       ...(values.contactPhone.trim().length > 0
         ? { contactPhone: values.contactPhone.trim() }
         : {}),
@@ -263,10 +272,33 @@ export function ShopEdit() {
           />
         </div>
 
-        {/* Order settings */}
-        <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.75rem', marginTop: '1.5rem' }}>
-          Order settings
+        {/* Order notifications (US-FP-026) — independent per-shop channels */}
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', marginTop: '1.5rem' }}>
+          Order notifications
         </p>
+        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+          Choose how this shop is alerted to new orders. Any combination can be active, and both online and
+          in-store orders trigger the enabled methods.
+        </p>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="kitchenDisplayEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="kitchenDisplayEnabled"
+              type="checkbox"
+              {...register('kitchenDisplayEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Highlight new orders on the kitchen display</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                Newly-arrived orders are briefly highlighted on the kitchen display screen.
+              </span>
+            </span>
+          </label>
+        </div>
         <div style={{ marginBottom: '0.5rem' }}>
           <label
             htmlFor="ticketPrinterEnabled"
@@ -282,6 +314,45 @@ export function ShopEdit() {
               <span style={{ fontWeight: 500 }}>Auto-print order tickets</span>
               <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
                 New orders print automatically on the kitchen display. Staff can also reprint any ticket manually.
+              </span>
+            </span>
+          </label>
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="pushNotificationEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="pushNotificationEnabled"
+              type="checkbox"
+              {...register('pushNotificationEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Push notifications for new orders</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                The kitchen display shows a desktop notification when a new order arrives. Staff must allow
+                notifications in the browser.
+              </span>
+            </span>
+          </label>
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="soundAlertEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="soundAlertEnabled"
+              type="checkbox"
+              {...register('soundAlertEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Sound alert for new orders</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                The kitchen display plays a chime when a new order arrives. Staff must enable sound on the display.
               </span>
             </span>
           </label>

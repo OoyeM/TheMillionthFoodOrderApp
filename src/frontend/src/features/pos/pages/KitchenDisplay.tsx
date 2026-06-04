@@ -5,6 +5,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActiveOrders, activeOrdersQueryKey } from '../hooks/useActiveOrders';
 import { KitchenOrderCard } from '../components/KitchenOrderCard';
 import { printTicket } from '../utils/printTicket';
+import { playNewOrderSound, primeAudioAlerts } from '../utils/playNewOrderSound';
+import {
+  notificationPermission,
+  requestNotificationPermission,
+  showNewOrderNotification,
+} from '../utils/notifyNewOrder';
 import { orderLifecycleApi } from '@api/orderLifecycle';
 import { ordersApi, type OrderResponse, type OrderStatusResponse } from '@api/orders';
 import { shopsApi } from '@api/shops';
@@ -16,6 +22,9 @@ const connectionColor: Record<ConnectionStatus, string> = {
   reconnecting: '#d97706',
   disconnected: '#dc2626',
 };
+
+// How long a newly-arrived order stays highlighted on the board (US-FP-026).
+const HIGHLIGHT_MS = 8000;
 
 export function KitchenDisplay() {
   const { t } = useTranslation('common');
@@ -45,14 +54,18 @@ export function KitchenDisplay() {
     staleTime: 5 * 60_000,
   });
 
-  // The shop's ticket-printer setting gates auto-printing (US-FP-028).
+  // The shop's notification settings gate each new-order channel (US-FP-026 /
+  // US-FP-028). Each is independent and any combination can be active at once.
   const shopQuery = useQuery({
     queryKey: ['shop', resolvedBrand, resolvedShop],
     queryFn: () => shopsApi.get(resolvedBrand, resolvedShop),
     enabled: hasShop,
     staleTime: 5 * 60_000,
   });
+  const highlightEnabled = shopQuery.data?.kitchenDisplayEnabled === true;
   const autoPrintEnabled = shopQuery.data?.ticketPrinterEnabled === true;
+  const pushEnabled = shopQuery.data?.pushNotificationEnabled === true;
+  const soundEnabled = shopQuery.data?.soundAlertEnabled === true;
 
   // Reprints (and auto-prints) a single order's kitchen ticket via a hidden iframe.
   const printOrder = useCallback(
@@ -69,9 +82,32 @@ export function KitchenDisplay() {
     [t],
   );
 
-  // Auto-print orders that appear after the initial load. The first successful
-  // fetch only seeds the "seen" set so we never reprint the existing backlog;
-  // thereafter any newly-arriving order prints once when the setting is enabled.
+  const notifyOrder = useCallback(
+    (order: OrderResponse) => {
+      showNewOrderNotification(
+        t('pos.kitchen.newOrderTitle'),
+        t('pos.kitchen.newOrderBody', { number: order.orderNumber }),
+        order.id,
+      );
+    },
+    [t],
+  );
+
+  // Newly-arrived order ids currently highlighted on the board (US-FP-026); each
+  // clears itself after HIGHLIGHT_MS. Timers are tracked so we can cancel on unmount.
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
+  const highlightTimers = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    const timers = highlightTimers.current;
+    return () => {
+      for (const timer of timers.values()) window.clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
+
+  // React to orders that appear after the initial load. The first successful fetch
+  // only seeds the "seen" set so the existing backlog never triggers a reaction;
+  // thereafter each newly-arriving order fires every enabled channel exactly once.
   const seenOrderIds = useRef<Set<string>>(new Set());
   const seeded = useRef(false);
   useEffect(() => {
@@ -81,12 +117,50 @@ export function KitchenDisplay() {
       seeded.current = true;
       return;
     }
+    const arrived: OrderResponse[] = [];
     for (const order of orders) {
       if (seenOrderIds.current.has(order.id)) continue;
       seenOrderIds.current.add(order.id);
+      arrived.push(order);
       if (autoPrintEnabled) printOrder(order);
+      if (pushEnabled) notifyOrder(order);
     }
-  }, [orders, autoPrintEnabled, printOrder]);
+    if (arrived.length === 0) return;
+    // One chime per batch — several orders landing together shouldn't stack alarms.
+    if (soundEnabled) playNewOrderSound();
+    if (highlightEnabled) {
+      setHighlightedIds((prev) => {
+        const next = new Set(prev);
+        for (const order of arrived) next.add(order.id);
+        return next;
+      });
+      for (const order of arrived) {
+        const existing = highlightTimers.current.get(order.id);
+        if (existing !== undefined) window.clearTimeout(existing);
+        const timer = window.setTimeout(() => {
+          setHighlightedIds((prev) => {
+            if (!prev.has(order.id)) return prev;
+            const next = new Set(prev);
+            next.delete(order.id);
+            return next;
+          });
+          highlightTimers.current.delete(order.id);
+        }, HIGHLIGHT_MS);
+        highlightTimers.current.set(order.id, timer);
+      }
+    }
+  }, [orders, autoPrintEnabled, pushEnabled, soundEnabled, highlightEnabled, printOrder, notifyOrder]);
+
+  // Sound and push both need a user gesture (autoplay + permission policies), so
+  // staff arm them once via a header control before any auto-fired alert.
+  const [alertsArmed, setAlertsArmed] = useState(false);
+  const armAlerts = useCallback(async () => {
+    if (soundEnabled) primeAudioAlerts();
+    if (pushEnabled) await requestNotificationPermission();
+    setAlertsArmed(true);
+  }, [soundEnabled, pushEnabled]);
+  const needsArming =
+    !alertsArmed && (soundEnabled || (pushEnabled && notificationPermission() !== 'granted'));
 
   // Map each status name → the statuses reachable from it (sorted by lifecycle order).
   // Orders carry only the denormalised status name, so we key by name.
@@ -146,30 +220,51 @@ export function KitchenDisplay() {
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>
           {t('pos.kitchen.title')}
         </h1>
-        <div
-          data-testid="kitchen-connection-status"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.375rem 0.75rem',
-            background: '#f3f4f6',
-            borderRadius: '999px',
-            fontSize: '0.8125rem',
-            fontWeight: 600,
-            color: '#374151',
-          }}
-        >
-          <span
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem' }}>
+          {needsArming && (
+            <button
+              type="button"
+              data-testid="kitchen-enable-alerts"
+              onClick={() => void armAlerts()}
+              style={{
+                padding: '0.375rem 0.875rem',
+                background: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '999px',
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              🔔 {t('pos.kitchen.enableAlerts')}
+            </button>
+          )}
+          <div
+            data-testid="kitchen-connection-status"
             style={{
-              width: '0.625rem',
-              height: '0.625rem',
-              borderRadius: '50%',
-              background: connectionColor[connectionStatus],
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.375rem 0.75rem',
+              background: '#f3f4f6',
+              borderRadius: '999px',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: '#374151',
             }}
-          />
-          {t(`pos.kitchen.connection.${connectionStatus}`)}
+          >
+            <span
+              style={{
+                width: '0.625rem',
+                height: '0.625rem',
+                borderRadius: '50%',
+                background: connectionColor[connectionStatus],
+                display: 'inline-block',
+              }}
+            />
+            {t(`pos.kitchen.connection.${connectionStatus}`)}
+          </div>
         </div>
       </header>
 
@@ -224,6 +319,7 @@ export function KitchenDisplay() {
               }
               advanceError={failedOrderId === order.id}
               onReprint={() => printOrder(order)}
+              highlight={highlightedIds.has(order.id)}
             />
           ))}
         </section>

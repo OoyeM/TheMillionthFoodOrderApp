@@ -25,11 +25,32 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     public string TimeZoneId { get; private set; } = "Europe/Brussels";
 
     /// <summary>
+    /// When true, newly-arrived orders are highlighted on the kitchen display as a
+    /// visual notification (US-FP-026). Off by default. The board always lists orders
+    /// (US-FP-027); this flag only gates the new-order highlight notification.
+    /// </summary>
+    public bool KitchenDisplayEnabled { get; private set; }
+
+    /// <summary>
     /// When true, new orders are automatically printed to the shop's ticket printer
     /// on the kitchen display (US-FP-028). Off by default. Note: the kitchen display
     /// device drives the actual browser print; this flag gates whether it does so.
     /// </summary>
     public bool TicketPrinterEnabled { get; private set; }
+
+    /// <summary>
+    /// When true, the kitchen display raises a browser push notification for each new
+    /// order (US-FP-026). Off by default. The notification is surfaced by the display
+    /// device; this flag gates whether it does so.
+    /// </summary>
+    public bool PushNotificationEnabled { get; private set; }
+
+    /// <summary>
+    /// When true, the kitchen display plays a sound alert for each new order
+    /// (US-FP-026). Off by default. The display device plays the sound; this flag
+    /// gates whether it does so.
+    /// </summary>
+    public bool SoundAlertEnabled { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -85,6 +106,18 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
     }
 
     /// <summary>
+    /// Enables or disables the new-order highlight on the kitchen display (US-FP-026).
+    /// </summary>
+    public void SetKitchenDisplayEnabled(bool enabled)
+    {
+        if (KitchenDisplayEnabled == enabled)
+            return;
+
+        KitchenDisplayEnabled = enabled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
     /// Enables or disables automatic ticket printing for new orders (US-FP-028).
     /// </summary>
     public void SetTicketPrinterEnabled(bool enabled)
@@ -93,6 +126,30 @@ public sealed class Shop : AggregateRoot<Guid>, IAuditable
             return;
 
         TicketPrinterEnabled = enabled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Enables or disables browser push notifications for new orders (US-FP-026).
+    /// </summary>
+    public void SetPushNotificationEnabled(bool enabled)
+    {
+        if (PushNotificationEnabled == enabled)
+            return;
+
+        PushNotificationEnabled = enabled;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Enables or disables the sound alert for new orders (US-FP-026).
+    /// </summary>
+    public void SetSoundAlertEnabled(bool enabled)
+    {
+        if (SoundAlertEnabled == enabled)
+            return;
+
+        SoundAlertEnabled = enabled;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
