@@ -41,6 +41,7 @@ export function ShopEdit() {
       address: { street: '', number: '', city: '', postalCode: '', country: 'BE' },
       contactEmail: '',
       contactPhone: '',
+      ticketPrinterEnabled: false,
     },
     toFormValues: (shop) => ({
       name: shop.name,
@@ -53,6 +54,7 @@ export function ShopEdit() {
       },
       contactEmail: shop.contactEmail,
       contactPhone: shop.contactPhone ?? '',
+      ticketPrinterEnabled: shop.ticketPrinterEnabled,
     }),
     toUpdatePayload: (values) => ({
       name: values.name.trim(),
@@ -64,6 +66,7 @@ export function ShopEdit() {
         country: values.address.country.trim() || 'BE',
       },
       contactEmail: values.contactEmail.trim(),
+      ticketPrinterEnabled: values.ticketPrinterEnabled,
       ...(values.contactPhone.trim().length > 0
         ? { contactPhone: values.contactPhone.trim() }
         : {}),
@@ -258,6 +261,30 @@ export function ShopEdit() {
             {...register('contactPhone')}
             style={inputStyle(false)}
           />
+        </div>
+
+        {/* Order settings */}
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.75rem', marginTop: '1.5rem' }}>
+          Order settings
+        </p>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="ticketPrinterEnabled"
+            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}
+          >
+            <input
+              id="ticketPrinterEnabled"
+              type="checkbox"
+              {...register('ticketPrinterEnabled')}
+              style={{ marginTop: '0.2rem', width: '1rem', height: '1rem' }}
+            />
+            <span>
+              <span style={{ fontWeight: 500 }}>Auto-print order tickets</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
+                New orders print automatically on the kitchen display. Staff can also reprint any ticket manually.
+              </span>
+            </span>
+          </label>
         </div>
 
         {/* Quick links to shop config pages */}

@@ -27,6 +27,7 @@ const mockShop = {
   contactEmail: 'gent@frietjes.be',
   contactPhone: null,
   isActive: true,
+  ticketPrinterEnabled: false,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };
@@ -111,6 +112,30 @@ describe('ShopEdit', () => {
       name: 'Frietjes Gent Updated',
       address: expect.objectContaining({ city: 'Gent' }),
     });
+  });
+
+  it('toggles the ticket-printer setting and includes it in the payload', async () => {
+    const user = userEvent.setup();
+
+    let capturedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.put('/api/brands/:brandSlug/shops/:id', async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...mockShop, ticketPrinterEnabled: true });
+      }),
+    );
+
+    renderPage();
+
+    const printerToggle = await screen.findByLabelText(/auto-print order tickets/i);
+    expect(printerToggle).not.toBeChecked();
+    await user.click(printerToggle);
+    expect(printerToggle).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(capturedBody).not.toBeNull());
+    expect(capturedBody).toMatchObject({ ticketPrinterEnabled: true });
   });
 
   it('shows a validation error when name is cleared', async () => {

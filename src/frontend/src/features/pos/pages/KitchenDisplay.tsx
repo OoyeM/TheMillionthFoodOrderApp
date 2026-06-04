@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActiveOrders, activeOrdersQueryKey } from '../hooks/useActiveOrders';
 import { KitchenOrderCard } from '../components/KitchenOrderCard';
+import { printTicket } from '../utils/printTicket';
 import { orderLifecycleApi } from '@api/orderLifecycle';
-import { ordersApi, type OrderStatusResponse } from '@api/orders';
+import { ordersApi, type OrderResponse, type OrderStatusResponse } from '@api/orders';
+import { shopsApi } from '@api/shops';
 import type { ConnectionStatus } from '@api/useSignalR';
 
 const connectionColor: Record<ConnectionStatus, string> = {
@@ -42,6 +44,49 @@ export function KitchenDisplay() {
     enabled: hasShop,
     staleTime: 5 * 60_000,
   });
+
+  // The shop's ticket-printer setting gates auto-printing (US-FP-028).
+  const shopQuery = useQuery({
+    queryKey: ['shop', resolvedBrand, resolvedShop],
+    queryFn: () => shopsApi.get(resolvedBrand, resolvedShop),
+    enabled: hasShop,
+    staleTime: 5 * 60_000,
+  });
+  const autoPrintEnabled = shopQuery.data?.ticketPrinterEnabled === true;
+
+  // Reprints (and auto-prints) a single order's kitchen ticket via a hidden iframe.
+  const printOrder = useCallback(
+    (order: OrderResponse) => {
+      printTicket(order, {
+        heading: t('pos.kitchen.ticket.heading'),
+        orderType: t(`pos.kitchen.orderType.${order.orderType}`),
+        table: t('pos.kitchen.ticket.table'),
+        timeSlot: t('pos.kitchen.ticket.timeSlot'),
+        placedAt: t('pos.kitchen.ticket.placedAt'),
+        customer: t('pos.kitchen.ticket.customer'),
+      });
+    },
+    [t],
+  );
+
+  // Auto-print orders that appear after the initial load. The first successful
+  // fetch only seeds the "seen" set so we never reprint the existing backlog;
+  // thereafter any newly-arriving order prints once when the setting is enabled.
+  const seenOrderIds = useRef<Set<string>>(new Set());
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (orders === undefined) return;
+    if (!seeded.current) {
+      seenOrderIds.current = new Set(orders.map((o) => o.id));
+      seeded.current = true;
+      return;
+    }
+    for (const order of orders) {
+      if (seenOrderIds.current.has(order.id)) continue;
+      seenOrderIds.current.add(order.id);
+      if (autoPrintEnabled) printOrder(order);
+    }
+  }, [orders, autoPrintEnabled, printOrder]);
 
   // Map each status name → the statuses reachable from it (sorted by lifecycle order).
   // Orders carry only the denormalised status name, so we key by name.
@@ -178,6 +223,7 @@ export function KitchenDisplay() {
                 advanceMutation.variables?.orderId === order.id
               }
               advanceError={failedOrderId === order.id}
+              onReprint={() => printOrder(order)}
             />
           ))}
         </section>

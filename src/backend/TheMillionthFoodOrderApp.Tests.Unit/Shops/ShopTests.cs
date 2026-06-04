@@ -111,6 +111,39 @@ public sealed class ShopTests
         await Assert.That(shop.ContactPhone).IsNull();
     }
 
+    // ── SetTicketPrinterEnabled ─────────────────────────────────────────────────
+
+    [Test]
+    public async Task Create_TicketPrinterEnabled_DefaultsToFalse()
+    {
+        var shop = CreateValidShop();
+
+        await Assert.That(shop.TicketPrinterEnabled).IsFalse();
+    }
+
+    [Test]
+    public async Task SetTicketPrinterEnabled_True_EnablesAndBumpsUpdatedAt()
+    {
+        var shop = CreateValidShop();
+        var originalUpdatedAt = shop.UpdatedAt;
+
+        shop.SetTicketPrinterEnabled(true);
+
+        await Assert.That(shop.TicketPrinterEnabled).IsTrue();
+        await Assert.That(shop.UpdatedAt).IsGreaterThanOrEqualTo(originalUpdatedAt);
+    }
+
+    [Test]
+    public async Task SetTicketPrinterEnabled_CanToggleBackToFalse()
+    {
+        var shop = CreateValidShop();
+        shop.SetTicketPrinterEnabled(true);
+
+        shop.SetTicketPrinterEnabled(false);
+
+        await Assert.That(shop.TicketPrinterEnabled).IsFalse();
+    }
+
     // ── Deactivate ────────────────────────────────────────────────────────────
 
     [Test]

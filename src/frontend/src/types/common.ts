@@ -76,6 +76,8 @@ export interface Shop {
   contactEmail: string;
   contactPhone: string | null;
   isActive: boolean;
+  /** When true, new orders auto-print on the kitchen display (US-FP-028). */
+  ticketPrinterEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }

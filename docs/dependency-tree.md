@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-03 (statuses reconciled against GitHub issue acceptance criteria — see "Status Accuracy" below)
+> Last updated: 2026-06-04 (US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -13,19 +13,23 @@
 
 ---
 
-## Status Accuracy & AC Verification (2026-06-03)
+## Status Accuracy & AC Verification (2026-06-04)
 
-> **Tracking caveat:** GitHub issues are *not* closed when work merges, and this tree had drifted. Statuses below were re-verified on 2026-06-03 by checking each open issue's **acceptance-criteria checklist** against the actual code (backend + frontend). Treat the issue tracker's open/closed state as unreliable on its own — verify against ACs.
+> **Tracking caveat:** GitHub issues are *not* closed when work merges, and this tree had drifted. Statuses below were re-verified by checking each open issue's **acceptance-criteria checklist** against the actual code (backend + frontend). Treat the issue tracker's open/closed state as unreliable on its own — verify against ACs.
 
-**⚠ Online-ordering journey has NO entry point (found 2026-06-03).** The storefront landing page (`Home.tsx`) is a stub — no shop list, no menu link. The menu only renders at `…/shops/{shopId}/menu` where `shopId` is a **database GUID**, and nothing in the storefront ever links there (only `CartDrawer`→`/checkout` and a checkout-empty redirect back). `shopId` is then carried through checkout/confirmation via `localStorage`/`sessionStorage` hacks (see the "For now" TODO in `OrderConfirmationPage.tsx`). **A real customer cannot reach the order flow.** Therefore **US-FP-016 / 038 / 058 / 063 are component-complete but NOT user-reachable** — downgraded from ✅ to 🚧; do NOT close their issues. Missing work: a storefront entry / shop-discovery page (list the brand's shops → link to menu), human-readable shop slugs instead of GUIDs, and `shopId` carried in the route rather than storage. **Now tracked as US-FP-071 (#127)** — a shop-selection page at `/{brand}/{lang}/shops` plus shop-slug-scoped storefront routes (`{shopSlug}/menu` → checkout/order), removing the localStorage shopId hack. This is the top-priority gap for the entire online channel.
+**✅ Online-ordering entry point RESOLVED (2026-06-04).** US-FP-071 (shop selection + shop-slug-scoped storefront routes) merged via **PR #128** and was runtime-verified. The storefront now has a real customer journey: `/{brand}/{lang}/shops` chooser → `{shopSlug}/menu` → checkout → payment → order tracking, with the localStorage `shopId` hack removed. This unblocks the cluster that was previously "component-complete but NOT user-reachable" — **US-FP-016 / 017 / 038 / 058 / 063 restored to ✅.** (Historical note: this gap was found 2026-06-03 — `Home.tsx` was a stub and the menu only rendered at a GUID-based route nothing linked to.)
 
-**Changed this session (2026-06-03):**
+**Changed 2026-06-04:**
+- **US-FP-071** → ✅ done. Shop chooser + shop-slug routes; FE/BE verified at runtime. PR #128 merged.
+- **US-FP-023** → ✅ done. Status-advance endpoint + kitchen-card button shipped (commit `adf18f2`); SignalR negotiate CSRF fix (`7fb5299`). The keystone is complete.
+- **US-FP-016 / 017 / 038 / 058 / 063** → ✅ — entry-point blocker resolved by 071; these were already component-complete.
+- **US-FP-028** → ✅ done. Per-shop `TicketPrinterEnabled` flag (admin toggle on ShopEdit); kitchen display auto-prints new orders via a hidden print iframe when enabled, plus a manual reprint button on every order card. Ticket carries order number, items+modifiers, type, table (eat-in), time slot (when present), timestamp.
+
+**Changed 2026-06-03:**
 - **US-FP-018** → ✅ done. Functionally complete; ticket-printer scope reclassified to US-FP-028. GitHub #18 closed.
-- **US-FP-017** → email + phone at checkout implemented and **build-verified** (working tree, uncommitted; migration `AddCustomerContactToOrder`). Its own ACs are now met, but it shares the entry-point blocker — stays 🚧 until US-FP-071 (#127) lands.
 
 **Partial (🚧) — specific remaining gaps:**
 - **US-FP-069** — per-endpoint RBAC not enforced (62 endpoints `AllowAnonymous`; roles only checked at the BFF proxy). ⚠ security hardening needed before production.
-- **US-FP-023** — keystone. SignalR/tracking plumbing all exists; missing only the status-advance endpoint + kitchen-card button (today just a dev-only Simulate endpoint).
 - **US-FP-024** — table-number capture + 21% VAT done; missing `Shop.IsEatInEnabled` gating + group-kitchen-cards-by-table.
 - **US-FP-037** — mock auth + BFF login work; customer self-registration not implemented.
 - **US-FP-039** — session timeout configurable; missing dynamic per-brand login UI, role-based redirect, failed-login errors.
@@ -122,10 +126,10 @@ Once brands + shops exist, these streams are **independent of each other**.
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-046** | Apply Belgian VAT rates | 022 |
 | ✅ | **US-FP-068** | Real-time updates (SignalR/SSE) | — (infra, can start in L1) |
-| 🚧 | **US-FP-016** | Place an online order — ⚠ no storefront entry point (shop discovery missing) | 005, 006, 007, 014, 022, 046 |
-| 🚧 | **US-FP-071** | Shop selection + shop-scoped routes (`/shops` chooser → `{shopSlug}/menu` → checkout/order) — #127 — implemented on branch `feat/us-fp-071-shop-selection`; FE build verified, BE compiles (per review); runtime NOT yet verified | 002, 005 |
-| 🚧 | **US-FP-058** | Complete payment flow (mocked) — built but unreachable (blocked by 016 entry point) | 016 |
-| 🚧 | **US-FP-017** | Place an order as a guest | 016 |
+| ✅ | **US-FP-016** | Place an online order | 005, 006, 007, 014, 022, 046 |
+| ✅ | **US-FP-071** | Shop selection + shop-scoped routes (`/shops` chooser → `{shopSlug}/menu` → checkout/order) — #127 (PR #128), runtime-verified | 002, 005 |
+| ✅ | **US-FP-058** | Complete payment flow (mocked) | 016 |
+| ✅ | **US-FP-017** | Place an order as a guest | 016 |
 | ✅ | **US-FP-018** | Place an in-store order (POS) | 016 |
 
 ---
@@ -139,15 +143,15 @@ Once ordering works, these streams are **all independent**.
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
 | ✅ | **US-FP-027** | View order on kitchen display | 022, 068 |
-| 🚧 | **US-FP-023** | Update order status (kitchen) | 022, 027 |
-| ⬜ | **US-FP-028** | Print order ticket (incl. in-store POS ticket, reclassified from US-FP-018) | 022 |
+| ✅ | **US-FP-023** | Update order status (kitchen) | 022, 027 |
+| ✅ | **US-FP-028** | Print order ticket (incl. in-store POS ticket, reclassified from US-FP-018) | 022 |
 | ⬜ | **US-FP-026** | Configure order notifications | 022 |
 
 ### Stream F: Customer Experience
 
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
-| 🚧 | **US-FP-063** | Track current order status — built but unreachable (blocked by 016 entry point) | 022, 068 |
+| ✅ | **US-FP-063** | Track current order status | 022, 068 |
 | ⬜ | **US-FP-062** | View order history | 016, 037 |
 | 🚧 | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
 | ⬜ | **US-FP-025** | QR code table ordering | 024, 065 |
@@ -225,7 +229,7 @@ Once ordering works, these streams are **all independent**.
 |--------|-------|-------------|------------|
 | 🚧 | **US-FP-060** | Platform admin dashboard | 001, reporting |
 | ⬜ | **US-FP-045** | View inventory signals | 012, 013 |
-| 🚧 | **US-FP-038** | Guest checkout (refinement) — built but unreachable (blocked by 016 entry point) | 017 |
+| ✅ | **US-FP-038** | Guest checkout (refinement) | 017 |
 
 ---
 
@@ -236,7 +240,7 @@ L0: [069🚧] → [061✅] → [001✅] → [070✅] → [004✅] → [002✅]
 
 L1: [A: Products✅]  [B: Auth/Staff🚧]  [C: Shop Config🚧]  [D: Branding✅]  ← 4 parallel
          │                │                  │
-L2: [046✅ VAT] [068✅ Realtime] → [016🚧 ⚠no entry point] → [058🚧 018✅ 017🚧]   ← ordering core
+L2: [046✅ VAT] [068✅ Realtime] → [071✅ entry] → [016✅ → 058✅ 018✅ 017✅]   ← ordering core ✅
                                         │
 L3: [E: Kitchen] [F: Customer] [G: Shop Mgmt] [H: Loyalty] [I: Reports]      ← 5 parallel
          │            │

@@ -116,10 +116,18 @@
       "status": "Status: {{name}}",
       "advanceTo": "→ {{status}}",
       "advanceError": "Status bijwerken mislukt. Probeer opnieuw.",
+      "reprint": "Bon afdrukken",
       "orderType": {
         "Pickup": "Afhalen",
         "EatIn": "Ter plaatse",
         "Delivery": "Bezorging"
+      },
+      "ticket": {
+        "heading": "Bestelbon",
+        "table": "Tafel",
+        "timeSlot": "Tijdslot",
+        "placedAt": "Geplaatst",
+        "customer": "Klant"
       },
       "connection": {
         "connected": "Live",

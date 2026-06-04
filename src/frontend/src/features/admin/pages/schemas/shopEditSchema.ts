@@ -11,6 +11,7 @@ export const shopEditSchema = z.object({
   }),
   contactEmail: z.string().email({ message: 'Enter a valid email address.' }),
   contactPhone: z.string(),
+  ticketPrinterEnabled: z.boolean(),
 });
 
 export type ShopEditFormValues = z.infer<typeof shopEditSchema>;
