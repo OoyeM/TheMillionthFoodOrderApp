@@ -72,11 +72,11 @@ export function ModifierGroupList() {
   const deleteModifierGroup = useDeleteModifierGroup(resolvedBrandSlug);
 
   function handleCreateClick() {
-    navigate(`/${brandSlug}/${lang}/admin/modifier-groups/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups/new`);
   }
 
   function handleRowClick(id: string) {
-    navigate(`/${brandSlug}/${lang}/admin/modifier-groups/${id}`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups/${id}`);
   }
 
   function handleDelete(id: string) {

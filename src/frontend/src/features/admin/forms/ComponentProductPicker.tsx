@@ -19,7 +19,7 @@ export function ComponentProductPicker({
   simpleProducts,
   selectedIds,
   onAdd,
-}: ComponentProductPickerProps): JSX.Element | null {
+}: ComponentProductPickerProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
   if (simpleProducts.length === 0) return null;

@@ -42,6 +42,7 @@ export function printHtmlDocument(html: string): void {
     return;
   }
   doc.open();
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write is the intended mechanism for streaming a self-contained doc into a print iframe; srcdoc would change load timing/behaviour.
   doc.write(html);
   doc.close();
 }

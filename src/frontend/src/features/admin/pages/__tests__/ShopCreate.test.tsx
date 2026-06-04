@@ -106,10 +106,14 @@ describe('ShopCreate', () => {
 
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.name).toBe('Gent Centrum');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.slug).toBe('gent-centrum');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     expect(capturedBody!.contactEmail).toBe('gent@frietjes.be');
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const address = capturedBody!.address as Record<string, string>;
     expect(address.street).toBe('Veldstraat');
     expect(address.number).toBe('12');

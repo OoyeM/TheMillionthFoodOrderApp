@@ -107,7 +107,7 @@ export function ModifierGroupEdit() {
       modifierGroupKeys.all(resolvedBrandSlug),
       modifierGroupKeys.detail(resolvedBrandSlug, resolvedId),
     ],
-    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/modifier-groups`); },
+    onSuccess: () => { navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups`); },
   });
 
   const {
@@ -137,14 +137,14 @@ export function ModifierGroupEdit() {
     if (window.confirm(message)) {
       deleteModifierGroup.mutate(resolvedId, {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/modifier-groups`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups`);
         },
       });
     }
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/modifier-groups`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/modifier-groups`);
   }
 
   // ---------------------------------------------------------------------------
@@ -163,7 +163,7 @@ export function ModifierGroupEdit() {
         {t('admin.modifierGroups.edit')}
       </h1>
 
-      <form onSubmit={submit} noValidate>
+      <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
         {/* Group name — Translation Tabs */}
         <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
           {t('admin.modifierGroups.name')} <RequiredMark />
@@ -386,7 +386,7 @@ function ModifierRow({ index, register, activeTab, onRemove }: ModifierRowProps)
       </div>
 
       <div style={{ marginBottom: '0.5rem' }}>
-        <label style={labelStyle} htmlFor={`modifier-${index}-name-${activeTab}`}>
+        <label style={labelStyle} htmlFor={`modifier-${String(index)}-name-${activeTab}`}>
           {t('admin.modifierGroups.modifierName')} ({activeTab.toUpperCase()})
           {activeTab === 'nl' ? ' *' : null}
         </label>
@@ -394,15 +394,15 @@ function ModifierRow({ index, register, activeTab, onRemove }: ModifierRowProps)
       </div>
 
       <div>
-        <label style={labelStyle} htmlFor={`modifier-${index}-price`}>
+        <label style={labelStyle} htmlFor={`modifier-${String(index)}-price`}>
           {t('admin.modifierGroups.priceAdjustment')}
         </label>
         <input
-          id={`modifier-${index}-price`}
+          id={`modifier-${String(index)}-price`}
           type="number"
           step="0.01"
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {...register(`modifiers.${index}.priceAdjustment` as any, { valueAsNumber: true })}
+          {...register(`modifiers.${String(index)}.priceAdjustment` as any, { valueAsNumber: true })}
           style={{ ...inputStyle(false), maxWidth: '12rem' }}
         />
       </div>
@@ -427,10 +427,10 @@ function ModifierTranslationFields({ index, register, activeTab }: ModifierTrans
   if (activeTab === 'nl') {
     return (
       <input
-        id={`modifier-${index}-name-nl`}
+        id={`modifier-${String(index)}-name-nl`}
         type="text"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        {...register(`modifiers.${index}.translations.nl.name` as any)}
+        {...register(`modifiers.${String(index)}.translations.nl.name` as any)}
         style={inputStyle(false)}
         placeholder="Modifier name in NL"
       />
@@ -439,10 +439,10 @@ function ModifierTranslationFields({ index, register, activeTab }: ModifierTrans
   if (activeTab === 'fr') {
     return (
       <input
-        id={`modifier-${index}-name-fr`}
+        id={`modifier-${String(index)}-name-fr`}
         type="text"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        {...register(`modifiers.${index}.translations.fr.name` as any)}
+        {...register(`modifiers.${String(index)}.translations.fr.name` as any)}
         style={inputStyle(false)}
         placeholder="Modifier name in FR"
       />
@@ -450,10 +450,10 @@ function ModifierTranslationFields({ index, register, activeTab }: ModifierTrans
   }
   return (
     <input
-      id={`modifier-${index}-name-de`}
+      id={`modifier-${String(index)}-name-de`}
       type="text"
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      {...register(`modifiers.${index}.translations.de.name` as any)}
+      {...register(`modifiers.${String(index)}.translations.de.name` as any)}
       style={inputStyle(false)}
       placeholder="Modifier name in DE"
     />

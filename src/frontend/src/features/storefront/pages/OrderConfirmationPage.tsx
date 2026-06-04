@@ -73,7 +73,7 @@ export function OrderConfirmationPage() {
       <main style={{ maxWidth: '40rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
         <p style={{ color: '#ef4444' }}>{t('error')}</p>
         <Link
-          to={`/${resolvedBrandSlug}/${lang}`}
+          to={`/${resolvedBrandSlug}/${String(lang)}`}
           style={{ color: 'var(--brand-color-primary, #111827)', fontWeight: 600 }}
         >
           {t('storefront.order.backToHome')}
@@ -177,7 +177,7 @@ export function OrderConfirmationPage() {
         <div style={{ padding: '0.75rem 1rem' }}>
           {order.items.map((item, idx) => (
             <div
-              key={`${item.productId}-${idx}`}
+              key={`${item.productId}-${String(idx)}`}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -238,7 +238,7 @@ export function OrderConfirmationPage() {
       {/* Back to home */}
       <div style={{ textAlign: 'center' }}>
         <Link
-          to={`/${resolvedBrandSlug}/${lang}`}
+          to={`/${resolvedBrandSlug}/${String(lang)}`}
           style={{
             color: 'var(--brand-color-primary, #111827)',
             fontWeight: 700,

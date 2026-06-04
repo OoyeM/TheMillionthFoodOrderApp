@@ -82,12 +82,12 @@ export const shopsApi = {
 
   deactivate: (brandSlug: string, id: string): Promise<void> =>
     apiClient
-      .post<void>(`/brands/${brandSlug}/shops/${id}/deactivate`)
+      .post(`/brands/${brandSlug}/shops/${id}/deactivate`)
       .then(() => undefined),
 
   activate: (brandSlug: string, id: string): Promise<void> =>
     apiClient
-      .post<void>(`/brands/${brandSlug}/shops/${id}/activate`)
+      .post(`/brands/${brandSlug}/shops/${id}/activate`)
       .then(() => undefined),
 
   /**

@@ -36,11 +36,13 @@ describe('TaxConfiguration', () => {
     // Takeaway rate input has id="rate-Takeaway"
     const takeawayInput = container.querySelector<HTMLInputElement>('#rate-Takeaway');
     expect(takeawayInput).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- expect.not.toBeNull above asserts takeawayInput is non-null
     expect(Number(takeawayInput!.value)).toBe(6);
 
     // EatIn rate input has id="rate-EatIn"
     const eatInInput = container.querySelector<HTMLInputElement>('#rate-EatIn');
     expect(eatInInput).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- expect.not.toBeNull above asserts eatInInput is non-null
     expect(Number(eatInInput!.value)).toBe(21);
   });
 
@@ -51,6 +53,7 @@ describe('TaxConfiguration', () => {
     // Wait for the form to be ready
     await screen.findByRole('heading', { name: /btw-configuratie/i });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the rate input renders once the page has loaded (awaited above)
     const takeawayInput = container.querySelector<HTMLInputElement>('#rate-Takeaway')!;
 
     // Clear and type a new value
@@ -82,6 +85,7 @@ describe('TaxConfiguration', () => {
     await screen.findByRole('heading', { name: /btw-configuratie/i });
 
     // Change the Takeaway rate to 9
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the rate input renders once the page has loaded (awaited above)
     const takeawayInput = container.querySelector<HTMLInputElement>('#rate-Takeaway')!;
     await user.clear(takeawayInput);
     await user.type(takeawayInput, '9');
@@ -93,6 +97,7 @@ describe('TaxConfiguration', () => {
     // Wait for the PUT to be captured
     await waitFor(() => { expect(capturedBody).not.toBeNull(); });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above asserts capturedBody is non-null
     const vatRates = capturedBody!.vatRates as {
       consumptionMode: string;
       ratePercentage: number;
@@ -119,6 +124,7 @@ describe('TaxConfiguration', () => {
 
     // Change the gross amount to a different value to confirm reactivity
     // id="calc-gross" is the input for the gross amount in the example calculation section
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the gross input renders once the page has loaded (awaited above)
     const grossInput = container.querySelector<HTMLInputElement>('#calc-gross')!;
     await user.clear(grossInput);
     await user.type(grossInput, '21');

@@ -25,7 +25,7 @@ interface NestedItemListProps<TFormValues extends FieldValues, TItem> {
  */
 export function NestedItemList<TFormValues extends FieldValues, TItem>(
   props: NestedItemListProps<TFormValues, TItem>,
-): JSX.Element {
+): React.JSX.Element {
   const { form, name, renderRow, newItem, addLabel = 'Add' } = props;
   const { fields, append, remove } = useFieldArray<TFormValues>({
     control: form.control,

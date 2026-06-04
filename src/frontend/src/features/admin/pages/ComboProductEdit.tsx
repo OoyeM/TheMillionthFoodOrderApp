@@ -136,7 +136,7 @@ export function ComboProductEdit() {
       componentProductIds: values.componentProductIds,
     }),
     invalidate: [productKeys.all(resolvedBrandSlug)],
-    onSuccess: () => { navigate(`/${brandSlug}/${lang}/admin/products`); },
+    onSuccess: () => { navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`); },
   });
 
   // ---------------------------------------------------------------------------
@@ -161,6 +161,7 @@ export function ComboProductEdit() {
   function handleMoveUp(index: number, currentIds: string[], onChange: (ids: string[]) => void) {
     if (index === 0) return;
     const next = [...currentIds];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index is in-bounds (index > 0) and next is a copy of currentIds
     [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
     onChange(next);
   }
@@ -168,6 +169,7 @@ export function ComboProductEdit() {
   function handleMoveDown(index: number, currentIds: string[], onChange: (ids: string[]) => void) {
     if (index >= currentIds.length - 1) return;
     const next = [...currentIds];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index and index+1 are in-bounds (index < length-1) and next is a copy of currentIds
     [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
     onChange(next);
   }
@@ -181,14 +183,14 @@ export function ComboProductEdit() {
     if (window.confirm(t('admin.comboProducts.confirmDelete', { name: nlName }))) {
       deleteProduct.mutate(resolvedProductId, {
         onSuccess: () => {
-          navigate(`/${brandSlug}/${lang}/admin/products`);
+          navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`);
         },
       });
     }
   }
 
   function handleCancel() {
-    navigate(`/${brandSlug}/${lang}/admin/products`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/products`);
   }
 
   // ---------------------------------------------------------------------------
@@ -225,6 +227,7 @@ export function ComboProductEdit() {
     if (index === 0) return;
     setAssignedGroups((prev) => {
       const next = [...prev];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index is in-bounds (index > 0) and next is a copy of prev
       [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
@@ -234,6 +237,7 @@ export function ComboProductEdit() {
     setAssignedGroups((prev) => {
       if (index >= prev.length - 1) return prev;
       const next = [...prev];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index and index+1 are in-bounds (index < length-1) and next is a copy of prev
       [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
       return next.map((g, i) => ({ ...g, sortOrder: i }));
     });
@@ -295,7 +299,7 @@ export function ComboProductEdit() {
         {t('admin.comboProducts.edit')}
       </h1>
 
-      <form onSubmit={submit} noValidate>
+      <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate>
         {/* Base Price */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={labelStyle} htmlFor="basePrice">
@@ -399,6 +403,7 @@ export function ComboProductEdit() {
             name="componentProductIds"
             control={form.control}
             render={({ field }) => {
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- RHF Controller field.value can be undefined at runtime before the form resets to fetched values, despite the non-nullable schema type
               const currentIds: string[] = field.value ?? [];
               const selectedProducts = currentIds
                 .map((id) => allProducts?.find((p) => p.id === id))

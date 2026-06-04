@@ -33,6 +33,7 @@ function resolveInitialLocale(): string {
  * Root redirect component — re-evaluates on every render so that changes to
  * the stored language preference are picked up when the user returns to "/".
  */
+// eslint-disable-next-line react-refresh/only-export-components -- router module intentionally exports the router config alongside this internal redirect component; HMR boundary, not a correctness concern
 function RootRedirect() {
   return <Navigate to={`/frietjes/${resolveInitialLocale()}`} replace />;
 }

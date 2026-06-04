@@ -148,11 +148,11 @@ export function MenuCategoryList() {
   const reorderCategory = useReorderMenuCategory(resolvedBrandSlug);
 
   function handleCreateClick() {
-    navigate(`/${brandSlug}/${lang}/admin/menu-categories/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories/new`);
   }
 
   function handleRowClick(id: string) {
-    navigate(`/${brandSlug}/${lang}/admin/menu-categories/${id}`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/menu-categories/${id}`);
   }
 
   function handleDelete(id: string) {

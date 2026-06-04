@@ -90,11 +90,11 @@ export function ShopList() {
   const { data: shops, isLoading, isError, error } = useShops(resolvedBrandSlug);
 
   function handleCreateClick() {
-    navigate(`/${brandSlug}/${lang}/admin/shops/new`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/shops/new`);
   }
 
   function handleRowClick(id: string) {
-    navigate(`/${brandSlug}/${lang}/admin/shops/${id}`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/shops/${id}`);
   }
 
   return (

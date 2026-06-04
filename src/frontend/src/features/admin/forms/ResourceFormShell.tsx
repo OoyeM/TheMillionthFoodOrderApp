@@ -21,7 +21,7 @@ export function ResourceFormShell({
   resourceName,
   onCancel,
   children,
-}: ResourceFormShellProps): JSX.Element {
+}: ResourceFormShellProps): React.JSX.Element {
   if (isFetching) {
     return (
       <main style={{ padding: '1.5rem' }}>

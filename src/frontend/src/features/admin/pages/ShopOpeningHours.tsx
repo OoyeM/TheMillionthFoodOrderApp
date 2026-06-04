@@ -38,7 +38,7 @@ interface LocalTimeBlock {
 let _localIdCounter = 0;
 function nextLocalId(): string {
   _localIdCounter += 1;
-  return `local-${_localIdCounter}`;
+  return `local-${String(_localIdCounter)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -81,10 +81,10 @@ function validateBlocks(blocks: LocalTimeBlock[]): ValidationErrors {
     // Sort by openTime for overlap detection
     const sorted = [...dayBlocks].sort((a, b) => (a.openTime < b.openTime ? -1 : 1));
     for (let i = 1; i < sorted.length; i++) {
-      const prev = sorted[i - 1]!;
-      const curr = sorted[i]!;
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
       // Overlap when current opens before previous closes
-      if (prev.closeTime > curr.openTime) {
+      if (prev && curr && prev.closeTime > curr.openTime) {
         errors[curr.localId] = 'Time blocks cannot overlap on the same day.';
       }
     }
@@ -147,11 +147,9 @@ export function ShopOpeningHours() {
 
   function removeBlock(localId: string) {
     setBlocks((prev) => prev.filter((b) => b.localId !== localId));
-    setValidationErrors((prev) => {
-      const next = { ...prev };
-      delete next[localId];
-      return next;
-    });
+    setValidationErrors((prev) =>
+      Object.fromEntries(Object.entries(prev).filter(([key]) => key !== localId)),
+    );
   }
 
   function updateBlock(localId: string, field: 'openTime' | 'closeTime', value: string) {
@@ -187,7 +185,7 @@ export function ShopOpeningHours() {
   }
 
   function handleBack() {
-    navigate(`/${brandSlug}/${lang}/admin/shops/${resolvedShopId}`);
+    navigate(`/${String(brandSlug)}/${String(lang)}/admin/shops/${resolvedShopId}`);
   }
 
   // ---------------------------------------------------------------------------

@@ -275,6 +275,7 @@ export function CartProvider({ brandSlug, shopId, children }: CartProviderProps)
 // Hook
 // ---------------------------------------------------------------------------
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with its provider; HMR boundary only, not a correctness concern
 export function useCart(): CartContextValue {
   const ctx = useContext(CartContext);
   if (ctx === null) {

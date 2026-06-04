@@ -110,6 +110,7 @@ export function ComboProductCreate() {
   function handleMoveUp(index: number) {
     if (index === 0) return;
     const next = [...currentComponentIds];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index is in-bounds (index > 0) and next is a copy of currentComponentIds
     [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
     setValue('componentProductIds', next);
   }
@@ -117,6 +118,7 @@ export function ComboProductCreate() {
   function handleMoveDown(index: number) {
     if (index >= currentComponentIds.length - 1) return;
     const next = [...currentComponentIds];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index and index+1 are in-bounds (index < length-1) and next is a copy of currentComponentIds
     [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
     setValue('componentProductIds', next);
   }

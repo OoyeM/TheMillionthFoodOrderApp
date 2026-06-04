@@ -50,6 +50,7 @@ export function PosModifierModal({
 
     const selected: CartModifier[] = [];
     for (const group of modifierGroups) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- modifiers comes from a network response; the field can be absent at runtime despite the non-nullable type
       for (const modifier of group.modifiers ?? []) {
         if (selectedModifierIds.has(modifier.id)) {
           const modifierName = modifier.translations[0]?.name ?? '';
@@ -175,6 +176,7 @@ export function PosModifierModal({
                 >
                   {group.name}
                 </h3>
+                {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- modifiers comes from a network response; the field can be absent at runtime despite the non-nullable type */}
                 {(group.modifiers ?? []).map((modifier) => {
                   const modifierName = modifier.translations[0]?.name ?? '';
                   const isChecked = selectedModifierIds.has(modifier.id);

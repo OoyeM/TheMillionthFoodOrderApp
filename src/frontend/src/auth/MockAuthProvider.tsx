@@ -58,6 +58,7 @@ interface MockAuthProviderProps {
  */
 export function MockAuthProvider({ children }: MockAuthProviderProps) {
   const initialRole = (import.meta.env.VITE_MOCK_ROLE as UserRole | undefined) ?? 'platform-admin';
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var is typed string but is undefined at runtime when unset; fallback is load-bearing
   const initialDisplayName = import.meta.env.VITE_MOCK_DISPLAY_NAME ?? 'Dev User';
 
   const [currentRole, setCurrentRole] = useState<UserRole>(initialRole);

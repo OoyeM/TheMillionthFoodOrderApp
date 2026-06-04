@@ -32,10 +32,10 @@ export const brandsApi = {
     apiClient.put<Brand>(`/brands/${id}`, data).then((r) => r.data),
 
   deactivate: (id: string): Promise<void> =>
-    apiClient.post<void>(`/brands/${id}/deactivate`).then(() => undefined),
+    apiClient.post(`/brands/${id}/deactivate`).then(() => undefined),
 
   activate: (id: string): Promise<void> =>
-    apiClient.post<void>(`/brands/${id}/activate`).then(() => undefined),
+    apiClient.post(`/brands/${id}/activate`).then(() => undefined),
 
   configureStaffAuth: (slug: string, method: StaffAuthMethod): Promise<Brand> => {
     const methodMap: Record<StaffAuthMethod, number> = {

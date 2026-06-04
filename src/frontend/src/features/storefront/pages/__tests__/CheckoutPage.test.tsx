@@ -26,9 +26,7 @@ vi.mock('../../hooks/useResolvedShop', () => ({
 }));
 
 // Import after mock registration
-// eslint-disable-next-line import/first
 import { useResolvedShop } from '../../hooks/useResolvedShop';
-// eslint-disable-next-line import/first
 import { CheckoutPage } from '../CheckoutPage';
 
 // ---------------------------------------------------------------------------
@@ -167,7 +165,7 @@ describe('CheckoutPage (US-FP-051)', () => {
     it('does not submit when first name is missing', async () => {
       let submitted = false;
       server.use(
-        http.post('/api/brands/:slug/shops/:shopId/orders', async () => {
+        http.post('/api/brands/:slug/shops/:shopId/orders', () => {
           submitted = true;
           return HttpResponse.json({}, { status: 201 });
         }),
@@ -184,7 +182,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       fireEvent.change(screen.getByLabelText(/telefoonnummer/i), { target: { value: '+32470000001' } });
 
       // Select order type and payment method
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!); // Pickup
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!); // CashAtPickup
 
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
@@ -198,7 +198,7 @@ describe('CheckoutPage (US-FP-051)', () => {
     it('does not submit when last name is missing', async () => {
       let submitted = false;
       server.use(
-        http.post('/api/brands/:slug/shops/:shopId/orders', async () => {
+        http.post('/api/brands/:slug/shops/:shopId/orders', () => {
           submitted = true;
           return HttpResponse.json({}, { status: 201 });
         }),
@@ -213,7 +213,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       fireEvent.change(screen.getByLabelText(/e-mailadres/i), { target: { value: 'jane@example.com' } });
       fireEvent.change(screen.getByLabelText(/telefoonnummer/i), { target: { value: '+32470000001' } });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!);
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
 
@@ -225,7 +227,7 @@ describe('CheckoutPage (US-FP-051)', () => {
     it('does not submit when email is missing', async () => {
       let submitted = false;
       server.use(
-        http.post('/api/brands/:slug/shops/:shopId/orders', async () => {
+        http.post('/api/brands/:slug/shops/:shopId/orders', () => {
           submitted = true;
           return HttpResponse.json({}, { status: 201 });
         }),
@@ -240,7 +242,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       // leave email empty
       fireEvent.change(screen.getByLabelText(/telefoonnummer/i), { target: { value: '+32470000001' } });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!);
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
 
@@ -252,7 +256,7 @@ describe('CheckoutPage (US-FP-051)', () => {
     it('does not submit when phone is missing', async () => {
       let submitted = false;
       server.use(
-        http.post('/api/brands/:slug/shops/:shopId/orders', async () => {
+        http.post('/api/brands/:slug/shops/:shopId/orders', () => {
           submitted = true;
           return HttpResponse.json({}, { status: 201 });
         }),
@@ -267,7 +271,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       fireEvent.change(screen.getByLabelText(/e-mailadres/i), { target: { value: 'jane@example.com' } });
       // leave phone empty
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!);
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
 
@@ -348,7 +354,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       fireEvent.change(screen.getByLabelText(/telefoonnummer/i), { target: { value: '+32470000001' } });
 
       // Select Pickup and CashAtPickup
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!);
 
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
@@ -357,11 +365,13 @@ describe('CheckoutPage (US-FP-051)', () => {
         expect(capturedBody).not.toBeNull();
       });
 
-      expect(capturedBody!.customerFirstName).toBe('Jane');
-      expect(capturedBody!.customerLastName).toBe('Doe');
-      expect(capturedBody!.languageCode).toBe('nl');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above guarantees capturedBody is non-null here
+      const body = capturedBody!;
+      expect(body.customerFirstName).toBe('Jane');
+      expect(body.customerLastName).toBe('Doe');
+      expect(body.languageCode).toBe('nl');
       // Old field must not be present in request
-      expect('customerName' in capturedBody!).toBe(false);
+      expect('customerName' in body).toBe(false);
     });
 
     it('normalises unsupported lang to nl in languageCode', async () => {
@@ -403,7 +413,9 @@ describe('CheckoutPage (US-FP-051)', () => {
       fireEvent.change(screen.getByLabelText(/e-mailadres/i), { target: { value: 'jane@example.com' } });
       fireEvent.change(screen.getByLabelText(/telefoonnummer/i), { target: { value: '+32470000001' } });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[0]!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- fixed set of radios always rendered by the form
       fireEvent.click(screen.getAllByRole('radio')[3]!);
       fireEvent.click(screen.getByRole('button', { name: /bestelling plaatsen/i }));
 
@@ -411,6 +423,7 @@ describe('CheckoutPage (US-FP-051)', () => {
         expect(capturedBody).not.toBeNull();
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- waitFor above guarantees capturedBody is non-null here
       expect(capturedBody!.languageCode).toBe('nl');
     });
   });

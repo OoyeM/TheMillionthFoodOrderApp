@@ -21,7 +21,7 @@ interface RunWithEventListenerResult {
  */
 export async function runWithEventListener(
   eventName: string,
-  action: () => Promise<unknown> | unknown,
+  action: () => unknown,
 ): Promise<RunWithEventListenerResult> {
   const listener = vi.fn();
   window.addEventListener(eventName, listener);

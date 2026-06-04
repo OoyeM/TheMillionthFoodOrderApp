@@ -94,7 +94,7 @@ export function useSignalR(options: UseSignalROptions = {}) {
           setStatus('connected');
           void joinGroups(conn);
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.error('[SignalR] Connection failed:', err);
           setStatus('disconnected');
         });
@@ -109,10 +109,14 @@ export function useSignalR(options: UseSignalROptions = {}) {
       const current = groupsRef.current;
       if (conn.state === HubConnectionState.Connected) {
         if (current.shopGroup && shopGroup) {
-          conn.invoke('LeaveShopGroup', shopGroup.brandSlug, shopGroup.shopId).catch(() => {});
+          conn.invoke('LeaveShopGroup', shopGroup.brandSlug, shopGroup.shopId).catch(() => {
+            // Intentionally ignored: connection may be closing during unmount.
+          });
         }
         if (current.orderGroup && orderId) {
-          conn.invoke('LeaveOrderGroup', orderId).catch(() => {});
+          conn.invoke('LeaveOrderGroup', orderId).catch(() => {
+            // Intentionally ignored: connection may be closing during unmount.
+          });
         }
       }
       groupsRef.current = {};

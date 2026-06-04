@@ -29,7 +29,7 @@ export function SelectedComponentsList({
   onMoveUp,
   onMoveDown,
   onRemove,
-}: SelectedComponentsListProps): JSX.Element | null {
+}: SelectedComponentsListProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
   if (selectedProducts.length === 0) return null;

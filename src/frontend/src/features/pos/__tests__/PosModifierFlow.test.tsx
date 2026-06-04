@@ -254,8 +254,10 @@ describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
 
     // Step 9: Assert the POST body contains the correct selectedModifierIds
     expect(capturedBody).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- asserted non-null above
     expect(capturedBody!.items).toHaveLength(1);
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- body captured and asserted non-null; items[0] guaranteed by toHaveLength(1) above
     const item = capturedBody!.items![0]!;
     expect(item.productId).toBe('prod-friet');
     // The modifier selected via the UI checkbox must appear here — NOT from a fixture
@@ -342,6 +344,7 @@ describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
     });
 
     expect(capturedBody).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- body captured and asserted non-null; the single posted item is guaranteed by the preceding item-count assertion
     expect(capturedBody!.items![0]!.selectedModifierIds).toEqual([]);
   });
 
@@ -427,6 +430,7 @@ describe('POS modifier flow — end-to-end UI (t-16, AC5)', () => {
     });
 
     expect(capturedBody).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- body captured and asserted non-null; the single posted item is guaranteed by the preceding submit/success flow
     const ids = capturedBody!.items![0]!.selectedModifierIds;
     expect(ids).toHaveLength(2);
     expect(ids).toContain('mod-mayo');
