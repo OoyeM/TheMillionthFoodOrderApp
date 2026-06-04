@@ -13,7 +13,7 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             throw new InvalidOperationException($"A shop with slug '{request.Slug}' already exists in this brand.");
 
         var address = MapToAddress(request.Address);
-        var shop = Shop.Create(request.Name, request.Slug, address, request.ContactEmail, request.ContactPhone);
+        var shop = Shop.Create(request.Name, request.Slug, address, request.ContactEmail, request.ContactPhone, request.VatNumber);
 
         await shopRepository.AddAsync(shop, cancellationToken);
         await shopRepository.SaveChangesAsync(cancellationToken);
@@ -32,7 +32,7 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             id,
             s =>
             {
-                s.UpdateMetadata(request.Name, address, request.ContactEmail, request.ContactPhone);
+                s.UpdateMetadata(request.Name, address, request.ContactEmail, request.ContactPhone, request.VatNumber);
                 s.SetKitchenDisplayEnabled(request.KitchenDisplayEnabled);
                 s.SetTicketPrinterEnabled(request.TicketPrinterEnabled);
                 s.SetPushNotificationEnabled(request.PushNotificationEnabled);
@@ -108,7 +108,8 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
             shop.PushNotificationEnabled,
             shop.SoundAlertEnabled,
             shop.CreatedAt,
-            shop.UpdatedAt);
+            shop.UpdatedAt,
+            shop.VatNumber);
 
     private static StorefrontShopResponse MapToStorefrontResponse(Shop shop, DateTimeOffset now) =>
         new(

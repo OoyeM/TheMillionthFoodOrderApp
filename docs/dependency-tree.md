@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-04 (US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
+> Last updated: 2026-06-04 (US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -20,6 +20,7 @@
 **✅ Online-ordering entry point RESOLVED (2026-06-04).** US-FP-071 (shop selection + shop-slug-scoped storefront routes) merged via **PR #128** and was runtime-verified. The storefront now has a real customer journey: `/{brand}/{lang}/shops` chooser → `{shopSlug}/menu` → checkout → payment → order tracking, with the localStorage `shopId` hack removed. This unblocks the cluster that was previously "component-complete but NOT user-reachable" — **US-FP-016 / 017 / 038 / 058 / 063 restored to ✅.** (Historical note: this gap was found 2026-06-03 — `Home.tsx` was a stub and the menu only rendered at a GUID-based route nothing linked to.)
 
 **Changed 2026-06-04:**
+- **US-FP-052** → ✅ done. POS customer receipt: thermal-format `buildReceiptHtml` (seller legal block — shop name, address, VAT number — plus per-line prices, Belgian VAT breakdown net/VAT/gross, payment method, date) printed via the shared hidden-iframe `printDocument` helper (extracted from US-FP-028's `printTicket`). A "Print receipt" action on the POS confirmation screen triggers print and doubles as reprint (AC3). New nullable `Shop.VatNumber` (domain + EF + brand migration `AddShopVatNumber` + shop create/update DTOs/endpoints/validators + admin ShopEdit field). The seller legal block is denormalised onto `OrderResponse` (populated on the create + GET-order paths; null on the kitchen status-advance/list paths) — this also lays the groundwork for US-FP-051 (digital receipt). Note: the receipt button is fed the order via router state, so reprint is available on the confirmation screen but not after a hard refresh (acceptable for MVP). 284 unit + 45 integration + 84 frontend tests green.
 - **US-FP-071** → ✅ done. Shop chooser + shop-slug routes; FE/BE verified at runtime. PR #128 merged.
 - **US-FP-023** → ✅ done. Status-advance endpoint + kitchen-card button shipped (commit `adf18f2`); SignalR negotiate CSRF fix (`7fb5299`). The keystone is complete.
 - **US-FP-016 / 017 / 038 / 058 / 063** → ✅ — entry-point blocker resolved by 071; these were already component-complete.
@@ -196,7 +197,7 @@ Once ordering works, these streams are **all independent**.
 | Status | Story | Description | Depends On |
 |--------|-------|-------------|------------|
 | ⬜ | **US-FP-051** | Generate digital receipt | 016, 046 |
-| ⬜ | **US-FP-052** | Print receipt at point of sale | 016, 046 |
+| ✅ | **US-FP-052** | Print receipt at point of sale (POS thermal receipt + reprint) | 016, 046 |
 
 ### Stream K: Offline Mode
 

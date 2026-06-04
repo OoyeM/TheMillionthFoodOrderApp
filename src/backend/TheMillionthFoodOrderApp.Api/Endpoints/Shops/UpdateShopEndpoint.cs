@@ -14,7 +14,8 @@ public sealed record UpdateShopRequest(
     bool KitchenDisplayEnabled,
     bool TicketPrinterEnabled,
     bool PushNotificationEnabled,
-    bool SoundAlertEnabled);
+    bool SoundAlertEnabled,
+    string? VatNumber = null);
 
 public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
 {
@@ -57,6 +58,10 @@ public sealed class UpdateShopRequestValidator : Validator<UpdateShopRequest>
         RuleFor(x => x.ContactPhone)
             .MaximumLength(30)
             .When(x => x.ContactPhone is not null);
+
+        RuleFor(x => x.VatNumber)
+            .MaximumLength(30)
+            .When(x => x.VatNumber is not null);
     }
 }
 
@@ -96,7 +101,8 @@ public sealed class UpdateShopEndpoint(IShopService shopService)
                 req.KitchenDisplayEnabled,
                 req.TicketPrinterEnabled,
                 req.PushNotificationEnabled,
-                req.SoundAlertEnabled);
+                req.SoundAlertEnabled,
+                req.VatNumber);
 
             var response = await shopService.UpdateShopAsync(req.Id, appRequest, ct);
 

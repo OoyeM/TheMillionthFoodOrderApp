@@ -1,5 +1,6 @@
 using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 using TheMillionthFoodOrderApp.Domain.Orders;
+using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
 
@@ -11,7 +12,12 @@ namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
 /// </summary>
 internal static class OrderTrackingMapper
 {
-    internal static OrderResponse MapOrder(Order order) =>
+    /// <summary>
+    /// Maps an order for tracking responses. When <paramref name="shop"/> is supplied, the
+    /// seller legal block (name, VAT number, address) is included so counter staff can
+    /// reprint a complete receipt (US-FP-052).
+    /// </summary>
+    internal static OrderResponse MapOrder(Order order, Shop? shop = null) =>
         new(
             order.Id,
             order.OrderNumber,
@@ -45,5 +51,8 @@ internal static class OrderTrackingMapper
             order.TableNumber,
             order.CreatedByStaffId,
             order.CustomerEmail,
-            order.CustomerPhone);
+            order.CustomerPhone,
+            shop?.Name,
+            shop?.VatNumber,
+            shop?.Address.ToSingleLine());
 }

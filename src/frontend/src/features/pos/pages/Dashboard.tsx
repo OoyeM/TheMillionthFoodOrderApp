@@ -35,7 +35,11 @@ function PosDashboardInner({ brandSlug, shopId }: PosDashboardInnerProps) {
     if (!canSubmit) return;
     try {
       const order = await mutation.mutateAsync({});
-      void navigate(`/${paramBrandSlug}/${lang}/pos/confirmation/${order.orderNumber}`);
+      // Carry the full order to the confirmation screen so counter staff can print/reprint
+      // the customer receipt (US-FP-052) without an extra round-trip.
+      void navigate(`/${paramBrandSlug}/${lang}/pos/confirmation/${order.orderNumber}`, {
+        state: { order },
+      });
     } catch {
       // error is exposed via mutation.isError
     }

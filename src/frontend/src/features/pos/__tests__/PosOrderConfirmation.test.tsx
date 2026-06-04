@@ -14,6 +14,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { OrderResponse } from '@api/orders';
 import { PosOrderConfirmationInner, PosOrderConfirmation } from '../pages/PosOrderConfirmation';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -22,6 +23,29 @@ function createTestClient() {
   return new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+}
+
+function makeOrder(): OrderResponse {
+  return {
+    id: 'order-1',
+    orderNumber: 'ORD-042',
+    shopId: 'shop-1',
+    brandSlug: 'frietjes',
+    orderType: 'Pickup',
+    statusName: 'Placed',
+    customerName: null,
+    items: [],
+    vatRatePercent: 6,
+    subtotalGross: 0,
+    totalVatAmount: 0,
+    totalNet: 0,
+    totalGross: 0,
+    createdAt: '2026-06-04T10:15:00Z',
+    paymentMethod: 'CashAtPickup',
+    shopName: 'Frietjes Gent',
+    shopVatNumber: 'BE0123456789',
+    shopAddressLine: 'Korenmarkt 1, 9000 Gent',
+  };
 }
 
 /**
@@ -63,6 +87,32 @@ describe('PosOrderConfirmationInner (t-15)', () => {
     fireEvent.click(backBtn);
 
     expect(backCalled).toBe(true);
+  });
+
+  it('shows a print-receipt button and calls onPrintReceipt when an order is present', () => {
+    let printed = false;
+    render(
+      <QueryClientProvider client={createTestClient()}>
+        <MemoryRouter>
+          <PosOrderConfirmationInner
+            orderNumber="ORD-042"
+            onBackToMenu={() => { /* no-op */ }}
+            order={makeOrder()}
+            onPrintReceipt={() => { printed = true; }}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const printBtn = screen.getByTestId('pos-print-receipt');
+    fireEvent.click(printBtn);
+
+    expect(printed).toBe(true);
+  });
+
+  it('does not show a print-receipt button when no order is available', () => {
+    renderInner('ORD-001');
+    expect(screen.queryByTestId('pos-print-receipt')).not.toBeInTheDocument();
   });
 });
 

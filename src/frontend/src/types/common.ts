@@ -75,6 +75,8 @@ export interface Shop {
   address: ShopAddress;
   contactEmail: string;
   contactPhone: string | null;
+  /** VAT / enterprise number printed on customer receipts (US-FP-052). Null when not set. */
+  vatNumber: string | null;
   isActive: boolean;
   /** When true, new orders are highlighted on the kitchen display (US-FP-026). */
   kitchenDisplayEnabled: boolean;

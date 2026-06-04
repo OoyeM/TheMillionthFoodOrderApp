@@ -1,4 +1,5 @@
 import type { OrderResponse } from '@api/orders';
+import { printHtmlDocument } from './printDocument';
 
 /**
  * Localised, pre-resolved labels for the printed ticket. Kept caller-supplied so
@@ -117,40 +118,5 @@ export function buildTicketHtml(order: OrderResponse, labels: TicketLabels): str
  * auto-prints without them bleeding into one another.
  */
 export function printTicket(order: OrderResponse, labels: TicketLabels): void {
-  if (typeof document === 'undefined') return;
-
-  const iframe = document.createElement('iframe');
-  iframe.setAttribute('aria-hidden', 'true');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-
-  iframe.addEventListener('load', () => {
-    const frameWindow = iframe.contentWindow;
-    if (frameWindow == null) {
-      iframe.remove();
-      return;
-    }
-    try {
-      frameWindow.focus();
-      frameWindow.print();
-    } finally {
-      // Give the print dialog time to grab the document before tearing it down.
-      window.setTimeout(() => iframe.remove(), 1000);
-    }
-  });
-
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentWindow?.document ?? iframe.contentDocument;
-  if (doc == null) {
-    iframe.remove();
-    return;
-  }
-  doc.open();
-  doc.write(buildTicketHtml(order, labels));
-  doc.close();
+  printHtmlDocument(buildTicketHtml(order, labels));
 }

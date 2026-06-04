@@ -32,4 +32,15 @@ public sealed class Address : ValueObject
         yield return PostalCode;
         yield return Country;
     }
+
+    /// <summary>
+    /// Renders the address as a single human-readable line for receipts and tickets,
+    /// e.g. "Frietstraat 1, 1000 Brussel". The country is appended only when it is not
+    /// the Belgian default ("BE").
+    /// </summary>
+    public string ToSingleLine()
+    {
+        var line = $"{Street} {Number}, {PostalCode} {City}";
+        return Country == "BE" ? line : $"{line}, {Country}";
+    }
 }

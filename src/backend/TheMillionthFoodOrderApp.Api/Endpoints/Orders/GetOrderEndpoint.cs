@@ -2,6 +2,7 @@ using FastEndpoints;
 using TheMillionthFoodOrderApp.Application.OrderLifecycle;
 using TheMillionthFoodOrderApp.Application.Orders.Dtos;
 using TheMillionthFoodOrderApp.Domain.Orders;
+using TheMillionthFoodOrderApp.Domain.Shops;
 
 namespace TheMillionthFoodOrderApp.Api.Endpoints.Orders;
 
@@ -15,7 +16,10 @@ public sealed record GetOrderRequest(
 /// configured lifecycle so the customer can see their order's progression
 /// without a second round-trip.
 /// </summary>
-public sealed class GetOrderEndpoint(IOrderRepository orderRepository, IOrderLifecycleService lifecycleService)
+public sealed class GetOrderEndpoint(
+    IOrderRepository orderRepository,
+    IOrderLifecycleService lifecycleService,
+    IShopRepository shopRepository)
     : Endpoint<GetOrderRequest, OrderTrackingResponse>
 {
     public const string Route = "/api/brands/{brandSlug}/shops/{shopId}/orders/{orderId}";
@@ -50,8 +54,12 @@ public sealed class GetOrderEndpoint(IOrderRepository orderRepository, IOrderLif
 
         var lifecycle = await lifecycleService.GetLifecycleAsync(req.ShopId, ct);
 
+        // Load the shop so the seller legal block (name, VAT number, address) is included
+        // for receipt rendering (US-FP-052).
+        var shop = await shopRepository.GetByIdAsync(req.ShopId, ct);
+
         var response = new OrderTrackingResponse(
-            OrderTrackingMapper.MapOrder(order),
+            OrderTrackingMapper.MapOrder(order, shop),
             lifecycle);
 
         await HttpContext.Response.SendAsync(response, statusCode: 200, cancellation: ct);

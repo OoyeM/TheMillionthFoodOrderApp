@@ -41,6 +41,7 @@ export function ShopEdit() {
       address: { street: '', number: '', city: '', postalCode: '', country: 'BE' },
       contactEmail: '',
       contactPhone: '',
+      vatNumber: '',
       kitchenDisplayEnabled: false,
       ticketPrinterEnabled: false,
       pushNotificationEnabled: false,
@@ -57,6 +58,7 @@ export function ShopEdit() {
       },
       contactEmail: shop.contactEmail,
       contactPhone: shop.contactPhone ?? '',
+      vatNumber: shop.vatNumber ?? '',
       kitchenDisplayEnabled: shop.kitchenDisplayEnabled,
       ticketPrinterEnabled: shop.ticketPrinterEnabled,
       pushNotificationEnabled: shop.pushNotificationEnabled,
@@ -78,6 +80,9 @@ export function ShopEdit() {
       soundAlertEnabled: values.soundAlertEnabled,
       ...(values.contactPhone.trim().length > 0
         ? { contactPhone: values.contactPhone.trim() }
+        : {}),
+      ...(values.vatNumber.trim().length > 0
+        ? { vatNumber: values.vatNumber.trim() }
         : {}),
     }),
     invalidate: [shopKeys.all(resolvedBrandSlug), shopKeys.detail(resolvedBrandSlug, resolvedShopId)],
@@ -270,6 +275,24 @@ export function ShopEdit() {
             {...register('contactPhone')}
             style={inputStyle(false)}
           />
+        </div>
+
+        {/* VAT number (optional) — printed on customer receipts (US-FP-052) */}
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={labelStyle} htmlFor="vatNumber">
+            VAT Number{' '}
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <input
+            id="vatNumber"
+            type="text"
+            {...register('vatNumber')}
+            style={inputStyle(false)}
+            placeholder="BE0123456789"
+          />
+          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            Shown on printed customer receipts as a legal requirement.
+          </p>
         </div>
 
         {/* Order notifications (US-FP-026) — independent per-shop channels */}
