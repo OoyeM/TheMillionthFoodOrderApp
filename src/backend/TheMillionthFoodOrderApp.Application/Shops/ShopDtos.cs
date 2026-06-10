@@ -73,4 +73,5 @@ public sealed record StorefrontShopResponse(
     string Slug,
     AddressResponse Address,
     bool IsOpen,
-    EatInSettingsDto EatIn);
+    EatInSettingsDto EatIn,
+    TimeSlotOrderingSettingsDto TimeSlotOrdering);

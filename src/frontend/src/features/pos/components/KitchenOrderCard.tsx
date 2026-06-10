@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { OrderResponse, OrderType } from '@api/orders';
 import type { OrderStatusResponse } from '@/types/common';
+import { formatTime, formatTimeSlot } from '../../../utils/timeSlot';
 
 interface KitchenOrderCardProps {
   order: OrderResponse;
@@ -23,11 +24,6 @@ const orderTypeColor: Record<OrderType, string> = {
   EatIn: '#9333ea',
   Delivery: '#059669',
 };
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat('nl-BE', { hour: '2-digit', minute: '2-digit' }).format(d);
-}
 
 function formatRelative(iso: string, now: number): string {
   const elapsedMs = now - new Date(iso).getTime();
@@ -140,7 +136,7 @@ export function KitchenOrderCard({
             {t('pos.kitchen.table', { number: order.tableNumber })}
           </span>
         )}
-        {order.timeSlot != null && order.timeSlot.length > 0 && (
+        {order.timeSlotStart != null && order.timeSlotEnd != null && (
           <span
             data-testid="kitchen-order-timeslot"
             style={{
@@ -152,7 +148,7 @@ export function KitchenOrderCard({
               fontWeight: 700,
             }}
           >
-            {t('pos.kitchen.timeSlot', { value: order.timeSlot })}
+            {t('pos.kitchen.timeSlot', { value: formatTimeSlot(order.timeSlotStart, order.timeSlotEnd) })}
           </span>
         )}
         {order.customerName != null && order.customerName.length > 0 && (

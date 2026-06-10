@@ -9,6 +9,7 @@ using TheMillionthFoodOrderApp.Domain.Orders;
 using TheMillionthFoodOrderApp.Domain.Products;
 using TheMillionthFoodOrderApp.Domain.Shops;
 using TheMillionthFoodOrderApp.Domain.TaxConfiguration;
+using TimeSlotTuple = (System.DateTimeOffset Start, System.DateTimeOffset End);
 
 namespace TheMillionthFoodOrderApp.Application.Orders;
 
@@ -61,7 +62,8 @@ public sealed class OrderService(
             request.CustomerEmail,
             request.CustomerPhone,
             request.LanguageCode,
-            enforceOpeningHours: true);
+            enforceOpeningHours: true,
+            timeSlotStart: request.TimeSlotStart);
     }
 
     public async Task<OrderResponse> CreateInStoreOrderAsync(
@@ -221,7 +223,8 @@ public sealed class OrderService(
         string? customerEmail = null,
         string? customerPhone = null,
         string? languageCode = null,
-        bool enforceOpeningHours = false)
+        bool enforceOpeningHours = false,
+        DateTimeOffset? timeSlotStart = null)
     {
         // 0. Resolve the receipt language: the customer's checkout language when supplied,
         //    otherwise the brand's primary language (US-FP-051).
@@ -264,6 +267,37 @@ public sealed class OrderService(
         if (enforceOpeningHours && !shop.IsOpenAt(DateTimeOffset.UtcNow))
             throw new InvalidOperationException(
                 "This shop is currently closed and is not accepting online orders.");
+
+        // 3c. Time-slot enforcement (US-FP-019). Only applies to online orders (in-store always ASAP).
+        TimeSlotTuple? resolvedSlot = null;
+        if (timeSlotStart is not null)
+        {
+            if (!shop.TimeSlotOrdering.IsEnabled)
+                throw new ArgumentException("This shop does not accept time-slot orders.");
+
+            // Re-generate valid slots on the server side (alignment + opening hours + lead time).
+            var validSlots = TimeSlotGenerator.GenerateSlotsForToday(shop, DateTimeOffset.UtcNow);
+            TimeSlotTuple? matched = validSlots
+                .Where(s => s.Start == timeSlotStart.Value)
+                .Select(s => (TimeSlotTuple?)s)
+                .FirstOrDefault();
+
+            if (matched is not { } matchedSlot)
+                throw new TimeSlotUnavailableException(
+                    "The requested time slot is no longer available for this shop. It may have " +
+                    "passed, be misaligned with the shop's slot grid, or fall outside opening hours.");
+
+            // Capacity check — count all orders sharing this TimeSlotStart.
+            var counts = await orderRepository.GetTimeSlotOrderCountsAsync(
+                shopId, matchedSlot.Start, matchedSlot.End, cancellationToken);
+            var existing = counts.TryGetValue(matchedSlot.Start, out var c) ? c : 0;
+
+            if (existing >= shop.TimeSlotOrdering.MaxOrdersPerInterval!.Value)
+                throw new TimeSlotUnavailableException(
+                    "The selected time slot is full. Please pick another slot.");
+
+            resolvedSlot = matchedSlot;
+        }
 
         // 4. Load order lifecycle config to determine opening status (lazy-init default if missing)
         var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken);
@@ -383,7 +417,9 @@ public sealed class OrderService(
                 createdByStaffId,
                 customerEmail,
                 customerPhone,
-                resolvedLanguage);
+                resolvedLanguage,
+                resolvedSlot?.Start,
+                resolvedSlot?.End);
 
             try
             {
@@ -475,5 +511,7 @@ public sealed class OrderService(
             shop?.Address.ToSingleLine(),
             order.CustomerFirstName,
             order.CustomerLastName,
-            order.LanguageCode);
+            order.LanguageCode,
+            order.TimeSlotStart,
+            order.TimeSlotEnd);
 }

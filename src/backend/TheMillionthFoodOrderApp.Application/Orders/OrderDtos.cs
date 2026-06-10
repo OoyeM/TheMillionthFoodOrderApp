@@ -26,7 +26,9 @@ public sealed record CreateOrderRequest(
     /// <summary>BCP-47 checkout language (e.g. "nl-BE") for the digital receipt; falls back to the brand default (US-FP-051).</summary>
     string? LanguageCode = null,
     /// <summary>Table number for eat-in orders (US-FP-024/066); null for takeaway/delivery or when not captured.</summary>
-    int? TableNumber = null);
+    int? TableNumber = null,
+    /// <summary>UTC start of the selected time slot (US-FP-019). Null = "as soon as possible".</summary>
+    DateTimeOffset? TimeSlotStart = null);
 
 /// <summary>
 /// Application-layer DTO for placing a new in-store order via counter staff.
@@ -110,7 +112,11 @@ public sealed record OrderResponse(
     /// <summary>Customer last name (US-FP-051).</summary>
     string? CustomerLastName = null,
     /// <summary>BCP-47 checkout language captured for the digital receipt (US-FP-051).</summary>
-    string? LanguageCode = null);
+    string? LanguageCode = null,
+    /// <summary>UTC start of the selected time slot (US-FP-019). Null when "as soon as possible".</summary>
+    DateTimeOffset? TimeSlotStart = null,
+    /// <summary>UTC end of the selected time slot (US-FP-019). Null when "as soon as possible".</summary>
+    DateTimeOffset? TimeSlotEnd = null);
 
 /// <summary>
 /// Combined response DTO returned by the order-tracking endpoints.
@@ -120,3 +126,25 @@ public sealed record OrderResponse(
 public record OrderTrackingResponse(
     OrderResponse Order,
     OrderLifecycleResponse Lifecycle);
+
+// ── Time-slot DTOs (US-FP-019) ───────────────────────────────────────────────
+
+/// <summary>
+/// A single time slot offered to a customer at checkout.
+/// </summary>
+public sealed record TimeSlotDto(
+    DateTimeOffset Start,
+    DateTimeOffset End,
+    bool IsAvailable,
+    int RemainingCapacity);
+
+/// <summary>
+/// Response from <c>GET /api/brands/{brandSlug}/shops/{shopId}/time-slots</c>.
+/// When <see cref="IsEnabled"/> is false, <see cref="Slots"/> is empty and the
+/// interval/capacity fields are null.
+/// </summary>
+public sealed record AvailableTimeSlotsResponse(
+    bool IsEnabled,
+    int? IntervalMinutes,
+    int? MaxOrdersPerInterval,
+    IReadOnlyList<TimeSlotDto> Slots);

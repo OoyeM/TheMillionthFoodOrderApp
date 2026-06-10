@@ -93,7 +93,16 @@
       "placing": "Wird aufgegeben…",
       "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen.",
       "cartEmpty": "Ihr Warenkorb ist leer.",
-      "shopClosed": "Dieser Shop ist derzeit geschlossen und nimmt keine Online-Bestellungen an."
+      "shopClosed": "Dieser Shop ist derzeit geschlossen und nimmt keine Online-Bestellungen an.",
+      "timeSlot": {
+        "label": "Zeitfenster",
+        "asap": "So schnell wie möglich",
+        "full": "Voll",
+        "noneAvailable": "Heute sind keine Zeitfenster mehr verfügbar. Ihre Bestellung wird so schnell wie möglich zubereitet.",
+        "asapNotice": "Ihre Bestellung wird so schnell wie möglich zubereitet.",
+        "slotFull": "Dieses Zeitfenster ist nicht mehr verfügbar. Bitte wählen Sie ein anderes.",
+        "loadError": "Zeitfenster konnten nicht geladen werden. Sie können \"so schnell wie möglich\" bestellen."
+      }
     },
     "order": {
       "confirmed": "Bestellung bestätigt!",
@@ -101,6 +110,7 @@
       "orderNumber": "Bestellnummer",
       "orderType": "Bestellart",
       "customerName": "Name",
+      "timeSlot": "Zeitfenster",
       "status": "Status",
       "items": "Artikel",
       "each": "je",

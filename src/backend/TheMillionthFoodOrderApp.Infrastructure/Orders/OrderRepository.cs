@@ -78,6 +78,25 @@ public sealed class OrderRepository(BrandDbContext dbContext, IMessageBus messag
             .AnyAsync(o => o.ShopId == shopId && o.OrderNumber == orderNumber, cancellationToken);
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyDictionary<DateTimeOffset, int>> GetTimeSlotOrderCountsAsync(
+        Guid shopId,
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken cancellationToken = default)
+    {
+        var counts = await dbContext.Orders
+            .Where(o => o.ShopId == shopId
+                && o.TimeSlotStart != null
+                && o.TimeSlotStart >= fromInclusive
+                && o.TimeSlotStart < toExclusive)
+            .GroupBy(o => o.TimeSlotStart!.Value)
+            .Select(g => new { SlotStart = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(x => x.SlotStart, x => x.Count);
+    }
+
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<Order>> GetActiveByShopAsync(
         Guid shopId,
         CancellationToken cancellationToken = default)

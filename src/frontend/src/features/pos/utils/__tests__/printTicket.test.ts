@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildTicketHtml, type TicketLabels } from '../printTicket';
+import { formatTimeSlot } from '../../../../utils/timeSlot';
 import type { OrderResponse } from '@api/orders';
 
 const labels: TicketLabels = {
@@ -66,9 +67,19 @@ describe('buildTicketHtml', () => {
     expect(buildTicketHtml(makeOrder(), labels)).not.toContain('Table:');
   });
 
-  it('renders the time slot only when present', () => {
-    expect(buildTicketHtml(makeOrder({ timeSlot: '18:30' }), labels)).toContain('Time slot: 18:30');
-    expect(buildTicketHtml(makeOrder({ timeSlot: null }), labels)).not.toContain('Time slot:');
+  it('renders the time slot only when both timeSlotStart and timeSlotEnd are present', () => {
+    // Exact local-time text depends on the host timezone, so assert against the same
+    // formatter the ticket uses — this still catches swapped args or a wrong source field.
+    const start = '2026-06-10T17:30:00Z';
+    const end = '2026-06-10T17:40:00Z';
+    const withSlot = buildTicketHtml(
+      makeOrder({ timeSlotStart: start, timeSlotEnd: end }),
+      labels,
+    );
+    expect(withSlot).toContain(`Time slot: ${formatTimeSlot(start, end)}`);
+
+    // When both are null, the row must be absent.
+    expect(buildTicketHtml(makeOrder(), labels)).not.toContain('Time slot:');
   });
 
   it('renders the customer name when present', () => {

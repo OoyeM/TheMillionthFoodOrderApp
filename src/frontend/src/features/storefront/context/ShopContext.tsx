@@ -56,6 +56,7 @@ export function ShopResolver() {
     slug: shop.slug,
     isOpen: shop.isOpen,
     eatIn: shop.eatIn,
+    timeSlotOrdering: shop.timeSlotOrdering,
   };
 
   return (

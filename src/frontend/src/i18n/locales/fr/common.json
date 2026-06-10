@@ -93,7 +93,16 @@
       "placing": "En cours…",
       "submitError": "Échec de la commande. Veuillez réessayer.",
       "cartEmpty": "Votre panier est vide.",
-      "shopClosed": "Ce magasin est actuellement fermé et n'accepte pas de commandes en ligne."
+      "shopClosed": "Ce magasin est actuellement fermé et n'accepte pas de commandes en ligne.",
+      "timeSlot": {
+        "label": "Créneau horaire",
+        "asap": "Dès que possible",
+        "full": "Complet",
+        "noneAvailable": "Plus de créneaux disponibles aujourd'hui. Votre commande sera préparée dès que possible.",
+        "asapNotice": "Votre commande sera préparée dès que possible.",
+        "slotFull": "Ce créneau n'est plus disponible. Veuillez en choisir un autre.",
+        "loadError": "Impossible de charger les créneaux. Vous pouvez commander \"dès que possible\"."
+      }
     },
     "order": {
       "confirmed": "Commande confirmée !",
@@ -101,6 +110,7 @@
       "orderNumber": "Numéro de commande",
       "orderType": "Type de commande",
       "customerName": "Nom",
+      "timeSlot": "Créneau horaire",
       "status": "Statut",
       "items": "Articles",
       "each": "chacun",

@@ -17,6 +17,8 @@ export interface StorefrontShop {
   isOpen: boolean;
   /** Eat-in ordering configuration — used to gate the eat-in option at checkout (US-FP-066). */
   eatIn: EatInSettings;
+  /** Time-slot ordering configuration — used to show the slot picker at checkout (US-FP-019). */
+  timeSlotOrdering: TimeSlotOrderingSettings;
 }
 
 export interface CreateShopRequest {

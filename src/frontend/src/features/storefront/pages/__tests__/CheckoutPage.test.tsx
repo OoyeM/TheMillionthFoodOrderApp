@@ -52,6 +52,7 @@ const defaultShop: ResolvedShop = {
   slug: 'gent-centrum',
   isOpen: true,
   eatIn: { isEnabled: true, requiresTableNumber: true },
+  timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
 };
 
 /** Unauthenticated context (guest). */

@@ -1,7 +1,7 @@
 # User Story Dependency Tree & Progress Tracker
 
 > Generated from [frietjes-platform.md](./extract-prd/user-stories/frietjes-platform.md)
-> Last updated: 2026-06-04 (US-FP-066 eat-in toggle + US-FP-020 time-slot config done; US-FP-051 digital receipt done; US-FP-052 print receipt done; US-FP-026 order notifications done; US-FP-023 + US-FP-071 verified done; online-channel cluster unblocked — see "Status Accuracy" below)
+> Last updated: 2026-06-10 (US-FP-019 time-slot picker at checkout done; previously: US-FP-066 eat-in toggle + US-FP-020 time-slot config, US-FP-051 digital receipt, US-FP-052 print receipt, US-FP-026 order notifications, US-FP-023 + US-FP-071 — see "Status Accuracy" below)
 
 ## Progress Legend
 
@@ -18,6 +18,9 @@
 > **Tracking caveat:** GitHub issues are *not* closed when work merges, and this tree had drifted. Statuses below were re-verified by checking each open issue's **acceptance-criteria checklist** against the actual code (backend + frontend). Treat the issue tracker's open/closed state as unreliable on its own — verify against ACs.
 
 **✅ Online-ordering entry point RESOLVED (2026-06-04).** US-FP-071 (shop selection + shop-slug-scoped storefront routes) merged via **PR #128** and was runtime-verified. The storefront now has a real customer journey: `/{brand}/{lang}/shops` chooser → `{shopSlug}/menu` → checkout → payment → order tracking, with the localStorage `shopId` hack removed. This unblocks the cluster that was previously "component-complete but NOT user-reachable" — **US-FP-016 / 017 / 038 / 058 / 063 restored to ✅.** (Historical note: this gap was found 2026-06-03 — `Home.tsx` was a stub and the menu only rendered at a GUID-based route nothing linked to.)
+
+**Changed 2026-06-10:**
+- **US-FP-019** → ✅ done. Customer-facing time-slot picker at checkout, consuming US-FP-020's per-shop config. `Order.TimeSlotStart/End` (`DateTimeOffset?`, null = ASAP) + brand migration `AddOrderTimeSlot` (filtered index for capacity counts). Pure domain `TimeSlotGenerator` (slots anchored per opening-hours block, today-only horizon, lead time = one interval, shop-timezone-aware). New endpoint `GET /brands/{slug}/shops/{shopId}/time-slots` (availability + remaining capacity); server-side enforcement in the shared `OrderService` create-core — full or no-longer-offered slot → typed `TimeSlotUnavailableException` → **409**, which the checkout recovers from (message + reset to ASAP + slot refetch). Storefront `TimeSlotPicker` (ASAP always first, full slots greyed out, scrollable, 30s refetch, stale-slot guard with visible reset notice); kitchen card + ticket print show the slot. POS stays ASAP-only. Scope decisions: today-only slots, capacity counts all statuses (no cancellation concept yet), accepted check-then-insert race (MVP), static "ASAP" notice when slots disabled (configured wait time = US-FP-021).
 
 **Changed 2026-06-04:**
 - **US-FP-066** → ✅ done. Per-shop eat-in toggle + a "require table number" sub-toggle, modelled as an owned `EatInSettings` value object on `Shop` (defaults: eat-in **on**, table **required** — preserves prior behaviour). Admin ShopEdit checkboxes; storefront + POS hide the eat-in order type when disabled and gate the table-number field (required/optional) by the flag; **server-side enforcement** in the shared `OrderService` create-core rejects eat-in when disabled and requires a table number when mandated, so online + in-store are gated identically. Closed US-FP-024's `IsEatInEnabled` gating gap and added **online table-number capture** (the public order path/`CreateOrderRequest` now accepts `tableNumber`). Brand migration `AddShopEatInAndTimeSlotSettings`.
@@ -160,7 +163,7 @@ Once ordering works, these streams are **all independent**.
 | ⬜ | **US-FP-062** | View order history | 016, 037 |
 | 🚧 | **US-FP-024** | Eat-in ordering with table number | 016, 066 |
 | ⬜ | **US-FP-025** | QR code table ordering | 024, 065 |
-| ⬜ | **US-FP-019** | Select time slot at checkout | 016, 020 |
+| ✅ | **US-FP-019** | Select time slot at checkout | 016, 020 |
 | ✅ | **US-FP-064** | Browse menu with allergen/dietary filters | 008 |
 | 🚧 | **US-FP-059** | Place a delivery order (POC) | 016 |
 

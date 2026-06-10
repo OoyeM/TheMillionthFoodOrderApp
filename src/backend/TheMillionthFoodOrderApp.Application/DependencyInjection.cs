@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderLifecycleService, OrderLifecycleService>();
         services.AddScoped<ITaxConfigurationService, TaxConfigurationService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<ITimeSlotAvailabilityService, TimeSlotAvailabilityService>();
 
         // Digital-receipt HTML composer (US-FP-051) — pure/stateless.
         services.AddSingleton<IReceiptComposer, ReceiptComposer>();

@@ -93,7 +93,16 @@
       "placing": "Bezig met plaatsen…",
       "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw.",
       "cartEmpty": "Uw winkelwagen is leeg.",
-      "shopClosed": "Deze winkel is momenteel gesloten en accepteert geen online bestellingen."
+      "shopClosed": "Deze winkel is momenteel gesloten en accepteert geen online bestellingen.",
+      "timeSlot": {
+        "label": "Tijdslot",
+        "asap": "Zo snel mogelijk",
+        "full": "Vol",
+        "noneAvailable": "Geen tijdsloten meer beschikbaar vandaag. Uw bestelling wordt zo snel mogelijk bereid.",
+        "asapNotice": "Uw bestelling wordt zo snel mogelijk bereid.",
+        "slotFull": "Dit tijdslot is niet meer beschikbaar. Kies een ander tijdslot.",
+        "loadError": "Tijdsloten konden niet geladen worden. U kunt wel \"zo snel mogelijk\" bestellen."
+      }
     },
     "order": {
       "confirmed": "Bestelling bevestigd!",
@@ -101,6 +110,7 @@
       "orderNumber": "Bestelnummer",
       "orderType": "Besteltype",
       "customerName": "Naam",
+      "timeSlot": "Tijdslot",
       "status": "Status",
       "items": "Artikelen",
       "each": "elk",
