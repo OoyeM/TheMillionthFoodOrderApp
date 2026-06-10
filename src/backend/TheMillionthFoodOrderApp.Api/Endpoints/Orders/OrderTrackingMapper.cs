@@ -57,5 +57,6 @@ internal static class OrderTrackingMapper
             shop?.Address.ToSingleLine(),
             order.CustomerFirstName,
             order.CustomerLastName,
-            order.LanguageCode);
+            order.LanguageCode,
+            order.TimeSlot);
 }

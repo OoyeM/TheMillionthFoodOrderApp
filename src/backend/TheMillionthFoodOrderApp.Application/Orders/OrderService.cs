@@ -61,7 +61,8 @@ public sealed class OrderService(
             request.CustomerEmail,
             request.CustomerPhone,
             request.LanguageCode,
-            enforceOpeningHours: true);
+            enforceOpeningHours: true,
+            timeSlotStart: request.TimeSlotStart);
     }
 
     public async Task<OrderResponse> CreateInStoreOrderAsync(
@@ -221,7 +222,8 @@ public sealed class OrderService(
         string? customerEmail = null,
         string? customerPhone = null,
         string? languageCode = null,
-        bool enforceOpeningHours = false)
+        bool enforceOpeningHours = false,
+        DateTimeOffset? timeSlotStart = null)
     {
         // 0. Resolve the receipt language: the customer's checkout language when supplied,
         //    otherwise the brand's primary language (US-FP-051).
@@ -264,6 +266,40 @@ public sealed class OrderService(
         if (enforceOpeningHours && !shop.IsOpenAt(DateTimeOffset.UtcNow))
             throw new InvalidOperationException(
                 "This shop is currently closed and is not accepting online orders.");
+
+        // 3c. Time-slot gating (US-FP-019) — online orders only; in-store bypasses like opening hours.
+        string? timeSlotLabel = null;
+        if (timeSlotStart is { } slotStart)
+        {
+            var tsSettings = shop.TimeSlotOrdering;
+            // Null interval/max on an "enabled" row is treated as disabled defensively (possible
+            // on rows written before the owned-bool default-value fix in ShopConfiguration).
+            if (!tsSettings.IsEnabled || tsSettings.Interval is null || tsSettings.MaxOrdersPerInterval is null)
+                throw new InvalidOperationException("This shop does not use time-slot ordering.");
+
+            if (!TimeSlotCalculator.IsValidSlotStart(
+                    shop.OpeningHours, shop.TimeZoneId, tsSettings.Interval!.Value, slotStart, DateTimeOffset.UtcNow))
+                throw new ArgumentException("The selected time slot is not valid for this shop.");
+
+            // Capacity check — best-effort (design decision 5): read-then-write can overshoot by 1
+            // under concurrent submits; accepted for MVP.
+            var taken = await orderRepository.CountByTimeSlotAsync(shopId, slotStart, cancellationToken);
+            if (taken >= tsSettings.MaxOrdersPerInterval!.Value)
+                throw new InvalidOperationException("TIME_SLOT_FULL");
+
+            // Compute the shop-local label for denormalisation.
+            try
+            {
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(shop.TimeZoneId);
+                var localSlot = TimeZoneInfo.ConvertTime(slotStart, tz);
+                timeSlotLabel = localSlot.DateTime.ToString("HH\\:mm");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // If TZ is somehow invalid here, store a UTC label rather than failing the order.
+                timeSlotLabel = slotStart.UtcDateTime.ToString("HH\\:mm");
+            }
+        }
 
         // 4. Load order lifecycle config to determine opening status (lazy-init default if missing)
         var lifecycleConfig = await orderLifecycleConfigRepository.GetByShopIdAsync(shopId, cancellationToken);
@@ -366,24 +402,27 @@ public sealed class OrderService(
         {
             var orderNumber = await GenerateUniqueOrderNumberAsync(shopId, cancellationToken);
 
-            // 9. Create the order aggregate with the candidate number
+            // 9. Create the order aggregate with the candidate number.
+            //    Named arguments are required here because Order.Create has optional tail params (7 total).
             order = Order.Create(
-                orderId,
-                shopId,
-                brandSlug,
-                orderNumber,
-                orderType,
-                paymentMethod,
-                openingStatus.Name,
-                customerFirstName,
-                customerLastName,
-                vatRate,
-                orderItems,
-                tableNumber,
-                createdByStaffId,
-                customerEmail,
-                customerPhone,
-                resolvedLanguage);
+                orderId: orderId,
+                shopId: shopId,
+                brandSlug: brandSlug,
+                orderNumber: orderNumber,
+                orderType: orderType,
+                paymentMethod: paymentMethod,
+                statusName: openingStatus.Name,
+                customerFirstName: customerFirstName,
+                customerLastName: customerLastName,
+                vatRatePercent: vatRate,
+                items: orderItems,
+                tableNumber: tableNumber,
+                createdByStaffId: createdByStaffId,
+                customerEmail: customerEmail,
+                customerPhone: customerPhone,
+                languageCode: resolvedLanguage,
+                timeSlotStart: timeSlotStart,
+                timeSlot: timeSlotLabel);
 
             try
             {
@@ -475,5 +514,6 @@ public sealed class OrderService(
             shop?.Address.ToSingleLine(),
             order.CustomerFirstName,
             order.CustomerLastName,
-            order.LanguageCode);
+            order.LanguageCode,
+            order.TimeSlot);
 }

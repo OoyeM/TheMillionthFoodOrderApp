@@ -840,6 +840,22 @@ export const handlers = [
     );
   }),
 
+  // ── Time Slots (/api/brands/:slug/shops/:shopId/time-slots) ─────────────
+  //
+  // LOAD-BEARING default: MSW runs with onUnhandledRequest:'error' (setup.ts:10).
+  // Once useTimeSlots is wired into CheckoutForm every existing CheckoutPage test
+  // fires this request — the handler must be present and must return the
+  // disabled-state shape so existing tests continue to pass unchanged.
+
+  http.get('/api/brands/:slug/shops/:shopId/time-slots', () =>
+    HttpResponse.json({
+      isEnabled: false,
+      intervalMinutes: null,
+      slots: [],
+      activeOrderCount: 0,
+    }),
+  ),
+
   // ── Tax Configuration (/api/brands/:slug/tax-configuration) ─────────────
 
   http.get('/api/brands/:slug/tax-configuration', () =>

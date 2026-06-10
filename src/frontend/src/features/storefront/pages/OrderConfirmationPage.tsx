@@ -151,6 +151,12 @@ export function OrderConfirmationPage() {
               : t('storefront.checkout.payment.statusPayAtPickup')
           }
         />
+        {order.timeSlot && (
+          <InfoCard
+            label={t('storefront.checkout.timeSlotLegend')}
+            value={t('storefront.order.timeSlot', { time: order.timeSlot })}
+          />
+        )}
       </div>
 
       {/* Items */}

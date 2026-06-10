@@ -55,6 +55,19 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     public string LanguageCode { get; private set; } = "nl-BE";
 
     /// <summary>
+    /// The UTC start of the chosen time slot (US-FP-019). Null means the customer selected
+    /// "As soon as possible" (no slot constraint). Used for capacity counting and validation.
+    /// </summary>
+    public DateTimeOffset? TimeSlotStart { get; private set; }
+
+    /// <summary>
+    /// Denormalised shop-local label of the chosen time slot formatted as <c>"HH:mm"</c>
+    /// (US-FP-019). Null when no slot was chosen. Stored denormalised so kitchen-display
+    /// callers can render it without loading the shop (mirrors <c>ProductName</c> / <c>StatusName</c>).
+    /// </summary>
+    public string? TimeSlot { get; private set; }
+
+    /// <summary>
     /// True once a digital receipt email has been sent for this order (US-FP-051).
     /// Guards against sending duplicate receipts on repeated terminal transitions.
     /// </summary>
@@ -127,7 +140,9 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         Guid? createdByStaffId = null,
         string? customerEmail = null,
         string? customerPhone = null,
-        string? languageCode = null)
+        string? languageCode = null,
+        DateTimeOffset? timeSlotStart = null,
+        string? timeSlot = null)
     {
         if (tableNumber.HasValue && tableNumber.Value <= 0)
             throw new ArgumentException("TableNumber must be greater than zero when provided.", nameof(tableNumber));
@@ -165,6 +180,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             TotalGross = Math.Round(subtotalGross, 2, MidpointRounding.AwayFromZero),
             CreatedAt = now,
             UpdatedAt = now,
+            TimeSlotStart = timeSlotStart,
+            TimeSlot = timeSlot,
         };
 
         // Items reference the order's Id — must be set after the order is created
