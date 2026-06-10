@@ -206,6 +206,7 @@ Each bounded context follows `IXxxService` (interface in Application) → `XxxSe
   7. `SaveChangesAsync` + `CommitAsync`
 
   Existing examples: `OrderLifecycleConfigRepository.ReplaceAsync`, `TaxConfigurationRepository.ReplaceRatesAsync`, `ShopRepository.ReplaceOpeningHoursAsync`. Apply this pattern whenever a repository method must fully replace a child collection.
+- **Owned value objects: never `HasDefaultValue` on their columns.** Replacing an owned VO instance (e.g. `shop.SetTimeSlotOrdering(...)`) is saved with *Added*-entity semantics, and EF omits any column whose new value equals its database default (the sentinel) — the UPDATE silently keeps the old row value. This made "disable time slots" and "re-enable eat-in" no-ops until fixed (migration `RemoveShopOwnedBoolDefaults`). Backfill defaults belong in the migration only; regression test: `ShopEatInTimeSlotTests.UpdateShop_ToggleBackToDefaults_Persists`.
 
 ## Real-Time Notifications
 
