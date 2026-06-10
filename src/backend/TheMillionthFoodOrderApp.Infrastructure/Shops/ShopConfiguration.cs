@@ -60,17 +60,20 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
             .HasDefaultValue(false);
 
         // Eat-in ordering config (US-FP-066) — owned, embedded in the Shops table.
+        // NOTE: no HasDefaultValue on these bools. Replacing an owned value-object instance is
+        // saved with Added-entity semantics, and EF omits columns whose value equals the database
+        // default (the sentinel) — silently keeping the old row value on toggle. The defaults that
+        // backfilled existing rows live in the AddShopEatInAndTimeSlotSettings migration history;
+        // the domain always materialises these VOs, so inserts never rely on a column default.
         builder.OwnsOne(s => s.EatIn, eatIn =>
         {
             eatIn.Property(e => e.IsEnabled)
                 .HasColumnName("EatIn_IsEnabled")
-                .IsRequired()
-                .HasDefaultValue(true);
+                .IsRequired();
 
             eatIn.Property(e => e.RequiresTableNumber)
                 .HasColumnName("EatIn_RequiresTableNumber")
-                .IsRequired()
-                .HasDefaultValue(true);
+                .IsRequired();
         });
         builder.Navigation(s => s.EatIn).IsRequired();
 
@@ -79,8 +82,7 @@ public sealed class ShopConfiguration : IEntityTypeConfiguration<Shop>
         {
             timeSlot.Property(t => t.IsEnabled)
                 .HasColumnName("TimeSlotOrdering_IsEnabled")
-                .IsRequired()
-                .HasDefaultValue(false);
+                .IsRequired();
 
             timeSlot.Property(t => t.Interval)
                 .HasColumnName("TimeSlotOrdering_Interval");

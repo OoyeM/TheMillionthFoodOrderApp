@@ -89,6 +89,14 @@
         "statusPaid": "Payé",
         "statusPayAtPickup": "Payer au retrait"
       },
+      "timeSlotLegend": "Créneau horaire",
+      "asap": "Dès que possible",
+      "slotFullSuffix": "(complet)",
+      "timeSlotInvalid": "Veuillez sélectionner un créneau horaire valide.",
+      "timeSlotFull": "Ce créneau est maintenant complet. Veuillez en choisir un autre.",
+      "queueNotice": "Il y a {{count}} commandes avant vous.",
+      "queueNotice_one": "Il y a {{count}} commande avant vous.",
+      "queueEmpty": "Votre commande va directement en cuisine.",
       "placeOrder": "Passer la commande",
       "placing": "En cours…",
       "submitError": "Échec de la commande. Veuillez réessayer.",
@@ -107,7 +115,8 @@
       "subtotal": "Sous-total",
       "vat": "TVA ({{rate}}%)",
       "total": "Total",
-      "backToHome": "Retour à l'accueil"
+      "backToHome": "Retour à l'accueil",
+      "timeSlot": "Prêt à {{time}}"
     },
     "tracking": {
       "title": "Suivez votre commande",

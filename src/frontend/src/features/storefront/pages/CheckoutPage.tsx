@@ -4,12 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import axios from 'axios';
 import { useAuth } from '@/auth/useAuth';
 import { CartProvider, useCart } from '../context/CartContext';
 import { useResolvedShop } from '../hooks/useResolvedShop';
 import { useCreateOrder } from '../hooks/useCreateOrder';
+import { useTimeSlots } from '../hooks/useTimeSlots';
 import { MockPaymentScreen } from '../components/MockPaymentScreen';
 import type { OrderType } from '@api/orders';
+import type { TimeSlotAvailabilityResponse } from '@api/timeSlots';
 import type { SupportedLocale, EatInSettings } from '@/types/common';
 
 // ---------------------------------------------------------------------------
@@ -32,16 +35,19 @@ function normalizeLang(lang: string | undefined): SupportedLocale {
 // ---------------------------------------------------------------------------
 
 /**
- * Builds the checkout schema based on the current auth state.
+ * Builds the checkout schema based on the current auth state and slot data.
  *
  * - Guest (not authenticated): first name, last name, email, phone are all REQUIRED.
  * - Authenticated: fields come from the profile and are pre-filled; schema stays
  *   permissive because the form renders them read-only (still submitted).
+ * - slotData: when time-slot ordering is enabled, timeSlotStart must be 'asap' or
+ *   match an available fetched slot (backstop for the auto-reset — design decision 8).
  */
 function makeCheckoutSchema(
   isAuthenticated: boolean,
   t: (key: string) => string,
   eatIn: EatInSettings,
+  slotData: TimeSlotAvailabilityResponse | undefined,
 ) {
   // Guest checkout requires the full contact record; authenticated customers have it pre-filled
   // from their profile (still submitted), so only phone is independently required.
@@ -76,6 +82,7 @@ function makeCheckoutSchema(
       ...contactFields,
       tableNumber: z.string(),
       paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
+      timeSlotStart: z.string(),
     })
     // Eat-in is only an allowed order type when the shop accepts it (US-FP-066).
     .refine((v) => eatIn.isEnabled || v.orderType !== 'EatIn', {
@@ -95,6 +102,16 @@ function makeCheckoutSchema(
         return Number.isInteger(parsed) && parsed > 0;
       },
       { message: t('storefront.checkout.tableNumberInvalid'), path: ['tableNumber'] },
+    )
+    // Time-slot validation: when slots are enabled, the selection must be 'asap'
+    // or match an available slot from the latest fetch (design decision 8).
+    .refine(
+      (v) => {
+        if (!slotData?.isEnabled) return true;
+        if (v.timeSlotStart === 'asap') return true;
+        return slotData.slots.some((s) => s.slotStart === v.timeSlotStart && s.isAvailable);
+      },
+      { message: t('storefront.checkout.timeSlotInvalid'), path: ['timeSlotStart'] },
     );
 }
 
@@ -106,6 +123,8 @@ interface CheckoutFormValues {
   customerPhone: string;
   tableNumber: string;
   paymentMethod: 'CashAtPickup' | 'CreditCard' | 'Bancontact';
+  /** 'asap' sentinel or an ISO-8601 slotStart string (US-FP-019). */
+  timeSlotStart: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,8 +147,13 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
   const { state, clearCart } = useCart();
   const createOrder = useCreateOrder(brandSlug, shopId);
 
+  // Time-slot availability — single source of truth (design decision 8).
+  // Polling every 60 s keeps the slot grid fresh without a dedicated SignalR event.
+  const { data: slotData, refetch: refetchSlots } = useTimeSlots(brandSlug, shopId);
+
   const [showMockPayment, setShowMockPayment] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [timeSlotFullError, setTimeSlotFullError] = useState(false);
 
   // Redirect to menu if cart is empty
   useEffect(() => {
@@ -138,10 +162,10 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     }
   }, [state.items.length, navigate, paramSlug, lang, shopSlug]);
 
-  // Build auth-aware schema (memoised so it only rebuilds when auth state or t changes)
+  // Build auth-aware, slot-aware schema (memoised so it only rebuilds when deps change)
   const schema = useMemo(
-    () => makeCheckoutSchema(isAuthenticated, t, eatIn),
-    [isAuthenticated, t, eatIn],
+    () => makeCheckoutSchema(isAuthenticated, t, eatIn, slotData),
+    [isAuthenticated, t, eatIn, slotData],
   );
 
   const defaultValues: CheckoutFormValues = {
@@ -152,6 +176,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     customerPhone: user?.phoneNumber ?? '',
     tableNumber: '',
     paymentMethod: 'CashAtPickup',
+    timeSlotStart: 'asap',
   };
 
   const {
@@ -159,12 +184,29 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema as z.ZodType<CheckoutFormValues, any, any>),
     defaultValues,
   });
+
+  const selectedTimeSlot = watch('timeSlotStart');
+
+  // Auto-reset to ASAP when the selected slot is no longer usable after a refetch:
+  // it disappeared or filled up (another customer claimed the last spot), or the shop
+  // disabled time-slot ordering mid-session — without this the stale value would be
+  // resubmitted forever with no control left on screen to clear it.
+  useEffect(() => {
+    if (selectedTimeSlot === 'asap' || !slotData) return;
+    const stillAvailable =
+      slotData.isEnabled &&
+      slotData.slots.some((s) => s.slotStart === selectedTimeSlot && s.isAvailable);
+    if (!stillAvailable) {
+      setValue('timeSlotStart', 'asap');
+    }
+  }, [slotData, selectedTimeSlot, setValue]);
 
   const orderType = watch('orderType');
   const orderTypeOptions = eatIn.isEnabled
@@ -189,35 +231,55 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     // Guard: a closed shop does not accept online orders (mirrors the backend check).
     if (!shopIsOpen) return;
 
+    setTimeSlotFullError(false);
+
     const orderItems = state.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
       selectedModifierIds: item.selectedModifiers.map((m) => m.modifierId),
     }));
 
-    const result = await createOrder.mutateAsync({
-      orderType: values.orderType as OrderType,
-      customerFirstName: values.customerFirstName || null,
-      customerLastName: values.customerLastName || null,
-      customerEmail: values.customerEmail || null,
-      customerPhone: values.customerPhone || null,
-      items: orderItems,
-      paymentMethod: values.paymentMethod,
-      languageCode: normalizeLang(lang),
-      tableNumber:
-        values.orderType === 'EatIn' && values.tableNumber.trim().length > 0
-          ? Number(values.tableNumber)
-          : null,
-    });
+    try {
+      const result = await createOrder.mutateAsync({
+        orderType: values.orderType as OrderType,
+        customerFirstName: values.customerFirstName || null,
+        customerLastName: values.customerLastName || null,
+        customerEmail: values.customerEmail || null,
+        customerPhone: values.customerPhone || null,
+        items: orderItems,
+        paymentMethod: values.paymentMethod,
+        languageCode: normalizeLang(lang),
+        tableNumber:
+          values.orderType === 'EatIn' && values.tableNumber.trim().length > 0
+            ? Number(values.tableNumber)
+            : null,
+        // 'asap' sentinel → null (server treats null as ASAP); otherwise send the ISO string.
+        timeSlotStart: values.timeSlotStart === 'asap' ? null : values.timeSlotStart,
+      });
 
-    clearCart();
+      clearCart();
 
-    if (values.paymentMethod === 'CashAtPickup') {
-      navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${result.id}`);
-    } else {
-      // Online payment methods: show mock processing screen first
-      setPendingOrderId(result.id);
-      setShowMockPayment(true);
+      if (values.paymentMethod === 'CashAtPickup') {
+        navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${result.id}`);
+      } else {
+        // Online payment methods: show mock processing screen first
+        setPendingOrderId(result.id);
+        setShowMockPayment(true);
+      }
+    } catch (err) {
+      // Check for a slot-full 400 from the server (errors.timeSlotStart in the body).
+      // The cart is preserved on failure — clearCart() only runs on success above.
+      if (axios.isAxiosError(err) && err.response?.status === 400) {
+        const body = err.response.data as Record<string, unknown> | null;
+        const errorsMap = body?.errors as Record<string, unknown> | undefined;
+        if (errorsMap?.timeSlotStart) {
+          setTimeSlotFullError(true);
+          void refetchSlots(); // Grey out the now-full slot immediately
+          return;
+        }
+      }
+      // Re-throw so react-hook-form's isError state reflects the generic failure
+      throw err;
     }
   }
 
@@ -338,6 +400,143 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
           >
             {vatNotice}
           </div>
+        )}
+
+        {/* AC5: place-in-line notice — shown when time-slot ordering is disabled (US-FP-019) */}
+        {slotData && !slotData.isEnabled && (
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '0.375rem',
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              color: '#1e40af',
+              fontSize: '0.875rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            {slotData.activeOrderCount === 0
+              ? t('storefront.checkout.queueEmpty')
+              : t('storefront.checkout.queueNotice', { count: slotData.activeOrderCount ?? 0 })}
+          </div>
+        )}
+
+        {/* Time-slot picker — shown when shop is open and slots are enabled (AC1/AC2/AC3) */}
+        {shopIsOpen && slotData?.isEnabled && (
+          <fieldset
+            style={{
+              border: 'none',
+              padding: 0,
+              margin: '0 0 1.5rem',
+            }}
+          >
+            <legend
+              style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: '#111827',
+                marginBottom: '0.75rem',
+              }}
+            >
+              {t('storefront.checkout.timeSlotLegend')}
+              <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>
+            </legend>
+
+            {errors.timeSlotStart && (
+              <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                {errors.timeSlotStart.message}
+              </p>
+            )}
+
+            <Controller
+              name="timeSlotStart"
+              control={control}
+              render={({ field }) => (
+                <>
+                  {/* ASAP option — always enabled, outside the scroll grid */}
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.875rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: `2px solid ${field.value === 'asap' ? 'var(--brand-color-primary, #111827)' : '#e5e7eb'}`,
+                      background: field.value === 'asap' ? '#f9fafb' : '#fff',
+                      cursor: 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: field.value === 'asap' ? 600 : 400,
+                      color: '#111827',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      value="asap"
+                      checked={field.value === 'asap'}
+                      onChange={() => { field.onChange('asap'); }}
+                      style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }}
+                    />
+                    {t('storefront.checkout.asap')}
+                  </label>
+
+                  {/* Slot grid — scrollable for many-slot days (e.g. 5-min interval) */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(5.5rem, 1fr))',
+                      gap: '0.5rem',
+                      maxHeight: '14rem',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {slotData.slots.map((slot) => (
+                      <label
+                        key={slot.slotStart}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.375rem',
+                          padding: '0.625rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          border: `2px solid ${
+                            field.value === slot.slotStart
+                              ? 'var(--brand-color-primary, #111827)'
+                              : '#e5e7eb'
+                          }`,
+                          background: field.value === slot.slotStart ? '#f9fafb' : '#fff',
+                          cursor: slot.isAvailable ? 'pointer' : 'not-allowed',
+                          fontSize: '0.875rem',
+                          fontWeight: field.value === slot.slotStart ? 600 : 400,
+                          color: '#111827',
+                          opacity: slot.isAvailable ? 1 : 0.45,
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          value={slot.slotStart}
+                          checked={field.value === slot.slotStart}
+                          onChange={() => {
+                            if (slot.isAvailable) {
+                              field.onChange(slot.slotStart);
+                            }
+                          }}
+                          disabled={!slot.isAvailable}
+                          style={{ width: '1rem', height: '1rem', cursor: slot.isAvailable ? 'pointer' : 'not-allowed' }}
+                        />
+                        {slot.label}
+                        {!slot.isAvailable && (
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {' '}{t('storefront.checkout.slotFullSuffix')}
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            />
+          </fieldset>
         )}
 
         {/* Table number — shown for eat-in; required when the shop mandates it (US-FP-066) */}
@@ -681,8 +880,25 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
           />
         </fieldset>
 
-        {/* Error */}
-        {createOrder.isError && (
+        {/* Slot-full error (400 errors.timeSlotStart — cart preserved, refetch triggered) */}
+        {timeSlotFullError && (
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '0.375rem',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '0.875rem',
+              marginBottom: '1rem',
+            }}
+          >
+            {t('storefront.checkout.timeSlotFull')}
+          </div>
+        )}
+
+        {/* Generic submit error */}
+        {createOrder.isError && !timeSlotFullError && (
           <div
             style={{
               padding: '0.75rem 1rem',

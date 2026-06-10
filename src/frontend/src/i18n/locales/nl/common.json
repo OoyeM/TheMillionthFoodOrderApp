@@ -89,6 +89,14 @@
         "statusPaid": "Betaald",
         "statusPayAtPickup": "Betalen bij afhaling"
       },
+      "timeSlotLegend": "Tijdslot",
+      "asap": "Zo snel mogelijk",
+      "slotFullSuffix": "(volzet)",
+      "timeSlotInvalid": "Selecteer een geldig tijdslot.",
+      "timeSlotFull": "Dit tijdslot is net volgeboekt. Kies een ander tijdslot.",
+      "queueNotice": "Er zijn {{count}} bestellingen voor jou.",
+      "queueNotice_one": "Er is {{count}} bestelling voor jou.",
+      "queueEmpty": "Je bestelling gaat direct naar de keuken.",
       "placeOrder": "Bestelling plaatsen",
       "placing": "Bezig met plaatsen…",
       "submitError": "Bestelling plaatsen mislukt. Probeer opnieuw.",
@@ -107,7 +115,8 @@
       "subtotal": "Subtotaal",
       "vat": "BTW ({{rate}}%)",
       "total": "Totaal",
-      "backToHome": "Terug naar beginpagina"
+      "backToHome": "Terug naar beginpagina",
+      "timeSlot": "Klaar om {{time}}"
     },
     "tracking": {
       "title": "Volg uw bestelling",

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TheMillionthFoodOrderApp.Infrastructure.Persistence;
 namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
 {
     [DbContext(typeof(BrandDbContext))]
-    partial class BrandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610085424_AddOrderTimeSlot")]
+    partial class AddOrderTimeSlot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1038,11 +1041,15 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<bool>("IsEnabled")
+                                .ValueGeneratedOnAdd()
                                 .HasColumnType("bit")
+                                .HasDefaultValue(true)
                                 .HasColumnName("EatIn_IsEnabled");
 
                             b1.Property<bool>("RequiresTableNumber")
+                                .ValueGeneratedOnAdd()
                                 .HasColumnType("bit")
+                                .HasDefaultValue(true)
                                 .HasColumnName("EatIn_RequiresTableNumber");
 
                             b1.HasKey("ShopId");
@@ -1063,7 +1070,9 @@ namespace TheMillionthFoodOrderApp.Infrastructure.Persistence.Migrations.Brand
                                 .HasColumnName("TimeSlotOrdering_Interval");
 
                             b1.Property<bool>("IsEnabled")
+                                .ValueGeneratedOnAdd()
                                 .HasColumnType("bit")
+                                .HasDefaultValue(false)
                                 .HasColumnName("TimeSlotOrdering_IsEnabled");
 
                             b1.Property<int?>("MaxOrdersPerInterval")

@@ -89,6 +89,14 @@
         "statusPaid": "Bezahlt",
         "statusPayAtPickup": "Bei Abholung zahlen"
       },
+      "timeSlotLegend": "Zeitfenster",
+      "asap": "So schnell wie möglich",
+      "slotFullSuffix": "(voll)",
+      "timeSlotInvalid": "Bitte wählen Sie ein gültiges Zeitfenster aus.",
+      "timeSlotFull": "Dieses Zeitfenster ist gerade ausgebucht. Bitte wählen Sie ein anderes.",
+      "queueNotice": "Es gibt {{count}} Bestellungen vor Ihnen.",
+      "queueNotice_one": "Es gibt {{count}} Bestellung vor Ihnen.",
+      "queueEmpty": "Ihre Bestellung geht direkt in die Küche.",
       "placeOrder": "Bestellung aufgeben",
       "placing": "Wird aufgegeben…",
       "submitError": "Bestellung fehlgeschlagen. Bitte erneut versuchen.",
@@ -107,7 +115,8 @@
       "subtotal": "Zwischensumme",
       "vat": "MwSt. ({{rate}}%)",
       "total": "Gesamt",
-      "backToHome": "Zurück zur Startseite"
+      "backToHome": "Zurück zur Startseite",
+      "timeSlot": "Fertig um {{time}}"
     },
     "tracking": {
       "title": "Verfolge deine Bestellung",

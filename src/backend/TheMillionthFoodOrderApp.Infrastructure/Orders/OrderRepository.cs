@@ -99,4 +99,46 @@ public sealed class OrderRepository(BrandDbContext dbContext, IMessageBus messag
             .OrderBy(o => o.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public async Task<int> CountByTimeSlotAsync(
+        Guid shopId,
+        DateTimeOffset slotStartUtc,
+        CancellationToken ct)
+        => await dbContext.Orders
+            .CountAsync(o => o.ShopId == shopId && o.TimeSlotStart == slotStartUtc, ct);
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyDictionary<DateTimeOffset, int>> GetTimeSlotCountsAsync(
+        Guid shopId,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken ct)
+    {
+        var counts = await dbContext.Orders
+            .Where(o => o.ShopId == shopId
+                     && o.TimeSlotStart != null
+                     && o.TimeSlotStart >= fromUtc
+                     && o.TimeSlotStart <= toUtc)
+            .GroupBy(o => o.TimeSlotStart!.Value)
+            .Select(g => new { SlotStart = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return counts.ToDictionary(x => x.SlotStart, x => x.Count);
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> CountActiveByShopAsync(Guid shopId, CancellationToken ct)
+    {
+        // Same terminal-name filter as GetActiveByShopAsync — count only non-terminal orders.
+        var terminalStatusNames = await dbContext.OrderLifecycleConfigs
+            .Where(c => c.ShopId == shopId)
+            .SelectMany(c => c.Statuses)
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Name)
+            .ToListAsync(ct);
+
+        return await dbContext.Orders
+            .CountAsync(o => o.ShopId == shopId && !terminalStatusNames.Contains(o.StatusName), ct);
+    }
 }

@@ -94,6 +94,69 @@ public sealed class ShopEatInTimeSlotTests(IntegrationTestBase fixture)
     }
 
     [Test]
+    public async Task UpdateShop_ToggleBackToDefaults_Persists()
+    {
+        // Regression test: replacing an owned value object is saved with Added-entity semantics,
+        // and EF omits columns whose value equals the database default — so toggling a setting
+        // BACK to the column-default value (time-slot off, eat-in on) silently kept the old row
+        // value until the HasDefaultValue config was removed from the owned bools.
+        var client = CreateClient();
+        var brand = IntegrationTestBase.BetaSlug;
+
+        var createResponse = await client.PostAsJsonAsync(ShopsUrl(brand), BuildCreateBody());
+        var created = await createResponse.Content.ReadFromJsonAsync<ShopResponse>();
+        await Assert.That(created).IsNotNull();
+
+        object BuildUpdateBody(object eatIn, object timeSlotOrdering) => new
+        {
+            Name = created!.Name,
+            Address = new
+            {
+                created.Address.Street,
+                created.Address.Number,
+                created.Address.City,
+                created.Address.PostalCode,
+                created.Address.Country,
+            },
+            ContactEmail = created.ContactEmail,
+            ContactPhone = (string?)null,
+            KitchenDisplayEnabled = false,
+            TicketPrinterEnabled = false,
+            PushNotificationEnabled = false,
+            SoundAlertEnabled = false,
+            EatIn = eatIn,
+            TimeSlotOrdering = timeSlotOrdering,
+            VatNumber = (string?)null,
+        };
+
+        // Step 1: move away from the defaults (eat-in off, time slots on).
+        var awayResponse = await client.PutAsJsonAsync(
+            ShopUrl(brand, created!.Id),
+            BuildUpdateBody(
+                new { IsEnabled = false, RequiresTableNumber = false },
+                new { IsEnabled = true, IntervalMinutes = 15, MaxOrdersPerInterval = 2 }));
+        await Assert.That(awayResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        // Step 2: toggle back to the column-default values (eat-in on, time slots off).
+        var backResponse = await client.PutAsJsonAsync(
+            ShopUrl(brand, created.Id),
+            BuildUpdateBody(
+                new { IsEnabled = true, RequiresTableNumber = true },
+                new { IsEnabled = false, IntervalMinutes = (int?)null, MaxOrdersPerInterval = (int?)null }));
+        await Assert.That(backResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        // Re-fetch to prove persistence (not just an echo of the request).
+        var getResponse = await client.GetAsync(ShopUrl(brand, created.Id));
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ShopResponse>();
+        await Assert.That(fetched).IsNotNull();
+        await Assert.That(fetched!.EatIn.IsEnabled).IsTrue();
+        await Assert.That(fetched.EatIn.RequiresTableNumber).IsTrue();
+        await Assert.That(fetched.TimeSlotOrdering.IsEnabled).IsFalse();
+        await Assert.That(fetched.TimeSlotOrdering.IntervalMinutes).IsNull();
+        await Assert.That(fetched.TimeSlotOrdering.MaxOrdersPerInterval).IsNull();
+    }
+
+    [Test]
     public async Task UpdateShop_WithInvalidTimeSlotInterval_Returns400()
     {
         var client = CreateClient();

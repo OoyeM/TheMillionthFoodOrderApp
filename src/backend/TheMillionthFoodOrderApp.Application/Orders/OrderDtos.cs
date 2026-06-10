@@ -26,7 +26,11 @@ public sealed record CreateOrderRequest(
     /// <summary>BCP-47 checkout language (e.g. "nl-BE") for the digital receipt; falls back to the brand default (US-FP-051).</summary>
     string? LanguageCode = null,
     /// <summary>Table number for eat-in orders (US-FP-024/066); null for takeaway/delivery or when not captured.</summary>
-    int? TableNumber = null);
+    int? TableNumber = null,
+    /// <summary>
+    /// UTC start of the chosen time slot (US-FP-019). Null means ASAP (no slot constraint).
+    /// </summary>
+    DateTimeOffset? TimeSlotStart = null);
 
 /// <summary>
 /// Application-layer DTO for placing a new in-store order via counter staff.
@@ -110,7 +114,12 @@ public sealed record OrderResponse(
     /// <summary>Customer last name (US-FP-051).</summary>
     string? CustomerLastName = null,
     /// <summary>BCP-47 checkout language captured for the digital receipt (US-FP-051).</summary>
-    string? LanguageCode = null);
+    string? LanguageCode = null,
+    /// <summary>
+    /// Denormalised shop-local time-slot label (e.g. "18:30") stored at order creation (US-FP-019).
+    /// Null when the customer chose ASAP or the shop does not use time-slot ordering.
+    /// </summary>
+    string? TimeSlot = null);
 
 /// <summary>
 /// Combined response DTO returned by the order-tracking endpoints.

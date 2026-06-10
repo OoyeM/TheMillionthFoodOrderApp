@@ -417,6 +417,31 @@ describe('KitchenDisplay', () => {
     expect(card).not.toHaveAttribute('data-highlight', 'true');
   });
 
+  it('renders the time-slot badge when an order has a timeSlot value (AC4)', async () => {
+    server.use(
+      http.get(`/api/brands/${brandSlug}/shops/${shopId}/orders/active`, () =>
+        HttpResponse.json({
+          orders: [
+            {
+              ...makeOrder({ id: 'ts-1', orderNumber: '0055' }),
+              timeSlot: '18:30',
+            },
+          ],
+        }),
+      ),
+    );
+
+    renderPage();
+
+    // The kitchen card should render the time-slot badge
+    await waitFor(() =>
+      expect(screen.getByTestId('kitchen-order-card')).toBeInTheDocument(),
+    );
+
+    // KitchenOrderCard renders pos.kitchen.timeSlot: "Tijdslot: {{value}}"
+    expect(screen.getByText(/18:30/)).toBeInTheDocument();
+  });
+
   it('arms sound and push from the enable-alerts control', async () => {
     server.use(
       http.get(`/api/brands/${brandSlug}/shops/${shopId}`, () =>

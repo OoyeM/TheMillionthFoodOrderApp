@@ -34,4 +34,26 @@ public interface IOrderRepository
     /// can render line details without a second round-trip.
     /// </summary>
     Task<IReadOnlyList<Order>> GetActiveByShopAsync(Guid shopId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the number of orders that have been placed into the given slot
+    /// (matched by exact <c>TimeSlotStart</c>). Used for best-effort capacity enforcement
+    /// at order-create time (US-FP-019, design decision 5).
+    /// </summary>
+    Task<int> CountByTimeSlotAsync(Guid shopId, DateTimeOffset slotStartUtc, CancellationToken ct);
+
+    /// <summary>
+    /// Returns a dictionary of <c>TimeSlotStart → order count</c> for all slots whose UTC
+    /// start falls within [<paramref name="fromUtc"/>, <paramref name="toUtc"/>] for the
+    /// given shop. Used by the availability endpoint to hydrate capacity in one query.
+    /// </summary>
+    Task<IReadOnlyDictionary<DateTimeOffset, int>> GetTimeSlotCountsAsync(
+        Guid shopId, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken ct);
+
+    /// <summary>
+    /// Returns the count of non-terminal (active) orders for the shop.
+    /// Used for the "place in line" notice when time-slot ordering is disabled (AC5).
+    /// Applies the same terminal-name filter as <see cref="GetActiveByShopAsync"/>.
+    /// </summary>
+    Task<int> CountActiveByShopAsync(Guid shopId, CancellationToken ct);
 }

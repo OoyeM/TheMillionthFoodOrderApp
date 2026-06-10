@@ -29,6 +29,11 @@ export interface CreateOrderRequest {
   languageCode?: 'nl' | 'fr' | 'de';
   /** Table number for eat-in orders (US-FP-024/066); omitted for takeaway/delivery. */
   tableNumber?: number | null;
+  /**
+   * ISO-8601 UTC datetime string for the selected time slot (US-FP-019).
+   * Null or omitted means "as soon as possible" (ASAP).
+   */
+  timeSlotStart?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +84,7 @@ export interface OrderResponse {
   totalGross: number;
   createdAt: string;
   paymentMethod: string;
-  // Forward-compatibility — server only sends timeSlot once that story ships.
+  /** Shop-local "HH:mm" label for the selected time slot (US-FP-019). Null means ASAP. */
   timeSlot?: string | null;
   /** Present on in-store EatIn orders. */
   tableNumber?: number;

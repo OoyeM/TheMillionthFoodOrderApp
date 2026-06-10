@@ -86,6 +86,13 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnType("uniqueidentifier")
             .IsRequired(false);
 
+        builder.Property(o => o.TimeSlotStart)
+            .IsRequired(false);
+
+        builder.Property(o => o.TimeSlot)
+            .HasMaxLength(16)
+            .IsRequired(false);
+
         builder.Property(o => o.CreatedAt)
             .IsRequired();
 
@@ -100,6 +107,10 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // Index for querying orders by shop
         builder.HasIndex(o => o.ShopId)
             .HasDatabaseName("IX_Orders_ShopId");
+
+        // Index to support capacity COUNT queries (ShopId + TimeSlotStart) for US-FP-019.
+        builder.HasIndex(o => new { o.ShopId, o.TimeSlotStart })
+            .HasDatabaseName("IX_Orders_ShopId_TimeSlotStart");
 
         builder.HasMany(o => o.Items)
             .WithOne()

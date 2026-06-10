@@ -20,7 +20,13 @@ public sealed record CreateOrderApiRequest(
     string? CustomerEmail = null,
     string? CustomerPhone = null,
     string? LanguageCode = null,
-    int? TableNumber = null);
+    int? TableNumber = null,
+    /// <summary>
+    /// UTC start of the chosen time slot (US-FP-019). Null or omitted = ASAP.
+    /// Must be returned verbatim from GET time-slots; the server re-validates alignment,
+    /// same-local-day, opening block, and capacity at create time.
+    /// </summary>
+    DateTimeOffset? TimeSlotStart = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -171,7 +177,8 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                 email,
                 phone,
                 req.LanguageCode,
-                req.TableNumber);
+                req.TableNumber,
+                req.TimeSlotStart);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 
@@ -185,6 +192,14 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
         catch (ArgumentException ex)
         {
             var failures = new List<ValidationFailure> { new("request", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "TIME_SLOT_FULL")
+        {
+            // The chosen slot has reached its capacity — send a field-level error so the frontend
+            // can show the slot-specific message and refetch (the field key is camelCased by FastEndpoints).
+            var failures = new List<ValidationFailure>
+                { new(nameof(req.TimeSlotStart), "The selected time slot is full. Please pick another slot.") };
             await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
         }
         catch (InvalidOperationException ex)

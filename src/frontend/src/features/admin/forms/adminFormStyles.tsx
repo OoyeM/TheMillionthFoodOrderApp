@@ -24,6 +24,19 @@ export const secondaryButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+export function primaryButtonStyle(disabled: boolean): React.CSSProperties {
+  return {
+    padding: '0.5rem 1.25rem',
+    background: '#111827',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '0.375rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontWeight: 600,
+    opacity: disabled ? 0.6 : 1,
+  };
+}
+
 export function inputStyle(hasError: boolean): React.CSSProperties {
   return {
     width: '100%',
@@ -43,6 +56,25 @@ export function FieldError({ message }: { message: string }): React.JSX.Element 
   return (
     <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
       {message}
+    </p>
+  );
+}
+
+/**
+ * Form-level (submission) error banner. Renders nothing when `error` is null/undefined,
+ * the message when it is an Error, or `fallback` otherwise.
+ */
+export function FormError({
+  error,
+  fallback,
+}: {
+  error: unknown;
+  fallback: string;
+}): React.JSX.Element | null {
+  if (error == null) return null;
+  return (
+    <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
+      {error instanceof Error ? error.message : fallback}
     </p>
   );
 }
