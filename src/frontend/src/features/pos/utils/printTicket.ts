@@ -1,5 +1,6 @@
 import type { OrderResponse } from '@api/orders';
 import { printHtmlDocument } from './printDocument';
+import { formatTimeSlot } from '../../../utils/timeSlot';
 
 /**
  * Localised, pre-resolved labels for the printed ticket. Kept caller-supplied so
@@ -56,9 +57,9 @@ export function buildTicketHtml(order: OrderResponse, labels: TicketLabels): str
       `<div class="meta">${escapeHtml(labels.table)}: ${escapeHtml(String(order.tableNumber))}</div>`,
     );
   }
-  if (order.timeSlot != null && order.timeSlot.length > 0) {
+  if (order.timeSlotStart != null && order.timeSlotEnd != null) {
     metaRows.push(
-      `<div class="meta">${escapeHtml(labels.timeSlot)}: ${escapeHtml(order.timeSlot)}</div>`,
+      `<div class="meta">${escapeHtml(labels.timeSlot)}: ${escapeHtml(formatTimeSlot(order.timeSlotStart, order.timeSlotEnd))}</div>`,
     );
   }
   if (order.customerName != null && order.customerName.length > 0) {

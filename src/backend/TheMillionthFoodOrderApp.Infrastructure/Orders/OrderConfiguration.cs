@@ -92,6 +92,18 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.UpdatedAt)
             .IsRequired();
 
+        // Time-slot fields (US-FP-019): null = ASAP; set together when a slot is selected.
+        builder.Property(o => o.TimeSlotStart)
+            .IsRequired(false);
+
+        builder.Property(o => o.TimeSlotEnd)
+            .IsRequired(false);
+
+        // Filtered index for capacity counting — only rows where a slot was selected.
+        builder.HasIndex(o => new { o.ShopId, o.TimeSlotStart })
+            .HasDatabaseName("IX_Orders_ShopId_TimeSlotStart")
+            .HasFilter("[TimeSlotStart] IS NOT NULL");
+
         // Unique order number per shop
         builder.HasIndex(o => new { o.ShopId, o.OrderNumber })
             .IsUnique()

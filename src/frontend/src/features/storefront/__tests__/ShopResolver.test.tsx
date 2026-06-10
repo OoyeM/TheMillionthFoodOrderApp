@@ -66,6 +66,7 @@ function makeShop(overrides: Partial<StorefrontShop> = {}): StorefrontShop {
     },
     isOpen: true,
     eatIn: { isEnabled: true, requiresTableNumber: true },
+    timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
     ...overrides,
   };
 }

@@ -20,7 +20,12 @@ public sealed record CreateOrderApiRequest(
     string? CustomerEmail = null,
     string? CustomerPhone = null,
     string? LanguageCode = null,
-    int? TableNumber = null);
+    int? TableNumber = null,
+    /// <summary>
+    /// UTC start of the requested time slot (US-FP-019). Null = "as soon as possible".
+    /// Shape validation only here; authoritative validation (alignment, capacity) is in OrderService.
+    /// </summary>
+    DateTimeOffset? TimeSlotStart = null);
 
 public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiRequest>
 {
@@ -79,6 +84,13 @@ public sealed class CreateOrderRequestValidator : Validator<CreateOrderApiReques
         RuleFor(x => x.TableNumber)
             .GreaterThan(0).WithMessage("TableNumber must be greater than zero.")
             .When(x => x.TableNumber is not null);
+
+        // Time slot shape check only — must be in the future when supplied (US-FP-019).
+        // Authoritative validation (slot alignment, capacity) is done server-side in OrderService.
+        RuleFor(x => x.TimeSlotStart)
+            .Must(v => v!.Value > DateTimeOffset.UtcNow)
+            .WithMessage("TimeSlotStart must be in the future.")
+            .When(x => x.TimeSlotStart is not null);
     }
 }
 
@@ -98,10 +110,12 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
             s.Description =
                 "Creates a new order for the specified shop. " +
                 "Server resolves current product prices — client-submitted prices are ignored. " +
-                "VAT is applied at 6% for Pickup/Delivery and 21% for EatIn.";
+                "VAT is applied at 6% for Pickup/Delivery and 21% for EatIn. " +
+                "Supply TimeSlotStart (UTC) for a specific slot; omit for 'as soon as possible'.";
             s.Response<OrderResponse>(201, "Order placed successfully.");
             s.Response(400, "Validation error or unknown product/modifier.");
             s.Response(404, "Shop or brand not found.");
+            s.Response(409, "The selected time slot is full; the customer should pick another slot.");
         });
     }
 
@@ -171,7 +185,8 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
                 email,
                 phone,
                 req.LanguageCode,
-                req.TableNumber);
+                req.TableNumber,
+                req.TimeSlotStart);
 
             var response = await orderService.CreateOrderAsync(appRequest, ct);
 
@@ -186,6 +201,13 @@ public sealed class CreateOrderEndpoint(IOrderService orderService)
         {
             var failures = new List<ValidationFailure> { new("request", ex.Message) };
             await HttpContext.Response.SendErrorsAsync(failures, statusCode: 400, cancellation: ct);
+        }
+        catch (TimeSlotUnavailableException ex)
+        {
+            // The selected slot is full or no longer offered (US-FP-019).
+            // Return 409 so the frontend can refresh the slot list and let the customer pick again.
+            var failures = new List<ValidationFailure> { new("timeSlotStart", ex.Message) };
+            await HttpContext.Response.SendErrorsAsync(failures, statusCode: 409, cancellation: ct);
         }
         catch (InvalidOperationException ex)
         {

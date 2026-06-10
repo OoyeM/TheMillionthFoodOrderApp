@@ -34,4 +34,16 @@ public interface IOrderRepository
     /// can render line details without a second round-trip.
     /// </summary>
     Task<IReadOnlyList<Order>> GetActiveByShopAsync(Guid shopId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns a dictionary mapping each distinct <c>TimeSlotStart</c> value (UTC) to
+    /// the count of orders in that slot for the given shop.
+    /// Only orders whose <c>TimeSlotStart</c> falls within <c>[fromInclusive, toExclusive)</c>
+    /// are counted. Used by <c>TimeSlotAvailabilityService</c> to compute remaining capacity (US-FP-019).
+    /// </summary>
+    Task<IReadOnlyDictionary<DateTimeOffset, int>> GetTimeSlotOrderCountsAsync(
+        Guid shopId,
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken cancellationToken = default);
 }

@@ -29,6 +29,8 @@ export interface CreateOrderRequest {
   languageCode?: 'nl' | 'fr' | 'de';
   /** Table number for eat-in orders (US-FP-024/066); omitted for takeaway/delivery. */
   tableNumber?: number | null;
+  /** UTC start of the selected time slot (US-FP-019). Null/omitted = "as soon as possible". */
+  timeSlotStart?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,8 +81,13 @@ export interface OrderResponse {
   totalGross: number;
   createdAt: string;
   paymentMethod: string;
-  // Forward-compatibility — server only sends timeSlot once that story ships.
-  timeSlot?: string | null;
+  /**
+   * UTC start of the selected time slot (US-FP-019). Null/absent means "as soon as possible".
+   * Previously this was the speculative `timeSlot?: string | null` — replaced by start+end pair.
+   */
+  timeSlotStart?: string | null;
+  /** UTC end of the selected time slot (US-FP-019). Null/absent means "as soon as possible". */
+  timeSlotEnd?: string | null;
   /** Present on in-store EatIn orders. */
   tableNumber?: number;
   /** Staff member who created the order (set by the server from the auth token). */
@@ -122,6 +129,24 @@ export interface CreateInStoreOrderRequest {
 export interface OrderTrackingResponse {
   order: OrderResponse;
   lifecycle: OrderLifecycleResponse;
+}
+
+// ---------------------------------------------------------------------------
+// Time-slot types (US-FP-019)
+// ---------------------------------------------------------------------------
+
+export interface TimeSlotResponse {
+  start: string;
+  end: string;
+  isAvailable: boolean;
+  remainingCapacity: number;
+}
+
+export interface AvailableTimeSlotsResponse {
+  isEnabled: boolean;
+  intervalMinutes: number | null;
+  maxOrdersPerInterval: number | null;
+  slots: TimeSlotResponse[];
 }
 
 // ---------------------------------------------------------------------------
@@ -212,5 +237,17 @@ export const ordersApi = {
         `/brands/${brandSlug}/shops/${shopId}/orders/in-store`,
         data,
       )
+      .then((r) => r.data),
+
+  /**
+   * Fetches available time slots for a shop for the remainder of today (US-FP-019).
+   * Route: GET /brands/{brandSlug}/shops/{shopId}/time-slots
+   */
+  getTimeSlots: (
+    brandSlug: string,
+    shopId: string,
+  ): Promise<AvailableTimeSlotsResponse> =>
+    apiClient
+      .get<AvailableTimeSlotsResponse>(`/brands/${brandSlug}/shops/${shopId}/time-slots`)
       .then((r) => r.data),
 };

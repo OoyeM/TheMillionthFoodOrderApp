@@ -6,6 +6,7 @@ import { ordersApi } from '@api/orders';
 import type { OrderResponse } from '@api/orders';
 import { useOrderUpdates } from '@api/useOrderUpdates';
 import { useResolvedShop } from '../hooks/useResolvedShop';
+import { formatTimeSlot } from '../../../utils/timeSlot';
 
 // ---------------------------------------------------------------------------
 // Query
@@ -151,6 +152,12 @@ export function OrderConfirmationPage() {
               : t('storefront.checkout.payment.statusPayAtPickup')
           }
         />
+        {order.timeSlotStart != null && order.timeSlotEnd != null && (
+          <InfoCard
+            label={t('storefront.order.timeSlot')}
+            value={formatTimeSlot(order.timeSlotStart, order.timeSlotEnd)}
+          />
+        )}
       </div>
 
       {/* Items */}

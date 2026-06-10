@@ -130,7 +130,11 @@ public sealed class ShopService(IShopRepository shopRepository) : IShopService
                 shop.Address.PostalCode,
                 shop.Address.Country),
             shop.IsOpenAt(now),
-            new EatInSettingsDto(shop.EatIn.IsEnabled, shop.EatIn.RequiresTableNumber));
+            new EatInSettingsDto(shop.EatIn.IsEnabled, shop.EatIn.RequiresTableNumber),
+            new TimeSlotOrderingSettingsDto(
+                shop.TimeSlotOrdering.IsEnabled,
+                (int?)shop.TimeSlotOrdering.Interval,
+                shop.TimeSlotOrdering.MaxOrdersPerInterval));
 
     private static TimeSlotOrderingSettings MapTimeSlotOrdering(TimeSlotOrderingSettingsDto dto) =>
         dto.IsEnabled && dto.IntervalMinutes is int minutes && dto.MaxOrdersPerInterval is int max

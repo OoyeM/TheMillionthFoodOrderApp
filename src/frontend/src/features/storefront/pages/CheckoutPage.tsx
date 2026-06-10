@@ -4,13 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { useAuth } from '@/auth/useAuth';
 import { CartProvider, useCart } from '../context/CartContext';
 import { useResolvedShop } from '../hooks/useResolvedShop';
 import { useCreateOrder } from '../hooks/useCreateOrder';
+import { timeSlotKeys, useAvailableTimeSlots } from '../hooks/useAvailableTimeSlots';
 import { MockPaymentScreen } from '../components/MockPaymentScreen';
+import { TimeSlotPicker } from '../components/TimeSlotPicker';
 import type { OrderType } from '@api/orders';
-import type { SupportedLocale, EatInSettings } from '@/types/common';
+import type { SupportedLocale, EatInSettings, TimeSlotOrderingSettings } from '@/types/common';
 
 // ---------------------------------------------------------------------------
 // Language normalisation helper
@@ -76,6 +80,8 @@ function makeCheckoutSchema(
       ...contactFields,
       tableNumber: z.string(),
       paymentMethod: z.enum(['CashAtPickup', 'CreditCard', 'Bancontact']),
+      // Empty string = ASAP (always valid); non-empty = selected slot ISO string (US-FP-019)
+      timeSlotStart: z.string(),
     })
     // Eat-in is only an allowed order type when the shop accepts it (US-FP-066).
     .refine((v) => eatIn.isEnabled || v.orderType !== 'EatIn', {
@@ -106,6 +112,8 @@ interface CheckoutFormValues {
   customerPhone: string;
   tableNumber: string;
   paymentMethod: 'CashAtPickup' | 'CreditCard' | 'Bancontact';
+  /** ISO string of the selected time slot start, or empty string for ASAP (US-FP-019). */
+  timeSlotStart: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -118,18 +126,28 @@ interface CheckoutFormProps {
   shopSlug: string;
   shopIsOpen: boolean;
   eatIn: EatInSettings;
+  timeSlotOrdering: TimeSlotOrderingSettings;
 }
 
-function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: CheckoutFormProps) {
+function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn, timeSlotOrdering }: CheckoutFormProps) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { brandSlug: paramSlug, lang } = useParams<{ brandSlug: string; lang: string }>();
   const { user, isAuthenticated } = useAuth();
   const { state, clearCart } = useCart();
   const createOrder = useCreateOrder(brandSlug, shopId);
+  const queryClient = useQueryClient();
+
+  // Separate 409 (slot unavailable/full) error message from the generic submit error.
+  const [slotFullError, setSlotFullError] = useState(false);
 
   const [showMockPayment, setShowMockPayment] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+
+  // Time slot availability — only fetched when time-slot ordering is enabled, and
+  // polling stops while the mock payment screen replaces the form (US-FP-019).
+  const { data: timeSlotsData, isLoading: isSlotsLoading, isError: isSlotsError } =
+    useAvailableTimeSlots(brandSlug, shopId, timeSlotOrdering.isEnabled && !showMockPayment);
 
   // Redirect to menu if cart is empty
   useEffect(() => {
@@ -152,6 +170,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     customerPhone: user?.phoneNumber ?? '',
     tableNumber: '',
     paymentMethod: 'CashAtPickup',
+    timeSlotStart: '',
   };
 
   const {
@@ -159,6 +178,7 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,35 +209,52 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
     // Guard: a closed shop does not accept online orders (mirrors the backend check).
     if (!shopIsOpen) return;
 
+    // Clear any previous slot-full error.
+    setSlotFullError(false);
+
     const orderItems = state.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
       selectedModifierIds: item.selectedModifiers.map((m) => m.modifierId),
     }));
 
-    const result = await createOrder.mutateAsync({
-      orderType: values.orderType as OrderType,
-      customerFirstName: values.customerFirstName || null,
-      customerLastName: values.customerLastName || null,
-      customerEmail: values.customerEmail || null,
-      customerPhone: values.customerPhone || null,
-      items: orderItems,
-      paymentMethod: values.paymentMethod,
-      languageCode: normalizeLang(lang),
-      tableNumber:
-        values.orderType === 'EatIn' && values.tableNumber.trim().length > 0
-          ? Number(values.tableNumber)
-          : null,
-    });
+    try {
+      const result = await createOrder.mutateAsync({
+        orderType: values.orderType as OrderType,
+        customerFirstName: values.customerFirstName || null,
+        customerLastName: values.customerLastName || null,
+        customerEmail: values.customerEmail || null,
+        customerPhone: values.customerPhone || null,
+        items: orderItems,
+        paymentMethod: values.paymentMethod,
+        languageCode: normalizeLang(lang),
+        tableNumber:
+          values.orderType === 'EatIn' && values.tableNumber.trim().length > 0
+            ? Number(values.tableNumber)
+            : null,
+        // Empty string → null (ASAP); non-empty → selected slot ISO string (US-FP-019).
+        timeSlotStart: values.timeSlotStart || null,
+      });
 
-    clearCart();
+      clearCart();
 
-    if (values.paymentMethod === 'CashAtPickup') {
-      navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${result.id}`);
-    } else {
-      // Online payment methods: show mock processing screen first
-      setPendingOrderId(result.id);
-      setShowMockPayment(true);
+      if (values.paymentMethod === 'CashAtPickup') {
+        navigate(`/${String(paramSlug)}/${String(lang)}/${shopSlug}/order/${result.id}`);
+      } else {
+        // Online payment methods: show mock processing screen first
+        setPendingOrderId(result.id);
+        setShowMockPayment(true);
+      }
+    } catch (err) {
+      // 409 = selected slot just filled up — show targeted message, reset to ASAP,
+      // and invalidate the slot query so the picker refreshes (US-FP-019, AC4).
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        setSlotFullError(true);
+        setValue('timeSlotStart', '');
+        void queryClient.invalidateQueries({ queryKey: timeSlotKeys.list(brandSlug, shopId) });
+      }
+      // Re-throw so react-hook-form marks the submission as failed (sets isSubmitting=false).
+      throw err;
     }
   }
 
@@ -322,6 +359,38 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
             )}
           />
         </fieldset>
+
+        {/* Time slot section (US-FP-019) */}
+        {timeSlotOrdering.isEnabled ? (
+          <Controller
+            name="timeSlotStart"
+            control={control}
+            render={({ field }) => (
+              <TimeSlotPicker
+                slots={timeSlotsData?.slots ?? []}
+                value={field.value}
+                onChange={field.onChange}
+                isLoading={isSlotsLoading}
+                isError={isSlotsError}
+              />
+            )}
+          />
+        ) : (
+          /* AC5: static ASAP notice when time-slot ordering is disabled (US-FP-021 not done) */
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '0.375rem',
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              color: '#1e40af',
+              fontSize: '0.875rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            {t('storefront.checkout.timeSlot.asapNotice')}
+          </div>
+        )}
 
         {/* VAT notice */}
         {vatNotice && (
@@ -681,8 +750,26 @@ function CheckoutForm({ brandSlug, shopId, shopSlug, shopIsOpen, eatIn }: Checko
           />
         </fieldset>
 
-        {/* Error */}
-        {createOrder.isError && (
+        {/* 409 slot-full error — shown instead of the generic error */}
+        {slotFullError && (
+          <div
+            role="alert"
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '0.375rem',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '0.875rem',
+              marginBottom: '1rem',
+            }}
+          >
+            {t('storefront.checkout.timeSlot.slotFull')}
+          </div>
+        )}
+
+        {/* Generic submit error (not 409) */}
+        {createOrder.isError && !slotFullError && (
           <div
             style={{
               padding: '0.75rem 1rem',
@@ -754,6 +841,7 @@ export function CheckoutPage() {
         shopSlug={shop.slug}
         shopIsOpen={shop.isOpen}
         eatIn={shop.eatIn}
+        timeSlotOrdering={shop.timeSlotOrdering}
       />
     </CartProvider>
   );

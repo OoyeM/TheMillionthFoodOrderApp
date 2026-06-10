@@ -5,7 +5,8 @@ import { useCreateModifierGroup } from '../hooks/useModifierGroups';
 import { useBrandSettings } from '../hooks/useBrandSettings';
 import { extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
-import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -241,35 +242,14 @@ export function ModifierGroupCreate() {
         </div>
 
         {/* API error */}
-        {createModifierGroup.isError && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {createModifierGroup.error instanceof Error
-              ? createModifierGroup.error.message
-              : 'Failed to create modifier group. Please try again.'}
-          </p>
-        )}
+        <FormError error={createModifierGroup.error} fallback="Failed to create modifier group. Please try again." />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="submit"
-            disabled={createModifierGroup.isPending}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: createModifierGroup.isPending ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              opacity: createModifierGroup.isPending ? 0.6 : 1,
-            }}
-          >
-            {createModifierGroup.isPending ? 'Creating...' : t('admin.modifierGroups.create')}
-          </button>
-          <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          isPending={createModifierGroup.isPending}
+          onCancel={handleCancel}
+          submitLabel={t('admin.modifierGroups.create')}
+          pendingLabel="Creating..."
+        />
       </form>
     </main>
   );

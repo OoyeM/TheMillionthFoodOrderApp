@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { EatInSettings } from '../../../types/common';
+import type { EatInSettings, TimeSlotOrderingSettings } from '../../../types/common';
 
 // ---------------------------------------------------------------------------
 // ResolvedShop type and context
@@ -16,6 +16,8 @@ export interface ResolvedShop {
   isOpen: boolean;
   /** Eat-in ordering configuration — gates the eat-in option at checkout (US-FP-066). */
   eatIn: EatInSettings;
+  /** Time-slot ordering configuration — drives the slot picker at checkout (US-FP-019). */
+  timeSlotOrdering: TimeSlotOrderingSettings;
 }
 
 /**

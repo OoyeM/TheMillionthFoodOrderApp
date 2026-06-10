@@ -4,7 +4,8 @@ import { useCreateMenuCategory } from '../hooks/useMenuCategories';
 import { useBrandSettings } from '../hooks/useBrandSettings';
 import { extractPrimaryLocale } from '../../../types/common';
 import type { SupportedLocale } from '../../../types/common';
-import { labelStyle, inputStyle, secondaryButtonStyle, RequiredMark, FieldError } from '../forms/adminFormStyles';
+import { labelStyle, inputStyle, RequiredMark, FieldError, FormError } from '../forms/adminFormStyles';
+import { FormActions } from '../forms/FormActions';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -222,35 +223,14 @@ export function MenuCategoryCreate() {
         </div>
 
         {/* API error */}
-        {createCategory.isError && (
-          <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {createCategory.error instanceof Error
-              ? createCategory.error.message
-              : 'Failed to create menu category. Please try again.'}
-          </p>
-        )}
+        <FormError error={createCategory.error} fallback="Failed to create menu category. Please try again." />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="submit"
-            disabled={createCategory.isPending}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: createCategory.isPending ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              opacity: createCategory.isPending ? 0.6 : 1,
-            }}
-          >
-            {createCategory.isPending ? 'Creating...' : 'Create Category'}
-          </button>
-          <button type="button" onClick={handleCancel} style={secondaryButtonStyle}>
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          isPending={createCategory.isPending}
+          onCancel={handleCancel}
+          submitLabel="Create Category"
+          pendingLabel="Creating..."
+        />
       </form>
     </main>
   );

@@ -247,8 +247,20 @@ export const handlers = [
         },
         isOpen: true,
         eatIn: { isEnabled: true, requiresTableNumber: true },
+        timeSlotOrdering: { isEnabled: false, intervalMinutes: null, maxOrdersPerInterval: null },
       },
     ]),
+  ),
+
+  // Time slots for the storefront checkout (US-FP-019).
+  // Must precede /orders handlers to avoid route ambiguity.
+  http.get('/api/brands/:brandSlug/shops/:shopId/time-slots', () =>
+    HttpResponse.json({
+      isEnabled: false,
+      intervalMinutes: null,
+      maxOrdersPerInterval: null,
+      slots: [],
+    }),
   ),
 
   http.get('/api/brands/:slug/shops/:shopId', ({ params }) =>

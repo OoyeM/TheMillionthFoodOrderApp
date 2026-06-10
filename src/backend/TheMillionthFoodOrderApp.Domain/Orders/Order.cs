@@ -55,6 +55,19 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
     public string LanguageCode { get; private set; } = "nl-BE";
 
     /// <summary>
+    /// UTC start of the selected time slot (US-FP-019). Null means "as soon as possible".
+    /// When set, <see cref="TimeSlotEnd"/> is also set.
+    /// </summary>
+    public DateTimeOffset? TimeSlotStart { get; private set; }
+
+    /// <summary>
+    /// UTC end of the selected time slot (US-FP-019). Null means "as soon as possible".
+    /// Stored to denormalise the slot boundary so future admin config changes
+    /// (interval/capacity) do not corrupt order history.
+    /// </summary>
+    public DateTimeOffset? TimeSlotEnd { get; private set; }
+
+    /// <summary>
     /// True once a digital receipt email has been sent for this order (US-FP-051).
     /// Guards against sending duplicate receipts on repeated terminal transitions.
     /// </summary>
@@ -127,10 +140,18 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
         Guid? createdByStaffId = null,
         string? customerEmail = null,
         string? customerPhone = null,
-        string? languageCode = null)
+        string? languageCode = null,
+        DateTimeOffset? timeSlotStart = null,
+        DateTimeOffset? timeSlotEnd = null)
     {
         if (tableNumber.HasValue && tableNumber.Value <= 0)
             throw new ArgumentException("TableNumber must be greater than zero when provided.", nameof(tableNumber));
+
+        // Time-slot invariants: both-or-neither, and end must be after start (US-FP-019).
+        if (timeSlotStart.HasValue != timeSlotEnd.HasValue)
+            throw new ArgumentException("TimeSlotStart and TimeSlotEnd must both be set or both be null.");
+        if (timeSlotStart.HasValue && timeSlotEnd.HasValue && timeSlotEnd.Value <= timeSlotStart.Value)
+            throw new ArgumentException("TimeSlotEnd must be after TimeSlotStart.");
 
         var itemList = items.ToList();
         if (itemList.Count == 0)
@@ -158,6 +179,8 @@ public sealed class Order : AggregateRoot<Guid>, IAuditable
             LanguageCode = string.IsNullOrWhiteSpace(languageCode) ? "nl-BE" : languageCode.Trim(),
             TableNumber = tableNumber,
             CreatedByStaffId = createdByStaffId,
+            TimeSlotStart = timeSlotStart,
+            TimeSlotEnd = timeSlotEnd,
             VatRatePercent = vatRatePercent,
             SubtotalGross = Math.Round(subtotalGross, 2, MidpointRounding.AwayFromZero),
             TotalVatAmount = Math.Round(totalVatAmount, 2, MidpointRounding.AwayFromZero),
